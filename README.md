@@ -19,9 +19,9 @@ python src/agent.py --date 2026-09-25
 # 3) baseline, v1, v2, v3 비교 평가 + 그래프 + 홈페이지 데이터
 python src/evaluate.py
 
-# 4) 홈페이지: docs/index.html을 브라우저로 열기
-#    사내 홈페이지: docs/intranet/index.html (evaluate.py가 사내용 데이터도 같이 갱신)
-#    데이터만 다시 만들 때: python src/export_intranet.py
+# 4) 사내포털: docs/index.html을 브라우저로 열기 (start docs\index.html)
+#    evaluate.py가 사내포털 데이터(docs/data/)를 같이 갱신합니다.
+#    회사 데이터만 다시 만들 때: python src/export_intranet.py
 ```
 
 Windows 터미널에서 한글이 깨지면 먼저 `$env:PYTHONIOENCODING='utf-8'`를 실행합니다.
@@ -59,24 +59,30 @@ src/agent.py               Claude 오케스트레이터 (프레임워크 없이 
 src/llm.py                 Claude API 호출, 응답 캐시
 src/evaluate.py            비교 평가 → outputs/, docs/data/results.js
 outputs/                   평가 표(CSV), 그래프(PNG), 에이전트 실행 기록(JSON)
-docs/                      가상 기업 홈페이지 (정적 페이지, GitHub Pages로 게시)
-docs/intranet/             사내 홈페이지 (사내 메일함, 조업 현황, 스크랩 야드·검수, 공지·조직·설비)
-src/export_intranet.py     사내 홈페이지용 회사 데이터(CSV만 사용) → docs/intranet/data/company.js
+docs/                      리본스틸 사내포털 (정적 페이지, GitHub Pages로 게시)
+  index.html                 홈 (오늘 할 일, 오늘의 미션, 메일 미리보기)
+  agent.html                 배합 에이전트 작업실 (브라우저에서 에이전트 실행·판정 수정·결재)
+  mail.html / ops.html / yard.html / company.html   메일함, 조업 현황, 스크랩 야드·검수, 회사·공지·조직
+  report.html                AI 배합 도입 보고서 (과제 요구사항 ①~⑤, 검증 결과 차트)
+  data/results.js            evaluate.py 결과, data/company.js 회사 데이터
+src/export_intranet.py     사내포털용 회사 데이터(CSV만 사용) → docs/data/company.js
 ```
 
-### 사내 홈페이지
+사이트 주소: https://hg8004.github.io/ReBorn_Steel/ (GitHub Pages, `main` 브랜치 `/docs` 폴더)
+
+### 사내포털
 
 - 처음 접속하면 이름을 묻고, 이 과제의 직무인 **제강팀 스크랩 배합 담당(AI 배합 에이전트 운영) 신입사원**으로 배정합니다.
   입사일은 에이전트 정식 적용일(2026-09-22)이고, 첫날에는 인사팀 환영 메일과 사수의 인수인계 메일이 옵니다.
 - 메일과 할 일은 업무 기준일의 배합 지시서, 검수 메모, 시세·재고에서 자동으로 만듭니다.
   예: 지시서 초안 검토·결재 상신, 위험 로트 메모 원문 확인, 재고 부족 등급 사용량 확인, 실행 기록 점검.
-- **배합 에이전트 작업실**(`docs/intranet/agent.html`): 에이전트를 브라우저에서 직접 실행합니다.
+- **배합 에이전트 작업실**(`docs/agent.html`): 에이전트를 브라우저에서 직접 실행합니다.
   1. 오늘 조건(단가·재고)을 보고, 값을 바꿔 '가정해 보기'를 할 수 있습니다.
   2. 검수 메모의 키워드 판정을 확인하고 담당자가 판정을 고칩니다.
   3. 실행하면 원가 최소 배합(선형계획법) → 모의 조업 1,000회 → 안전여유 조정 반복 과정을 단계별로 보여 줍니다.
   4. 숙련자 배합과 비교하고, 실행 기록끼리 비교한 뒤 제강팀장에게 결재를 올립니다. 결재 내용에 따라 팀장 회신 메일이 옵니다.
   5. 날짜별 미션(첫 결재, 위험 로트 막기, 잘못 제외된 로트 찾기, 재고 부족 대응)은 검수 메모 원문만으로 판정합니다.
-- 브라우저 계산 엔진 `docs/intranet/assets/engine.js`는 파이썬 도구와 같은 수식입니다.
+- 브라우저 계산 엔진 `docs/assets/engine.js`는 파이썬 도구와 같은 수식입니다.
   5개 날짜로 대조한 결과, 첫 안전여유·숙련자 배합 원가·같은 안전여유에서의 최적 배합 원가가 파이썬(HiGHS)과 원 단위까지 같았습니다.
   반복 전체는 모의 조업 난수가 달라 톤당 0.1% 안팎 차이가 납니다. 성분 추정값은 `export_intranet.py`가 파이썬 결과를 내보낸 것을 씁니다.
 - **리보 AI (timelyGPT)**: 작업실에서 '결과 요약 복사'를 누르면 지금 배합 결과가 리보 AI용 설명문으로 복사되고,
@@ -86,8 +92,9 @@ src/export_intranet.py     사내 홈페이지용 회사 데이터(CSV만 사용
     (`portal.js`의 `TIMELY` 설정). 키는 코드에 넣지 않고 로그인 토큰(24시간)만 브라우저 창에 보관합니다.
   - timelyGPT는 결과 설명용 어시스턴트로만 쓰고, 에이전트의 판단(메모 판정 등)에는 쓰지 않습니다.
 - 브랜드(로고, 컬러 팔레트, 공식 캐릭터 '리보')는 `ReBorn_Steel.pdf` 브랜드 자료를 따릅니다.
-  이미지는 `docs/intranet/assets/`(프로필 사진 `rebo-face.png`, 로고·리보 모습 `brand/`)에 있습니다.
-- 회사 직원이 보는 화면이므로 숨은 정답(정답 기준 이탈률, 이상 로트 날짜)은 쓰지 않습니다.
+  이미지는 `docs/assets/`(프로필 사진 `rebo-face.png`, 로고·리보 모습 `brand/`)에 있습니다.
+- 업무 화면(홈, 작업실, 메일, 조업, 야드)은 직원이 실제로 알 수 있는 정보만 쓰고, 숨은 정답(정답 기준 이탈률, 이상 로트 날짜)은 쓰지 않습니다.
+  숨은 정답 채점 결과는 'AI 배합 도입 보고서'(`report.html`)에만, 도입 검증 결과로 보여 줍니다.
 - 읽음·완료 표시는 각자 브라우저(localStorage)에만 저장됩니다.
 
 `ground_truth.json`은 `generate_data.py`와 `evaluate.py`만 읽습니다. 에이전트 쪽 코드(`tools/`, `pipeline.py`, `agent.py`)는 읽지 않습니다.
@@ -175,8 +182,8 @@ src/export_intranet.py     사내 홈페이지용 회사 데이터(CSV만 사용
 - 선형계획법은 분산을 모르기 때문에 한두 등급에 몰린 배합을 고릅니다. 몰린 배합은 성분 편차가 커서 안전여유도 커집니다.
 - 키워드 규칙은 "전선 피복 발견, 전량 제거 완료" 같은 메모에도 속습니다. LLM 판정 결과는 API 키로 `evaluate.py`를 다시 돌려야 확인됩니다.
 
-## 홈페이지 게시
+## 사내포털 게시
 
-`docs/` 폴더(`index.html` + `data/results.js`)가 그대로 정적 사이트입니다. `evaluate.py`를 다시 돌리면 `results.js`가 갱신됩니다.
-GitHub 저장소 Settings → Pages에서 브랜치 `main`, 폴더 `/docs`를 고르면 게시됩니다.
+`docs/` 폴더가 그대로 정적 사이트(사내포털)입니다. `evaluate.py`를 다시 돌리면 `docs/data/results.js`와 `docs/data/company.js`가 갱신됩니다.
+GitHub 저장소 Settings → Pages에서 브랜치 `main`, 폴더 `/docs`를 고르면 https://hg8004.github.io/ReBorn_Steel/ 에 게시됩니다.
 결과를 갱신했다면 GitHub Desktop에서 커밋하고 Push하면 1~2분 뒤 사이트에 반영됩니다.

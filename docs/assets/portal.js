@@ -466,7 +466,7 @@
   var renderFn = null;
 
   var NAV = [["home", "index.html", "홈"], ["agent", "agent.html", "배합 에이전트 작업실"], ["mail", "mail.html", "사내 메일함"], ["ops", "ops.html", "오늘의 조업 현황"],
-             ["yard", "yard.html", "스크랩 야드·검수"], ["company", "company.html", "회사·공지·조직"]];
+             ["yard", "yard.html", "스크랩 야드·검수"], ["company", "company.html", "회사·공지·조직"], ["report", "report.html", "AI 도입 보고서"]];
 
   function buildShell() {
     var page = document.body.dataset.page;
@@ -482,7 +482,7 @@
     sel.addEventListener("change", function () { setDate(sel.value); });
     $("side").innerHTML = NAV.map(function (n) {
       return '<a href="' + n[1] + '"' + (n[0] === page ? ' aria-current="page"' : "") + "><span>" + n[2] + "</span>" + (n[0] === "mail" ? '<span id="navBadge"></span>' : "") + "</a>";
-    }).join("") + '<div class="sep"></div><a class="ext" href="../index.html">외부 홈페이지 ↗</a><p class="side-note">가상 기업 · 수업 과제</p>';
+    }).join("") + '<div class="sep"></div><p class="side-note">가상 기업 · 수업 과제<br>모든 데이터는 AI가 생성</p>';
     if (!$("tip")) tipEl();
   }
   function updateShell() {

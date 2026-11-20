@@ -3,623 +3,171 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>리본스틸 배합 에이전트</title>
-<meta name="claude:viewport-fit-sides" content="cover">
-<meta name="description" content="가상 전기로 제강사 리본스틸의 스크랩 배합 AI 에이전트 (수업 과제, 모든 데이터는 가상)">
+<title>리본스틸 사내포털</title>
+<meta name="description" content="가상 기업 리본스틸의 사내 포털: 신입 배합 담당의 오늘 할 일과 메일 (수업 과제, 모든 데이터는 가상)">
+<link rel="icon" href="assets/rebo-face.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="assets/portal.css">
 <style>
-/* 레이아웃: 좁은 본문 칼럼(최대 1080px) 위에 섹션을 세로로 쌓고, 데모는 표 중심의 작업 화면으로 구성 */
-:root {
-  --bg: #eef0ef;          /* 페이지 바닥: 약간 푸른 기가 도는 강판 회색 */
-  --surface: #fbfcfb;     /* 카드·표 바탕 */
-  --ink: #14181b;         /* 본문 */
-  --ink-2: #4d555b;       /* 보조 글씨 */
-  --muted: #7d858a;       /* 축, 캡션 */
-  --line: #d9dddb;        /* 구분선 */
-  --accent: #2b4eb0;      /* 템퍼링 블루 (강조 1곳에만) */
-  --accent-soft: #dfe6f7;
-  --good: #0ca30c; --warn: #fab219; --crit: #d03b3b;
-  --good-ink: #006300; --crit-ink: #b32a2a;
-  /* 차트 시리즈 (참고 팔레트 1~8번 슬롯, 순서 고정) */
-  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100;
-  --s5: #e87ba4; --s6: #008300; --s7: #6250d6; --s8: #e34948;
-  --grid: #e1e0d9; --axis: #c3c2b7;
-  --font: "IBM Plex Sans KR", "Malgun Gothic", "Apple SD Gothic Neo", system-ui, sans-serif;
-  --mono: "IBM Plex Mono", ui-monospace, "Consolas", monospace;
-  --r: 6px;
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #111416; --surface: #1a1d1f; --ink: #eef0ee; --ink-2: #c0c6c8; --muted: #8b9396;
-    --line: #2d3235; --accent: #7f9cf0; --accent-soft: #232c45;
-    --good-ink: #0ca30c; --crit-ink: #ef7a7a;
-    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500;
-    --s5: #d55181; --s6: #008300; --s7: #9085e9; --s8: #e66767;
-    --grid: #2c2c2a; --axis: #383835;
-    color-scheme: dark;
-  }
-}
-:root[data-theme="dark"] {
-  --bg: #111416; --surface: #1a1d1f; --ink: #eef0ee; --ink-2: #c0c6c8; --muted: #8b9396;
-  --line: #2d3235; --accent: #7f9cf0; --accent-soft: #232c45;
-  --good-ink: #0ca30c; --crit-ink: #ef7a7a;
-  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500;
-  --s5: #d55181; --s6: #008300; --s7: #9085e9; --s8: #e66767;
-  --grid: #2c2c2a; --axis: #383835;
-  color-scheme: dark;
-}
-
-* { box-sizing: border-box; }
-html { scroll-behavior: smooth; }
-@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
-body {
-  margin: 0; background: var(--bg); color: var(--ink);
-  font-family: var(--font); font-size: 15px; line-height: 1.65;
-  padding-left: max(16px, env(safe-area-inset-left, 0px));
-  padding-right: max(16px, env(safe-area-inset-right, 0px));
-}
-.wrap { max-width: 1080px; margin: 0 auto; }
-h1, h2, h3 { line-height: 1.3; text-wrap: balance; margin: 0; }
-h2 { font-size: 1.5rem; font-weight: 700; }
-h3 { font-size: 1.05rem; font-weight: 600; }
-p { margin: 0; }
-.num { font-variant-numeric: tabular-nums; }
-.mono { font-family: var(--mono); }
-.eyebrow { font-size: .78rem; letter-spacing: .08em; color: var(--muted); font-weight: 600; }
-.lede { color: var(--ink-2); max-width: 64ch; }
-a { color: var(--accent); }
-:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-
-/* 상단 */
-header.top { display: flex; align-items: center; justify-content: space-between; gap: 16px;
-  padding-block: 18px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
-.brand { display: flex; align-items: baseline; gap: 10px; }
-.brand b { font-size: 1.15rem; letter-spacing: -.01em; }
-.brand span { color: var(--muted); font-size: .85rem; }
-nav { display: flex; gap: 18px; flex-wrap: wrap; font-size: .9rem; }
-nav a { color: var(--ink-2); text-decoration: none; }
-nav a:hover { color: var(--ink); text-decoration: underline; }
-.notice { font-size: .78rem; color: var(--ink-2); background: var(--surface); border: 1px solid var(--line);
-  border-radius: 999px; padding: 2px 10px; }
-
-/* 히어로 */
-.hero { padding-block: 56px 40px; display: grid; gap: 28px; }
-.hero h1 { font-size: clamp(2rem, 5vw, 3.1rem); font-weight: 700; letter-spacing: -.02em; }
-.hero h1 em { font-style: normal; color: var(--accent); }
-.spec-strip { display: flex; flex-wrap: wrap; gap: 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
-.spec-strip div { padding: 12px 22px 12px 0; margin-right: 22px; border-right: 1px solid var(--line); min-width: 0; }
-.spec-strip div:last-child { border-right: 0; }
-.spec-strip dt { font-size: .75rem; color: var(--muted); }
-.spec-strip dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; }
-
-section { padding-block: 44px; border-top: 1px solid var(--line); display: grid; gap: 22px; }
-section > *, .hero > *, .box > * { min-width: 0; }
-.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; }
-.cols > * { min-width: 0; }
-.box { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 18px; display: grid; gap: 8px; align-content: start; }
-.box ul { margin: 0; padding-left: 18px; color: var(--ink-2); }
-.box li + li { margin-top: 4px; }
-.approval { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: .88rem; color: var(--ink-2); }
-.approval span { border: 1px solid var(--line); border-radius: 4px; padding: 1px 8px; background: var(--bg); }
-
-.scroll-x { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-svg text { font-family: var(--font); }
-.flow { min-width: 760px; width: 100%; height: auto; display: block; }
-.callout { border-left: 3px solid var(--accent); padding: 4px 0 4px 14px; color: var(--ink-2); max-width: 72ch; }
-
-/* 데모 */
-.controls { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
-select, button { font: inherit; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 6px 10px; }
-button { cursor: pointer; }
-button:hover { border-color: var(--ink-2); }
-.chip { font-size: .82rem; padding: 3px 10px; border-radius: 999px; }
-.chip[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--ink); }
-.chip .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--crit); margin-right: 5px; vertical-align: 1px; }
-.chip .dot.decoy { background: var(--warn); }
-.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
-.tile { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 12px 14px; display: grid; gap: 2px; }
-.tile .k { font-size: .78rem; color: var(--muted); }
-.tile .v { font-size: 1.35rem; font-weight: 600; font-variant-numeric: tabular-nums; }
-.tile .s { font-size: .8rem; color: var(--ink-2); }
-.pill { display: inline-flex; align-items: center; gap: 4px; font-size: .75rem; font-weight: 600; border-radius: 999px; padding: 1px 8px; border: 1px solid currentColor; white-space: nowrap; }
-.pill.high { color: var(--crit-ink); }
-.pill.medium { color: var(--ink-2); }
-.pill.none { color: var(--muted); }
-.pill.ok { color: var(--good-ink); }
-.notes { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
-.notes li { display: grid; gap: 2px; padding-bottom: 8px; border-bottom: 1px dashed var(--line); }
-.notes li:last-child { border-bottom: 0; }
-.notes .t { font-size: .92rem; }
-.notes .m { font-size: .78rem; color: var(--muted); }
-.log { margin: 0; padding-left: 18px; font-size: .86rem; color: var(--ink-2); display: grid; gap: 4px; }
-.log li { font-variant-numeric: tabular-nums; }
-
-table { border-collapse: collapse; width: 100%; font-size: .86rem; }
-th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: middle; white-space: nowrap; }
-th { font-size: .75rem; color: var(--muted); font-weight: 600; }
-td.r, th.r { text-align: right; font-variant-numeric: tabular-nums; }
-tbody tr { cursor: pointer; }
-tbody tr:hover { background: var(--bg); }
-tbody tr[aria-selected="true"] { background: var(--accent-soft); }
-.tablebox { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); }
-.bar { display: flex; height: 12px; width: 220px; gap: 2px; }
-.bar i { display: block; height: 100%; }
-.bar i:first-child { border-radius: 3px 0 0 3px; }
-.bar i:last-child { border-radius: 0 3px 3px 0; }
-.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .8rem; color: var(--ink-2); }
-.legend span { display: inline-flex; align-items: center; gap: 5px; }
-.legend i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
-.detail { display: grid; gap: 10px; }
-.detail .charges { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; }
-.detail .charges div { border: 1px solid var(--line); border-radius: 4px; padding: 6px 8px; font-size: .86rem; display: flex; justify-content: space-between; gap: 6px; }
-.meter { display: grid; gap: 3px; font-size: .82rem; color: var(--ink-2); }
-.meter .track { position: relative; height: 8px; background: var(--bg); border: 1px solid var(--line); border-radius: 4px; }
-.meter .fill { position: absolute; inset: 0 auto 0 0; background: var(--s1); border-radius: 3px; }
-.meter .lim { position: absolute; top: -4px; bottom: -4px; width: 2px; background: var(--ink); }
-
-/* 검증 결과 */
-.charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr)); gap: 16px; }
-.charts > * { min-width: 0; }
-.chart { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 14px; display: grid; gap: 8px; }
-.chart svg { width: 100%; height: auto; display: block; overflow: visible; }
-.chart .cap { font-size: .8rem; color: var(--muted); }
-#tip { position: fixed; pointer-events: none; z-index: 20; background: var(--ink); color: var(--surface); font-size: .8rem; padding: 5px 8px; border-radius: 4px; max-width: 260px; line-height: 1.45; font-variant-numeric: tabular-nums; }
-.limits { display: grid; gap: 6px; color: var(--ink-2); padding-left: 18px; margin: 0; }
-footer { border-top: 1px solid var(--line); padding-block: 28px 40px; font-size: .82rem; color: var(--muted); display: grid; gap: 6px; }
-
-@media (max-width: 520px) {
-  .hero { padding-block: 36px 28px; }
-  .spec-strip div { border-right: 0; margin-right: 0; padding-right: 18px; }
-  section { padding-block: 32px; }
-}
+.hero { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 16px; align-items: end; background: var(--accent); color: var(--accent-ink);
+  border-radius: var(--r); padding: 20px 22px; position: relative; overflow: hidden; }
+.hero .eyebrow { color: inherit; opacity: .8; }
+.hero h1 { color: inherit; }
+.hero .pagehead p { color: inherit; opacity: .9; font-size: .92rem; }
+.hero .day { text-align: right; }
+.hero .day b { display: block; font-size: 2rem; line-height: 1; color: var(--point); }
+.hero .day span { font-size: .8rem; opacity: .85; }
+.welcome { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 16px; align-items: center; }
+.welcome img { width: 120px; height: auto; border-radius: 50%; }
+.bubble { position: relative; background: var(--point-soft); border-radius: 10px; padding: 10px 14px; font-size: .92rem; }
+.bubble::before { content: ""; position: absolute; left: -8px; top: 22px; border: 8px solid transparent; border-left: 0; border-right-color: var(--point-soft); }
+.duties { margin: 0; padding-left: 18px; color: var(--ink-2); font-size: .88rem; }
+.mini { list-style: none; margin: 0; padding: 0; display: grid; }
+.mini li { border-bottom: 1px solid var(--line); }
+.mini li:last-child { border-bottom: 0; }
+.mini a { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 8px 0; color: var(--ink); text-decoration: none; }
+.mini a:hover .s { text-decoration: underline; }
+.mini .s { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .9rem; }
+.mini .unread .s { font-weight: 600; }
+.mini .t { font-size: .76rem; color: var(--muted); white-space: nowrap; }
+@media (max-width: 640px) { #missionCard { grid-template-columns: 60px minmax(0, 1fr) !important; } #missionCard img { width: 60px !important; } #missionCard .btn { grid-column: 1 / 3; justify-self: start; } }
+@media (max-width: 520px) { .welcome { grid-template-columns: 76px minmax(0, 1fr); } .welcome img { width: 76px; } .hero { grid-template-columns: 1fr; } .hero .day { text-align: left; } }
 </style>
 </head>
-<body>
-<div class="wrap">
+<body data-page="home">
+<header id="topbar"></header>
+<div class="shell">
+<nav class="side" id="side" aria-label="사내 메뉴"></nav>
+<main>
+  <div class="hero">
+    <div class="pagehead">
+      <div class="eyebrow" id="today"></div>
+      <h1 id="hello">사내포털</h1>
+      <p id="job"></p>
+    </div>
+    <div class="day"><b id="dayNo">-</b><span>입사 일차</span></div>
+  </div>
 
-<header class="top">
-  <div class="brand"><b>리본스틸㈜</b><span>ReBorn Steel</span></div>
-  <nav aria-label="페이지 내 이동">
-    <a href="#company">회사 소개</a><a href="#process">공정</a><a href="#approach">접근 방법</a>
-    <a href="#demo">에이전트 데모</a><a href="#results">검증 결과</a>
-    <a href="intranet/index.html">사내포털 →</a>
-  </nav>
-  <span class="notice">가상 기업 · 수업 과제 · 모든 데이터는 AI가 생성</span>
-</header>
+  <section class="card" id="missionCard" aria-labelledby="msT" style="grid-template-columns:84px minmax(0,1fr) auto;align-items:center;border:2px solid var(--point);background:var(--point-soft)"></section>
 
-<div class="hero">
-  <div class="eyebrow">전기로 제강 · 철근 SD400 / SD500 / SD600</div>
-  <h1>스크랩이 <em>다시 태어나는</em> 곳</h1>
-  <p class="lede">리본스틸은 철스크랩을 녹여 철근을 만드는 가상의 전기로 제강사입니다. 우리는 매 heat마다 8개 등급 스크랩을 몇 톤씩 넣을지 정하는 배합 작업을 AI 에이전트에게 맡겼습니다. 목표는 두 가지입니다. Cu·Sn 규격은 지키고, 톤당 원가는 낮춥니다.</p>
-  <dl class="spec-strip" id="specStrip">
-    <div><dt>전기로</dt><dd>100톤 EAF 1기</dd></div>
-    <div><dt>연 생산</dt><dd>80만 톤</dd></div>
-    <div><dt>하루 조업</dt><dd>약 24 heat</dd></div>
-    <div><dt>숙련자 대비 톤당 절감 (v3)</dt><dd id="heroSaving">-</dd></div>
-    <div><dt>규격 이탈률 (v3, 정답 기준)</dt><dd id="heroFail">-</dd></div>
-  </dl>
+  <div class="grid2">
+    <section class="card" aria-labelledby="taskT">
+      <div class="card-h"><h2 id="taskT">오늘 할 일</h2><span class="muted num" id="taskCount" style="font-size:.84rem"></span></div>
+      <ul class="tasks" id="tasks"></ul>
+      <p class="muted" style="font-size:.78rem">할 일은 사내 메일에서 만들어집니다. 체크 표시는 이 브라우저에만 저장됩니다.</p>
+    </section>
+    <section class="card" aria-labelledby="meT">
+      <div class="welcome">
+        <img id="reboPic" src="assets/brand/rebo-hello.jpg" alt="">
+        <div style="display:grid;gap:10px">
+          <div class="bubble" id="bubble"></div>
+          <div><h2 id="meT" style="font-size:.95rem">내 직무: 스크랩 배합 담당</h2><ul class="duties" id="duties"></ul></div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <section style="display:grid;gap:10px" aria-labelledby="opsT">
+    <div class="card-h"><h2 id="opsT">오늘 조업 한눈에</h2><a href="ops.html" id="opsLink">조업 현황 자세히 →</a></div>
+    <div class="tiles" id="tiles"></div>
+  </section>
+
+  <div class="grid2">
+    <section class="card" aria-labelledby="mailT">
+      <div class="card-h"><h2 id="mailT">받은 메일</h2><a href="mail.html">메일함 열기 →</a></div>
+      <ul class="mini" id="mails"></ul>
+    </section>
+    <section class="card" aria-labelledby="noticeT">
+      <div class="card-h"><h2 id="noticeT">전사 공지</h2><a href="company.html#notices">전체 보기 →</a></div>
+      <ul class="mini" id="notices"></ul>
+    </section>
+  </div>
+
+  <p class="disclaimer">리본스틸㈜은 인공지능재료공학 수업 과제를 위해 만든 가상 기업입니다. 직원, 메일, 공지, 조업 데이터는 모두 가상입니다.</p>
+</main>
 </div>
-
-<section id="company">
-  <div class="eyebrow">회사 소개</div>
-  <h2>100톤 전기로 한 기로 연 80만 톤의 철근을 만듭니다</h2>
-  <div class="cols">
-    <div class="box"><h3>설비</h3><ul>
-      <li>100톤 전기로(EAF) 1기</li><li>LF(래들 정련로) 1기</li>
-      <li>빌릿 연속주조기</li><li>봉강 압연 라인</li></ul></div>
-    <div class="box"><h3>제품과 관리 기준</h3>
-      <div class="scroll-x"><table style="font-size:.85rem">
-        <thead><tr><th>강종</th><th class="r">Cu 상한</th><th class="r">Sn 상한</th></tr></thead>
-        <tbody style="cursor:default">
-          <tr><td>SD400</td><td class="r">0.40%</td><td class="r">0.040%</td></tr>
-          <tr><td>SD500</td><td class="r">0.35%</td><td class="r">0.035%</td></tr>
-          <tr><td>SD600</td><td class="r">0.30%</td><td class="r">0.030%</td></tr>
-        </tbody></table></div></div>
-    <div class="box"><h3>배합 지시서 결재선</h3>
-      <div class="approval"><span>담당(배합)</span>→<span>제강팀장</span>→<span>생산본부장</span>→<span>사장</span></div>
-      <p style="font-size:.88rem;color:var(--ink-2)">에이전트는 담당자 자리에서 지시서 초안과 근거를 씁니다. 결재는 사람이 합니다.</p></div>
-  </div>
-</section>
-
-<section id="process">
-  <div class="eyebrow">공정 흐름</div>
-  <h2>Cu와 Sn은 배합 단계에서 결정됩니다</h2>
-  <div class="scroll-x" role="img" aria-label="공정 흐름도: 스크랩 입고, 배합·장입, 전기로 용해, LF 정련, 연속주조, 압연, 철근 출하. 배합·장입 단계에 AI 에이전트가 개입한다.">
-    <svg class="flow" viewBox="0 0 1080 200" id="flowSvg"></svg>
-  </div>
-  <p class="callout">Cu(구리)와 Sn(주석)은 철보다 산화되기 어려워서 전기로의 산화 정련이나 LF 정련으로 빠지지 않습니다. 오히려 철 일부가 슬래그와 분진으로 빠지면서(실수율 &lt; 1) 용강 속 농도가 올라갑니다. 압연 중 표면 균열을 막으려면 장입하기 전에 배합으로 막아야 합니다.</p>
-</section>
-
-<section id="approach">
-  <div class="eyebrow">문제와 접근 방법</div>
-  <h2>보수적인 배합표 대신, 검증을 거친 최적 배합</h2>
-  <div class="cols">
-    <div class="box"><h3>문제</h3><ul>
-      <li>저급 스크랩은 싸지만 Cu·Sn이 많고 실수율이 낮습니다.</li>
-      <li>규격을 넘기면 강등이나 재처리를 해야 해서, 담당자는 고급 스크랩을 넉넉히 씁니다.</li>
-      <li>시세와 재고는 매일 바뀌는데 배합표는 그 속도를 따라가지 못합니다.</li></ul></div>
-    <div class="box"><h3>기존 방식의 한계</h3><ul>
-      <li>숙련자 경험과 엑셀 고정 배합표에 의존해 사람마다 결과가 다릅니다.</li>
-      <li>등급별 평균 성분(공칭값)만 쓰고 로트별 편차는 반영하지 못합니다.</li>
-      <li>"모터 혼입" 같은 검수 메모가 배합에 체계적으로 반영되지 않습니다.</li>
-      <li>솔버만 쓰면 입력 정리, 제약 수정, 결과 해석을 사람이 해야 합니다.</li></ul></div>
-    <div class="box"><h3>AI가 맡는 일</h3><ul>
-      <li>검수 메모(비정형 텍스트)를 읽고 배합 제약으로 바꿉니다.</li>
-      <li>시뮬레이션 결과를 보고 안전여유를 얼마나 키울지 스스로 정합니다.</li>
-      <li>결재자가 읽을 지시서와 판단 근거를 씁니다.</li>
-      <li>숫자는 모두 회귀·선형계획·몬테카를로 도구가 계산합니다.</li></ul></div>
-  </div>
-  <div class="scroll-x" role="img" aria-label="에이전트 실행 흐름: 조회, 검수 메모 분석, 성분 추정, 최적화, 시뮬레이션. 이탈 확률이 2%를 넘으면 안전여유를 키워 최적화로 되돌아가고, 통과하면 지시서를 작성한다.">
-    <svg class="flow" viewBox="0 0 1080 170" id="loopSvg"></svg>
-  </div>
-</section>
-
-<section id="demo">
-  <div class="eyebrow">에이전트 데모</div>
-  <h2>날짜를 고르면 그날의 배합 지시서가 나옵니다</h2>
-  <p class="lede">평가 기간 39일 각각에 대해 미리 실행한 결과입니다. 날짜마다 그날의 시세, 재고, 검수 메모가 다릅니다. 빨간 점은 숨은 이상 로트가 있던 날이고, 노란 점은 위험해 보이지만 실제로는 문제가 없는 메모가 있던 날입니다.</p>
-  <div class="controls">
-    <label for="dateSel" class="eyebrow">날짜</label>
-    <select id="dateSel"></select>
-    <div id="quick" class="controls"></div>
-  </div>
-  <div class="tiles" id="tiles"></div>
-  <div class="cols">
-    <div class="box"><h3>검수 메모 판정</h3><ul class="notes" id="notes"></ul><p class="m" id="noteMethod" style="font-size:.78rem;color:var(--muted)"></p></div>
-    <div class="box"><h3>최적화 ↔ 시뮬레이션 반복 기록</h3><ol class="log" id="log"></ol>
-      <p id="daySummary" style="font-size:.88rem;color:var(--ink-2)"></p></div>
-  </div>
-  <div class="legend" id="gradeLegend" aria-label="스크랩 등급 색"></div>
-  <div class="tablebox scroll-x">
-    <table id="heatTable">
-      <thead><tr><th>heat</th><th>강종</th><th>배합 비율</th><th class="r">장입(t)</th><th class="r">예상 Cu(%)</th><th class="r">예상 Sn(%)</th><th class="r">이탈확률</th><th class="r">원/t</th></tr></thead>
-      <tbody></tbody>
-    </table>
-  </div>
-  <div class="box detail" id="detail" aria-live="polite"></div>
-</section>
-
-<section id="results">
-  <div class="eyebrow">검증 결과</div>
-  <h2>같은 생산 계획, 39일, 네 가지 방식</h2>
-  <p class="lede">숙련자 규칙 배합(baseline)과 에이전트 v1~v3을 같은 생산 계획으로 돌린 뒤, 에이전트에게 숨겨 둔 '실제' 성분 분포로 모의 조업 2,000회를 돌려 채점했습니다. 아래 수치는 모두 실제 실행 결과입니다.</p>
-  <p class="lede" style="font-size:.9rem">에이전트가 성분을 추정한 조업 이력(9/1~9/21, 500 heat)과 평가 기간(9/22~10/30)은 겹치지 않습니다. 평가는 39일 × 24 heat = 936 heat이고, 이 중 이상 로트가 있던 날은 6일(144 heat)입니다.</p>
-  <div class="tablebox scroll-x">
-    <table id="sumTable"><thead><tr><th>방식</th><th>내용</th><th class="r">톤당 원가</th><th class="r">절감(원/t)</th><th class="r">이탈률 전체</th><th class="r">이상 로트 날</th><th class="r">2% 초과 heat/일</th><th class="r">반복</th><th class="r">계산 시간</th></tr></thead><tbody style="cursor:default"></tbody></table>
-  </div>
-  <div class="legend" id="verLegend"></div>
-  <div class="charts">
-    <div class="chart"><h3>톤당 배합 원가</h3><svg id="cCost" viewBox="0 0 420 240"></svg><p class="cap">39일 평균, 원/톤 출강</p></div>
-    <div class="chart"><h3>규격 이탈률</h3><svg id="cFail" viewBox="0 0 420 240"></svg><p class="cap">heat당 이탈 확률의 평균. 진한 막대는 전체 39일, 옅은 막대는 이상 로트가 있던 6일. 점선은 목표 2%.</p></div>
-    <div class="chart"><h3>날짜별 이탈률</h3><svg id="cDay" viewBox="0 0 420 240"></svg><p class="cap">회색 띠는 이상 로트가 있던 날. v1은 30% 안팎이라 이 축에서 뺐습니다.</p></div>
-    <div class="chart"><h3>등급별 Cu: 공칭값, 추정값, 숨은 정답</h3><svg id="cEst" viewBox="0 0 420 240"></svg><p class="cap" id="estCap"></p></div>
-  </div>
-  <div class="cols">
-    <div class="box"><h3>버전별로 확인한 것</h3><ul>
-      <li><b>v1</b> 공칭 성분만 믿고 상한까지 꽉 채우면 원가는 가장 낮지만 이탈률이 크게 오릅니다. 실제 성분이 공칭값보다 조금씩 높기 때문입니다.</li>
-      <li><b>v2</b> 조업 이력으로 성분을 다시 추정하고 시뮬레이션으로 검증하면 평상시 이탈률은 목표 근처로 내려옵니다. 이상 로트가 들어온 날에는 여전히 이탈이 큽니다.</li>
-      <li><b>v3</b> 검수 메모로 위험 로트를 빼면 이상 로트가 있던 날의 이탈도 막습니다. 원가 절감은 대부분 유지됩니다.</li></ul></div>
-    <div class="box"><h3>남은 한계</h3><ul class="limits" id="limits"></ul></div>
-  </div>
-</section>
-
-<footer>
-  <p>리본스틸㈜은 인공지능재료공학 수업 과제를 위해 만든 가상 기업입니다. 회사, 설비, 시세, 성분, 조업 이력은 모두 AI가 생성한 합성 데이터이며 실제 기업이나 공개 데이터와 관계가 없습니다.</p>
-  <p>절감액 환산은 연 80만 톤 생산이라는 가상 설정을 곱한 가상 데이터 기준 추정치입니다.</p>
-</footer>
-</div>
-<div id="tip" hidden></div>
 
 <script src="data/results.js"></script>
+<script src="data/company.js"></script>
+<script src="assets/portal.js"></script>
 <script>
 (function () {
   "use strict";
-  var D = window.REBORN_DATA;
-  var GRADES = ["HS_A","HS_B","HMS_A","HMS_B","LS_A","LS_B","SHR","TRN"];
-  var GNAME = {HS_A:"생철A",HS_B:"생철B",HMS_A:"중량A",HMS_B:"중량B",LS_A:"경량A",LS_B:"경량B",SHR:"슈레디드",TRN:"선반설"};
-  var GCOL = {HS_A:"--s1",HS_B:"--s2",HMS_A:"--s3",HMS_B:"--s4",LS_A:"--s5",LS_B:"--s6",SHR:"--s7",TRN:"--s8"};
-  var VERS = ["baseline","v1","v2","v3"];
-  var VCOL = {baseline:"--s1", v1:"--s2", v2:"--s3", v3:"--s4"};
-  var VNAME = {baseline:"숙련자 규칙", v1:"v1 공칭성분", v2:"v2 추정+검증", v3:"v3 +검수메모"};
-  var VDESC = {baseline:"고정 배합표, 재고 부족 시 고급 스크랩으로 대체", v1:"공칭 성분, 안전여유 0, 검증 없음",
-               v2:"이력 기반 성분 추정 + 안전여유 + 시뮬레이션 루프", v3:"v2 + 검수 메모로 위험 로트 제외"};
-  var NS = "http://www.w3.org/2000/svg";
-  var $ = function (id) { return document.getElementById(id); };
-  var won = function (v) { return Math.round(v).toLocaleString("ko-KR"); };
-  var pct = function (v, d) { return (v * 100).toFixed(d == null ? 1 : d) + "%"; };
-  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
-  function css(v) { return "var(" + v + ")"; }
-  function svgEl(tag, attrs, parent) {
-    var e = document.createElementNS(NS, tag);
-    for (var k in attrs) { if (k === "text") e.textContent = attrs[k]; else e.setAttribute(k, attrs[k]); }
-    if (parent) parent.appendChild(e);
-    return e;
-  }
-  if (!D) { document.body.insertAdjacentHTML("afterbegin", "<p style='padding:16px'>data/results.js를 불러오지 못했습니다. python src/evaluate.py를 먼저 실행하세요.</p>"); return; }
+  var P = window.Portal; if (!P || !P.D) return;
+  var $ = P.$, esc = P.esc;
+  var PICS = { hello: ["rebo-hello.jpg", "손을 들어 인사하는 리보"], earth: ["rebo-earth.jpg", "지구를 안고 웃는 리보"],
+               safety: ["rebo-safety.jpg", "안전조끼를 입고 무전기를 든 리보"] };
 
-  var S = {}; D.summary.forEach(function (r) { S[r.version] = r; });
-  var anomaly = D.meta.anomaly_dates, decoy = D.meta.decoy_dates;
+  function render(c) {
+    var u = c.user, S = c.sheet, f = S.summary;
+    $("today").textContent = c.date + " (" + P.dow(c.date) + ") · " + P.JOB.dept + " " + u.team;
+    $("hello").textContent = (c.day === 1 ? "입사를 환영해요, " : "좋은 아침이에요, ") + u.name + " 사원님";
+    $("job").textContent = P.JOB.roleLong + " · 사수 한지수 대리";
+    $("dayNo").textContent = c.day + "일차";
+    $("duties").innerHTML = u.duties.map(function (d) { return "<li>" + esc(d) + "</li>"; }).join("");
 
-  /* ---------- 툴팁 ---------- */
-  var tip = $("tip");
-  function showTip(ev, html) {
-    tip.innerHTML = html; tip.hidden = false;
-    var x = Math.min(ev.clientX + 12, window.innerWidth - tip.offsetWidth - 8);
-    var y = ev.clientY - tip.offsetHeight - 10; if (y < 8) y = ev.clientY + 16;
-    tip.style.left = x + "px"; tip.style.top = y + "px";
-  }
-  function hideTip() { tip.hidden = true; }
-  function hover(el, html) {
-    el.addEventListener("mousemove", function (e) { showTip(e, html); });
-    el.addEventListener("mouseleave", hideTip);
-  }
+    // 오늘의 미션
+    var ms = P.missionFor(c.date), sub = P.getSubmit(c.date), mr = sub && P.checkMission(c.date, sub);
+    $("missionCard").innerHTML = '<img src="assets/brand/' + ms.pic + '" alt="" style="width:84px;height:auto;border-radius:50%;background:var(--surface)">' +
+      '<div style="display:grid;gap:4px"><div class="eyebrow" style="color:var(--point-ink)">오늘의 미션</div><h2 id="msT" style="color:var(--point-ink)">' + esc(ms.title) + "</h2>" +
+      '<p style="font-size:.9rem">' + esc(ms.story) + "</p>" +
+      (mr ? "<p>" + (mr.ok ? '<span class="pill good">✓ 미션 성공</span>' : '<span class="pill warn">보완 필요</span>') + "</p>" : "") + "</div>" +
+      '<a class="btn primary" href="agent.html?date=' + c.date + '">' + (sub ? "작업실 다시 보기" : "작업실에서 시작 →") + "</a>";
 
-  /* ---------- 히어로 수치 ---------- */
-  $("heroSaving").textContent = won(S.v3.saving_per_t_vs_baseline) + "원/t (" + (S.v3.saving_per_t_vs_baseline / S.baseline.cost_per_t * 100).toFixed(1) + "%)";
-  $("heroFail").textContent = pct(S.v3.fail_rate, 2) + " (목표 2%)";
+    // 오늘 할 일 = 기준일 메일 중 할 일이 있는 것
+    var mails = P.mailbox(c.date);
+    var todays = mails.filter(function (m) { return m.date === c.date && P.taskOf(m); })
+      .sort(function (a, b) { return a.time < b.time ? -1 : 1; });            // 이른 시간부터
+    function drawTasks() {
+      var done = todays.filter(function (m) { return P.isDone(m); }).length;
+      $("taskCount").textContent = todays.length ? done + " / " + todays.length + " 완료" : "";
+      $("tasks").innerHTML = todays.length ? todays.map(function (m, i) {
+        var t = P.taskOf(m), d = P.isDone(m);
+        return '<li class="' + (d ? "done" : "") + '"><input type="checkbox" id="tk' + i + '" data-i="' + i + '"' + (d ? " checked" : "") + '>' +
+          '<label for="tk' + i + '" style="display:grid;gap:1px"><span class="t">' + esc(t.text) + '</span><span class="m">' + P.tagPill(m.tag) + " " + esc(m.time) + " · " + esc(P.sender(m.from).name) + '</span></label>' +
+          '<span style="display:grid;gap:2px;text-align:right"><a class="go" href="' + esc(t.href) + '">처리하러 가기</a><a class="go" href="mail.html?id=' + encodeURIComponent(m.id) + '">메일 보기</a></span></li>';
+      }).join("") : '<li><span></span><span class="empty">오늘 배정된 할 일이 없습니다.</span><span></span></li>';
+      Array.prototype.forEach.call($("tasks").querySelectorAll("input"), function (cb) {
+        cb.addEventListener("change", function () { P.setDone(todays[+cb.dataset.i], cb.checked); drawTasks(); });
+      });
+      var left = todays.length - done;
+      var pic = !left && todays.length ? PICS.earth : mails.some(function (m) { return m.date === c.date && /안전/.test(m.subject); }) ? PICS.safety : PICS.hello;
+      $("reboPic").src = "assets/brand/" + pic[0]; $("reboPic").alt = pic[1];
+      $("bubble").innerHTML = left
+        ? "<b>" + esc(u.name) + "님</b>, 오늘 처리할 업무가 <b>" + left + "건</b> 남았어요." + (c.day === 1 ? '<br><span class="ink2" style="font-size:.84rem">첫날이니까 사수님 인수인계 메일부터 읽어 봐요!</span>' : "")
+        : "<b>" + esc(u.name) + "님</b>, 오늘 할 일을 모두 마쳤어요. 오늘도 지구를 지켰어요!";
+    }
+    drawTasks();
 
-  /* ---------- 공정 흐름도 ---------- */
-  (function () {
-    var svg = $("flowSvg");
-    var steps = [["스크랩 입고·야드","계근·검수, 등급별 야적"],["배합·장입","등급별 장입량 결정"],["전기로 용해","아크 용해, 산소 취입"],
-                 ["LF 정련","탈산·탈황, 성분·온도"],["연속주조","빌릿 응고·절단"],["압연","가열 후 봉강 압연"],["철근 출하","SD400~600"]];
-    var w = 134, gap = 20, x0 = 8, y = 54, h = 74;
-    svgEl("defs", {}, svg).innerHTML = '<marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--muted)"/></marker>';
-    steps.forEach(function (s, i) {
-      var x = x0 + i * (w + gap), ai = i === 1;
-      svgEl("rect", {x:x, y:y, width:w, height:h, rx:6, style:"fill:" + (ai ? "var(--accent-soft)" : "var(--surface)") + ";stroke:" + (ai ? "var(--accent)" : "var(--line)") + ";stroke-width:" + (ai ? 2 : 1)}, svg);
-      svgEl("text", {x:x + w/2, y:y + 30, "text-anchor":"middle", "font-size":14, "font-weight":600, style:"fill:var(--ink)", text:s[0]}, svg);
-      svgEl("text", {x:x + w/2, y:y + 52, "text-anchor":"middle", "font-size":11.5, style:"fill:var(--ink-2)", text:s[1]}, svg);
-      if (i < steps.length - 1) svgEl("line", {x1:x + w + 2, y1:y + h/2, x2:x + w + gap - 2, y2:y + h/2, style:"stroke:var(--muted);stroke-width:1.5", "marker-end":"url(#ar)"}, svg);
-    });
-    var ax = x0 + (w + gap) + w/2;
-    svgEl("text", {x:ax, y:26, "text-anchor":"middle", "font-size":13, "font-weight":700, style:"fill:var(--accent)", text:"AI 에이전트가 개입하는 지점"}, svg);
-    svgEl("line", {x1:ax, y1:32, x2:ax, y2:y - 4, style:"stroke:var(--accent);stroke-width:1.5", "marker-end":"url(#ar)"}, svg);
-    svgEl("text", {x:x0 + 2*(w+gap) + w/2, y:y + h + 30, "text-anchor":"middle", "font-size":11.5, style:"fill:var(--muted)", text:"배가스 → 집진(아연 회수) · 슬래그 → 골재"}, svg);
-    svgEl("text", {x:x0 + 3*(w+gap) + w/2, y:y + h + 50, "text-anchor":"middle", "font-size":11.5, style:"fill:var(--muted)", text:"Cu·Sn은 여기서도 제거되지 않음"}, svg);
-  })();
-
-  /* ---------- 에이전트 루프 도식 ---------- */
-  (function () {
-    var svg = $("loopSvg");
-    svgEl("defs", {}, svg).innerHTML = '<marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--muted)"/></marker>';
-    var steps = [["1 load_context","당일 계획·재고·시세","조회"],["2 parse_inspection_notes","검수 메모 → 위험 로트","LLM"],["3 estimate_composition","이력 500 heat 회귀","회귀 분석"],
-                 ["4 optimize_blend","원가 최소 배합","선형계획법"],["5 simulate_heat","모의 조업 1,000회","몬테카를로"],["6 write_charge_sheet","지시서·근거 작성","LLM"]];
-    var w = 160, gap = 14, y = 30, h = 70;
-    steps.forEach(function (s, i) {
-      var x = 4 + i * (w + gap), llm = s[2] === "LLM";
-      svgEl("rect", {x:x, y:y, width:w, height:h, rx:6, style:"fill:var(--surface);stroke:" + (llm ? "var(--accent)" : "var(--line)") + ";stroke-width:" + (llm ? 1.5 : 1)}, svg);
-      svgEl("text", {x:x + 10, y:y + 22, "font-size":11.5, "font-weight":600, "font-family":"IBM Plex Mono, monospace", style:"fill:var(--ink)", text:s[0]}, svg);
-      svgEl("text", {x:x + 10, y:y + 42, "font-size":12, style:"fill:var(--ink-2)", text:s[1]}, svg);
-      svgEl("text", {x:x + 10, y:y + 60, "font-size":11, style:"fill:" + (llm ? "var(--accent)" : "var(--muted)"), text:s[2]}, svg);
-      if (i < steps.length - 1) svgEl("line", {x1:x + w + 1, y1:y + h/2, x2:x + w + gap - 1, y2:y + h/2, style:"stroke:var(--muted);stroke-width:1.5", "marker-end":"url(#ar2)"}, svg);
-    });
-    var x4 = 4 + 3*(w+gap) + w/2, x5 = 4 + 4*(w+gap) + w/2;
-    svgEl("path", {d:"M" + x5 + "," + (y+h) + " V" + (y+h+34) + " H" + x4 + " V" + (y+h+4), style:"fill:none;stroke:var(--crit);stroke-width:1.5;stroke-dasharray:4 3", "marker-end":"url(#ar2)"}, svg);
-    svgEl("text", {x:(x4+x5)/2, y:y + h + 52, "text-anchor":"middle", "font-size":12, style:"fill:var(--ink-2)", text:"이탈 확률 > 2% → 안전여유를 키워 다시 최적화 (최대 6회)"}, svg);
-    svgEl("text", {x:4, y:16, "font-size":12, style:"fill:var(--muted)", text:"오케스트레이터(Claude)가 도구를 고르고, 숫자는 도구가 계산"}, svg);
-  })();
-
-  /* ---------- 데모 ---------- */
-  var dates = Object.keys(D.sheets).sort();
-  var sel = $("dateSel"), current = null, curHeat = 0;
-  dates.forEach(function (d) {
-    var o = document.createElement("option"); o.value = d;
-    o.textContent = d + (anomaly.indexOf(d) >= 0 ? "  ● 이상 로트" : decoy.indexOf(d) >= 0 ? "  ○ 헷갈리는 메모" : "");
-    sel.appendChild(o);
-  });
-  var quick = $("quick");
-  anomaly.concat(decoy).sort().forEach(function (d) {
-    var b = document.createElement("button"); b.type = "button"; b.className = "chip"; b.dataset.date = d;
-    b.innerHTML = '<span class="dot' + (decoy.indexOf(d) >= 0 ? " decoy" : "") + '"></span>' + d.slice(5).replace("-", "/");
-    b.setAttribute("aria-label", d + (decoy.indexOf(d) >= 0 ? " 헷갈리는 메모가 있는 날" : " 이상 로트가 있는 날"));
-    b.addEventListener("click", function () { sel.value = d; render(d); });
-    quick.appendChild(b);
-  });
-  sel.addEventListener("change", function () { render(sel.value); });
-
-  $("gradeLegend").innerHTML = GRADES.map(function (g) { return '<span><i style="background:' + css(GCOL[g]) + '"></i>' + GNAME[g] + ' <span class="mono" style="color:var(--muted)">' + g + '</span></span>'; }).join("");
-
-  function riskPill(r) {
-    var t = {high:"제외", medium:"제한", none:"영향 없음"}[r] || r;
-    return '<span class="pill ' + r + '">' + (r === "high" ? "▲ " : r === "medium" ? "△ " : "") + t + '</span>';
-  }
-
-  function render(d) {
-    current = D.sheets[d]; curHeat = 0;
-    try { localStorage.setItem("reborn-date", d); } catch (e) {}
-    Array.prototype.forEach.call(quick.children, function (b) { b.setAttribute("aria-pressed", b.dataset.date === d ? "true" : "false"); });
-    var f = current.summary;
-    var day = D.by_day.filter(function (r) { return r.date === d; });
-    var dv = {}; day.forEach(function (r) { dv[r.version] = r; });
-    var maxP = Math.max.apply(null, current.heats.map(function (h) { return h.p_fail_pct; }));
+    // 조업 요약
+    var fl = P.flagged(S);
+    var maxP = Math.max.apply(null, S.heats.map(function (h) { return h.p_fail_pct; }));
+    var mk = P.marketRow(c.date);
+    var short = P.GRADES.filter(function (g) { return mk[g][1] < P.SHORT_T; });
+    $("opsLink").href = "ops.html?date=" + c.date;
     $("tiles").innerHTML = [
-      ["톤당 배합 원가", won(f.cost_per_t) + "원", "숙련자 배합 " + won(f.expert_cost_per_t) + "원"],
-      ["톤당 절감", won(f.saving_per_t) + "원", "하루 약 " + (f.saving_per_t * current.heats.reduce(function (a, h) { return a + h.target_tap_t; }, 0) / 1e6).toFixed(1) + "백만 원"],
-      ["최적화-시뮬레이션 반복", f.iterations + "회", "목표: heat별 이탈 2% 이하"],
-      ["에이전트 예측 최대 이탈", maxP.toFixed(1) + "%", "에이전트가 추정한 분포 기준"],
-      ["정답 기준 이탈률", current.gt_fail_rate_pct.toFixed(2) + "%", "v2였다면 " + (dv.v2.fail_rate * 100).toFixed(2) + "%"]
-    ].map(function (t) { return '<div class="tile"><span class="k">' + t[0] + '</span><span class="v">' + t[1] + '</span><span class="s">' + t[2] + '</span></div>'; }).join("");
+      ["톤당 배합 원가", P.won(f.cost_per_t) + "원", "숙련자 배합 " + P.won(f.expert_cost_per_t) + "원"],
+      ["톤당 절감", P.won(f.saving_per_t) + "원", "하루 약 " + (f.saving_per_t * P.tapTotal(S) / 1e6).toFixed(1) + "백만 원"],
+      ["예측 최대 이탈 확률", maxP.toFixed(1) + "%", "목표 heat별 2% 이하"],
+      ["위험 로트", fl.length + "건", fl.length ? fl.map(function (x) { return P.GNAME[x.grade_id]; }).join(", ") + " 조치" : "검수 메모 이상 없음"],
+      ["재고 부족 등급", short.length + "개", short.length ? short.map(function (g) { return P.GNAME[g] + " " + mk[g][1] + "t"; }).join(", ") : P.SHORT_T + "t 미만 없음"]
+    ].map(function (t) { return '<div class="tile"><span class="k">' + t[0] + '</span><span class="v">' + t[1] + '</span><span class="s">' + esc(t[2]) + "</span></div>"; }).join("");
 
-    var flagBy = {}; current.flags.forEach(function (x) { flagBy[x.lot_id] = x; });
-    $("notes").innerHTML = current.notes.length ? current.notes.map(function (n) {
-      var fl = flagBy[n.lot_id] || {risk:"none", reason:""};
-      return '<li><div style="display:flex;justify-content:space-between;gap:8px;align-items:start"><span class="t">' + esc(n.note_text) + '</span>' + riskPill(fl.risk) + '</div>' +
-             '<span class="m mono">' + esc(n.lot_id) + ' · ' + GNAME[n.grade_id] + '</span>' +
-             (fl.risk !== "none" ? '<span class="m">' + esc(fl.reason) + '</span>' : '') + '</li>';
-    }).join("") : '<li><span class="t">검수 메모 없음</span></li>';
-    $("noteMethod").textContent = D.meta.use_llm ? "판정: Claude (LLM)" : "판정: 키워드 규칙 (이 결과는 API 키 없이 실행한 것입니다. 문맥을 읽지 못해 '제거 완료' 같은 메모에도 속습니다.)";
-    $("log").innerHTML = current.log.map(function (l) { return "<li>" + esc(l) + "</li>"; }).join("");
-    $("daySummary").textContent = current.rationale.day_summary;
+    // 받은 메일 미리보기
+    $("mails").innerHTML = mails.slice(0, 6).map(function (m) {
+      return '<li class="' + (P.isRead(m) ? "" : "unread") + '"><a href="mail.html?id=' + encodeURIComponent(m.id) + '">' + P.tagPill(m.tag) +
+        '<span class="s">' + esc(m.subject) + '</span><span class="t">' + P.md(m.date) + " " + esc(m.time) + "</span></a></li>";
+    }).join("") || '<li class="empty">받은 메일이 없습니다.</li>';
 
-    var tb = $("heatTable").querySelector("tbody");
-    tb.innerHTML = "";
-    current.heats.forEach(function (h, i) {
-      var tr = document.createElement("tr"); tr.tabIndex = 0;
-      tr.setAttribute("aria-selected", i === 0 ? "true" : "false");
-      var bar = '<div class="bar" aria-hidden="true">' + h.charges.map(function (c) { return '<i style="width:' + c.pct + '%;background:' + css(GCOL[c.grade_id]) + '" data-g="' + c.grade_id + '" data-t="' + c.t + '" data-p="' + c.pct + '"></i>'; }).join("") + '</div>';
-      var risk = h.p_fail_pct > 2 ? '<span class="pill high">' + h.p_fail_pct.toFixed(1) + '%</span>' : '<span class="num">' + h.p_fail_pct.toFixed(1) + '%</span>';
-      tr.innerHTML = '<td class="mono">' + h.heat_id + '</td><td>' + h.steel_grade + '</td><td>' + bar + '</td><td class="r">' + h.charge_t.toFixed(1) +
-        '</td><td class="r">' + h.pred_cu_pct.toFixed(3) + ' <span style="color:var(--muted)">/ ' + h.cu_max_pct.toFixed(2) + '</span></td><td class="r">' + h.pred_sn_pct.toFixed(4) +
-        ' <span style="color:var(--muted)">/ ' + h.sn_max_pct.toFixed(3) + '</span></td><td class="r">' + risk + '</td><td class="r">' + won(h.cost_per_t) + '</td>';
-      tr.addEventListener("click", function () { pick(i); });
-      tr.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pick(i); } });
-      Array.prototype.forEach.call(tr.querySelectorAll(".bar i"), function (seg) {
-        hover(seg, GNAME[seg.dataset.g] + " " + seg.dataset.t + "t (" + seg.dataset.p + "%)");
-      });
-      tb.appendChild(tr);
-    });
-    pick(0);
+    // 공지 (기준일까지)
+    var ns = P.NOTICES.filter(function (n) { return n.date <= c.date; }).slice().reverse().slice(0, 5);
+    $("notices").innerHTML = ns.map(function (n) {
+      return '<li><a href="company.html#' + n.key + '"><span class="pill mute">공지</span><span class="s">' + esc(n.subject) + '</span><span class="t">' + P.md(n.date) + "</span></a></li>";
+    }).join("") || '<li class="empty">공지가 없습니다.</li>';
   }
-
-  function pick(i) {
-    curHeat = i;
-    Array.prototype.forEach.call($("heatTable").querySelectorAll("tbody tr"), function (tr, k) { tr.setAttribute("aria-selected", k === i ? "true" : "false"); });
-    var h = current.heats[i];
-    function meter(label, v, lim, d) {
-      var max = lim * 1.25, w = Math.min(v / max, 1) * 100, l = lim / max * 100;
-      return '<div class="meter"><span>' + label + ' 예상 <b class="num">' + v.toFixed(d) + '%</b> · 상한 ' + lim.toFixed(d) + '% · 여유 ' + (lim - v).toFixed(d) + '%p</span>' +
-             '<div class="track"><div class="fill" style="width:' + w + '%"></div><div class="lim" style="left:calc(' + l + '% - 1px)"></div></div></div>';
-    }
-    $("detail").innerHTML = '<div style="display:flex;flex-wrap:wrap;gap:8px 16px;align-items:baseline"><h3>배합 지시서 · ' + current.date + ' · ' + h.heat_id + '</h3>' +
-      '<span style="color:var(--ink-2)">' + h.steel_grade + ' · 목표 출강 ' + h.target_tap_t + 't · 장입 ' + h.charge_t.toFixed(1) + 't · 용적 ' + h.volume_m3.toFixed(1) + ' / 180 m³</span></div>' +
-      '<div class="charges">' + h.charges.map(function (c) { return '<div><span><i style="display:inline-block;width:9px;height:9px;border-radius:2px;background:' + css(GCOL[c.grade_id]) + ';margin-right:6px"></i>' + c.name_kr + '</span><span class="num">' + c.t.toFixed(1) + 't · ' + c.pct.toFixed(1) + '%</span></div>'; }).join("") + '</div>' +
-      '<div class="cols" style="gap:12px">' + meter("Cu", h.pred_cu_pct, h.cu_max_pct, 3) + meter("Sn", h.pred_sn_pct, h.sn_max_pct, 4) + '</div>' +
-      '<p style="font-size:.9rem"><b>규격 이탈 확률</b> ' + h.p_fail_pct.toFixed(1) + '% (모의 조업 1,000회) · <b>톤당 원가</b> ' + won(h.cost_per_t) + '원</p>' +
-      '<p style="font-size:.9rem;color:var(--ink-2)"><b style="color:var(--ink)">판단 근거</b> ' + esc(h.rationale) + '</p>';
-  }
-
-  var start = dates[0];
-  try { var saved = localStorage.getItem("reborn-date"); if (saved && D.sheets[saved]) start = saved; } catch (e) {}
-  if (anomaly.indexOf(start) < 0 && start === dates[0] && anomaly.length) start = anomaly[0];
-  sel.value = start; render(start);
-
-  /* ---------- 검증 결과 표 ---------- */
-  $("sumTable").querySelector("tbody").innerHTML = VERS.map(function (v) {
-    var r = S[v];
-    return '<tr><td><i style="display:inline-block;width:10px;height:10px;border-radius:2px;background:' + css(VCOL[v]) + ';margin-right:6px"></i><b>' + VNAME[v] + '</b></td><td style="white-space:normal;min-width:180px;color:var(--ink-2)">' + VDESC[v] + '</td>' +
-      '<td class="r">' + won(r.cost_per_t) + '</td><td class="r">' + won(r.saving_per_t_vs_baseline) + '</td><td class="r">' + pct(r.fail_rate, 2) + '</td><td class="r">' + pct(r.fail_rate_anomaly_days, 2) +
-      '</td><td class="r">' + r.heats_over_target_per_day.toFixed(1) + '</td><td class="r">' + r.iterations.toFixed(1) + '</td><td class="r">' + r.seconds_per_day.toFixed(2) + '초</td></tr>';
-  }).join("");
-  $("verLegend").innerHTML = VERS.map(function (v) { return '<span><i style="background:' + css(VCOL[v]) + '"></i>' + VNAME[v] + '</span>'; }).join("");
-
-  /* ---------- 차트 공통 ---------- */
-  function axisY(svg, x0, x1, y0, y1, lo, hi, ticks, fmt) {
-    for (var i = 0; i <= ticks; i++) {
-      var v = lo + (hi - lo) * i / ticks, y = y0 - (y0 - y1) * i / ticks;
-      svgEl("line", {x1:x0, x2:x1, y1:y, y2:y, style:"stroke:var(" + (i === 0 ? "--axis" : "--grid") + ");stroke-width:1"}, svg);
-      svgEl("text", {x:x0 - 6, y:y + 4, "text-anchor":"end", "font-size":11, style:"fill:var(--muted)", text:fmt(v)}, svg);
-    }
-  }
-  function barTop(x, y, w, h, r) {   /* 위쪽 모서리만 둥근 막대 */
-    r = Math.min(r, h, w / 2);
-    return "M" + x + "," + (y + h) + " V" + (y + r) + " Q" + x + "," + y + " " + (x + r) + "," + y + " H" + (x + w - r) + " Q" + (x + w) + "," + y + " " + (x + w) + "," + (y + r) + " V" + (y + h) + " Z";
-  }
-
-  /* 원가 막대 */
-  (function () {
-    var svg = $("cCost"), x0 = 64, x1 = 410, y0 = 200, y1 = 24;
-    var lo = 390000, hi = 420000;
-    axisY(svg, x0, x1, y0, y1, lo, hi, 3, function (v) { return (v / 1000).toFixed(0) + "천"; });
-    var bw = 46, step = (x1 - x0) / VERS.length;
-    VERS.forEach(function (v, i) {
-      var val = S[v].cost_per_t, x = x0 + step * i + (step - bw) / 2;
-      var y = y0 - (val - lo) / (hi - lo) * (y0 - y1);
-      var p = svgEl("path", {d:barTop(x, y, bw, y0 - y, 4), style:"fill:" + css(VCOL[v])}, svg);
-      var hit = svgEl("rect", {x:x - 8, y:y1, width:bw + 16, height:y0 - y1, style:"fill:transparent"}, svg);
-      hover(hit, "<b>" + VNAME[v] + "</b><br>" + won(val) + "원/t<br>절감 " + won(S[v].saving_per_t_vs_baseline) + "원/t");
-      svgEl("text", {x:x + bw/2, y:y - 6, "text-anchor":"middle", "font-size":11, style:"fill:var(--ink)", text:(val / 1000).toFixed(1) + "천"}, svg);
-      svgEl("text", {x:x + bw/2, y:y0 + 16, "text-anchor":"middle", "font-size":11, style:"fill:var(--ink-2)", text:VNAME[v].split(" ")[0]}, svg);
-    });
-    svgEl("text", {x:x0, y:12, "font-size":10.5, style:"fill:var(--muted)", text:"세로축은 39만 원에서 시작"}, svg);
-  })();
-
-  /* 이탈률 막대 (전체 / 이상 로트 날) */
-  (function () {
-    var svg = $("cFail"), x0 = 44, x1 = 410, y0 = 200, y1 = 20, hi = 0.45;
-    axisY(svg, x0, x1, y0, y1, 0, hi, 3, function (v) { return Math.round(v * 100) + "%"; });
-    var step = (x1 - x0) / VERS.length, bw = 30;
-    VERS.forEach(function (v, i) {
-      [["fail_rate", 1, "전체 39일"], ["fail_rate_anomaly_days", .45, "이상 로트 6일"]].forEach(function (k, j) {
-        var val = S[v][k[0]], x = x0 + step * i + step / 2 - bw - 1 + j * (bw + 2);
-        var h = Math.max(val / hi * (y0 - y1), 0), y = y0 - h;
-        if (h > 0.5) svgEl("path", {d:barTop(x, y, bw, h, 4), style:"fill:" + css(VCOL[v]) + ";fill-opacity:" + k[1]}, svg);
-        var hit = svgEl("rect", {x:x - 2, y:y1, width:bw + 4, height:y0 - y1, style:"fill:transparent"}, svg);
-        hover(hit, "<b>" + VNAME[v] + "</b> · " + k[2] + "<br>heat당 이탈 확률 " + pct(val, 2));
-        svgEl("text", {x:x + bw/2, y:y - 5, "text-anchor":"middle", "font-size":10, style:"fill:var(--ink)", text:(val * 100).toFixed(1)}, svg);
-      });
-      svgEl("text", {x:x0 + step * i + step / 2, y:y0 + 16, "text-anchor":"middle", "font-size":11, style:"fill:var(--ink-2)", text:VNAME[v].split(" ")[0]}, svg);
-    });
-    var ty = y0 - 0.02 / hi * (y0 - y1);
-    svgEl("line", {x1:x0, x2:x1, y1:ty, y2:ty, style:"stroke:var(--ink-2);stroke-width:1;stroke-dasharray:4 3"}, svg);
-    svgEl("text", {x:x1, y:ty - 4, "text-anchor":"end", "font-size":10.5, style:"fill:var(--ink-2)", text:"목표 2%"}, svg);
-  })();
-
-  /* 날짜별 이탈률 선 */
-  (function () {
-    var svg = $("cDay"), x0 = 40, x1 = 410, y0 = 200, y1 = 24, hi = 0.25;
-    var n = dates.length, X = function (i) { return x0 + (x1 - x0) * i / (n - 1); };
-    var Y = function (v) { return y0 - Math.min(v, hi) / hi * (y0 - y1); };
-    dates.forEach(function (d, i) { if (anomaly.indexOf(d) >= 0) svgEl("rect", {x:X(i) - 4, y:y1, width:8, height:y0 - y1, style:"fill:var(--grid)"}, svg); });
-    axisY(svg, x0, x1, y0, y1, 0, hi, 5, function (v) { return Math.round(v * 100) + "%"; });
-    ["baseline","v2","v3"].forEach(function (v) {
-      var pts = dates.map(function (d, i) { var r = D.by_day.filter(function (q) { return q.date === d && q.version === v; })[0]; return [X(i), Y(r.fail_rate)]; });
-      svgEl("polyline", {points:pts.map(function (p) { return p.join(","); }).join(" "), style:"fill:none;stroke:" + css(VCOL[v]) + ";stroke-width:2;stroke-linejoin:round"}, svg);
-      var last = pts[pts.length - 1];
-      svgEl("circle", {cx:last[0], cy:last[1], r:3.5, style:"fill:" + css(VCOL[v]) + ";stroke:var(--surface);stroke-width:2"}, svg);
-    });
-    var ty = Y(0.02);
-    svgEl("line", {x1:x0, x2:x1, y1:ty, y2:ty, style:"stroke:var(--ink-2);stroke-width:1;stroke-dasharray:4 3"}, svg);
-    [0, Math.floor(n / 2), n - 1].forEach(function (i) { svgEl("text", {x:X(i), y:y0 + 16, "text-anchor":i === 0 ? "start" : i === n - 1 ? "end" : "middle", "font-size":11, style:"fill:var(--muted)", text:dates[i].slice(5).replace("-", "/")}, svg); });
-    var cross = svgEl("line", {x1:0, x2:0, y1:y1, y2:y0, style:"stroke:var(--ink-2);stroke-width:1;opacity:0"}, svg);
-    var hit = svgEl("rect", {x:x0, y:y1, width:x1 - x0, height:y0 - y1, style:"fill:transparent"}, svg);
-    hit.addEventListener("mousemove", function (e) {
-      var b = svg.getBoundingClientRect(), sx = (e.clientX - b.left) / b.width * 420;
-      var i = Math.max(0, Math.min(n - 1, Math.round((sx - x0) / (x1 - x0) * (n - 1))));
-      cross.setAttribute("x1", X(i)); cross.setAttribute("x2", X(i)); cross.style.opacity = 1;
-      var rows = ["baseline","v2","v3"].map(function (v) { var r = D.by_day.filter(function (q) { return q.date === dates[i] && q.version === v; })[0]; return VNAME[v] + " " + pct(r.fail_rate, 2); });
-      showTip(e, "<b>" + dates[i] + (anomaly.indexOf(dates[i]) >= 0 ? " · 이상 로트" : "") + "</b><br>" + rows.join("<br>"));
-    });
-    hit.addEventListener("mouseleave", function () { cross.style.opacity = 0; hideTip(); });
-  })();
-
-  /* 성분 추정 점 그래프 */
-  (function () {
-    var svg = $("cEst"), x0 = 44, x1 = 410, y0 = 200, y1 = 30, hi = 0.5;
-    axisY(svg, x0, x1, y0, y1, 0, hi, 5, function (v) { return v.toFixed(1); });
-    var step = (x1 - x0) / GRADES.length;
-    D.estimate.forEach(function (r, i) {
-      var cx = x0 + step * i + step / 2, Y = function (v) { return y0 - v / hi * (y0 - y1); };
-      svgEl("line", {x1:cx - 10, x2:cx + 10, y1:Y(r.true_cu), y2:Y(r.true_cu), style:"stroke:var(--ink);stroke-width:2.5"}, svg);
-      svgEl("circle", {cx:cx - 6, cy:Y(r.nominal_cu), r:4.5, style:"fill:var(--muted);stroke:var(--surface);stroke-width:2"}, svg);
-      svgEl("circle", {cx:cx + 6, cy:Y(r.est_cu), r:4.5, style:"fill:var(--s3);stroke:var(--surface);stroke-width:2"}, svg);
-      var hit = svgEl("rect", {x:cx - step/2, y:y1, width:step, height:y0 - y1, style:"fill:transparent"}, svg);
-      hover(hit, "<b>" + GNAME[r.grade_id] + "</b> Cu<br>공칭 " + r.nominal_cu.toFixed(3) + "%<br>추정 " + r.est_cu.toFixed(3) + "%<br>숨은 정답 " + r.true_cu.toFixed(3) + "%");
-      svgEl("text", {x:cx, y:y0 + 16, "text-anchor":"middle", "font-size":10.5, style:"fill:var(--ink-2)", text:GNAME[r.grade_id]}, svg);
-    });
-    var lg = [["circle","var(--muted)","공칭값"],["circle","var(--s3)","이력 기반 추정"],["line","var(--ink)","숨은 정답"]];
-    lg.forEach(function (l, i) {
-      var x = x0 + i * 110;
-      if (l[0] === "circle") svgEl("circle", {cx:x + 5, cy:12, r:4.5, style:"fill:" + l[1]}, svg);
-      else svgEl("line", {x1:x, x2:x + 12, y1:12, y2:12, style:"stroke:" + l[1] + ";stroke-width:2.5"}, svg);
-      svgEl("text", {x:x + 16, y:16, "font-size":11, style:"fill:var(--ink-2)", text:l[2]}, svg);
-    });
-    var e = D.meta.estimation_error;
-    $("estCap").textContent = "Cu %. 8개 등급 평균 절대오차: 공칭값 " + e.mae_cu_nominal.toFixed(4) + "%p → 추정값 " + e.mae_cu_est.toFixed(4) + "%p. Sn: " + e.mae_sn_nominal.toFixed(4) + " → " + e.mae_sn_est.toFixed(4) + "%p.";
-  })();
-
-  /* 한계 */
-  var na = D.meta.note_accuracy;
-  var breakEven = S.v3.saving_per_t_vs_baseline / S.v3.fail_rate;      // 이탈 1톤당 손실이 이보다 크면 숙련자 배합이 유리
-  $("limits").innerHTML = [
-    "이탈 비용: 숙련자 배합은 이탈률 0%이고 v3는 " + pct(S.v3.fail_rate, 2) + "입니다. 이탈 heat 1톤당 손실(강등·재처리)이 약 " + won(Math.round(breakEven / 10000)) + "만 원을 넘지 않으면 v3가 유리합니다. 예를 들어 손실을 톤당 5만 원으로 가정하면 순절감은 톤당 약 " + won(S.v3.saving_per_t_vs_baseline - S.v3.fail_rate * 50000) + "원입니다 (가상 데이터 기준 추정치).",
-    "v3도 하루 24 heat 중 평균 " + S.v3.heats_over_target_per_day.toFixed(1) + "개 heat는 정답 기준 이탈 확률이 2%를 넘습니다. 평균은 " + pct(S.v3.fail_rate, 2) + "로 목표 안이지만, 일부 등급의 성분 추정이 정답보다 낮게 나온 탓입니다.",
-    "검수 메모 판정(" + (na.method === "llm" ? "Claude" : "키워드 규칙") + "): 이상 로트 " + (na.true_pos + na.false_neg) + "건 중 " + na.true_pos + "건을 잡았고, 정상 로트 " + na.false_pos + "건을 잘못 제외했습니다.",
-    "배합 설계 시간은 계산 시간만 쟀습니다. 사람이 엑셀로 짜는 시간은 측정하지 않았습니다.",
-    "최적화 단계에서 보수적 평균(추정 평균 + 표준오차)도 시험했지만 이탈률 차이가 노이즈 수준이라 쓰지 않았습니다."
-  ].map(function (t) { return "<li>" + esc(t) + "</li>"; }).join("");
+  P.start(render);
 })();
 </script>
 </body>

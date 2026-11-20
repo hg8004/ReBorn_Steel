@@ -1,7 +1,7 @@
 """
 사내 홈페이지용 회사 데이터 내보내기  (실행: python src/export_intranet.py)
 
-docs/intranet/data/company.js 를 만든다.
+docs/data/company.js 를 만든다 (사내포털 = docs/ 폴더 전체, GitHub Pages로 게시).
   - 스크랩 등급 카탈로그, 강종 규격, 생산 계획
   - 60일 시세·재고 (날짜 × 등급)
   - 검수 메모 전체
@@ -50,7 +50,7 @@ def build():
 
 
 def export_intranet():
-    out = WEB_DIR / "intranet" / "data"
+    out = WEB_DIR / "data"
     out.mkdir(parents=True, exist_ok=True)
     js = "window.REBORN_COMPANY = " + json.dumps(build(), ensure_ascii=False, default=float) + ";\n"
     (out / "company.js").write_text(js, encoding="utf-8")

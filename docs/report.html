@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AI 배합 도입 보고서</title>
+<meta name="description" content="리본스틸 사내포털: AI 스크랩 배합 에이전트 도입 보고서 (문제 정의, 기존 한계, AI 활용, 검증·개선, 결과·효과). 가상 데이터.">
+<link rel="icon" href="assets/rebo-face.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="assets/portal.css">
+<style>
+.toc { display: flex; flex-wrap: wrap; gap: 6px; }
+.toc a { font-size: .84rem; text-decoration: none; border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 3px 12px; color: var(--ink-2); }
+.toc a:hover { border-color: var(--accent); color: var(--accent); }
+.sec { display: grid; gap: 14px; scroll-margin-top: 70px; }
+.sec > h2 { font-size: 1.2rem; display: flex; align-items: center; gap: 8px; color: var(--accent); }
+.sec > h2 .n { display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); font-size: .85rem; }
+.sec .lead { color: var(--ink-2); max-width: 74ch; }
+.card ul { margin: 0; padding-left: 18px; color: var(--ink-2); font-size: .92rem; }
+.card li + li { margin-top: 4px; }
+.flow { min-width: 760px; width: 100%; height: auto; display: block; }
+.charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 380px), 1fr)); gap: 16px; }
+.charts > * { min-width: 0; }
+.cap { font-size: .8rem; color: var(--muted); }
+.why { background: var(--accent); color: var(--accent-ink); border-radius: var(--r); padding: 14px 16px; font-size: .92rem; }
+.netbox td, .netbox th { font-size: .86rem; }
+.netbox tr.be td { font-weight: 700; color: var(--point-ink); }
+</style>
+</head>
+<body data-page="report">
+<header id="topbar"></header>
+<div class="shell">
+<nav class="side" id="side" aria-label="사내 메뉴"></nav>
+<main>
+  <div class="headpic">
+    <img src="assets/brand/rebo-build.jpg" alt="">
+    <div class="pagehead">
+      <div class="eyebrow">생산본부 제강팀 · 사내 보고 · 2026-10-30</div>
+      <h1>AI 스크랩 배합 에이전트 도입 보고서</h1>
+      <p>평가 기간 9/22~10/30(39일) 동안 숙련자 배합과 에이전트 v1~v3을 같은 생산 계획으로 비교한 결과입니다. 아래 수치는 모두 실제 실행 결과이며, 회사·설비·시세·성분은 가상 데이터입니다.</p>
+    </div>
+  </div>
+  <nav class="toc" aria-label="보고서 목차">
+    <a href="#s1">① 문제 정의</a><a href="#s2">② 기존 방식의 한계</a><a href="#s3">③ AI 활용 방법</a><a href="#s4">④ 검증과 개선</a><a href="#s5">⑤ 결과와 기대 효과</a>
+  </nav>
+  <div class="tiles" id="tiles"></div>
+
+  <section class="sec" id="s1" aria-labelledby="h1t">
+    <h2 id="h1t"><span class="n">1</span>문제 정의</h2>
+    <p class="lead">매일 24 heat마다 8개 등급의 철스크랩을 몇 톤씩 넣을지 정해야 합니다. 등급마다 가격과 성분이 다르고, 시세와 재고는 매일 바뀝니다.</p>
+    <div class="grid3">
+      <div class="card"><h3>원가와 품질의 맞교환</h3><ul><li>저급 스크랩은 싸지만 Cu·Sn이 많고 실수율이 낮습니다.</li><li>규격(Cu·Sn 상한)을 넘기면 강등이나 재처리를 해야 합니다.</li></ul></div>
+      <div class="card"><h3>성분은 배합에서 결정</h3><ul><li>Cu·Sn은 철보다 산화되기 어려워 전기로·LF 정련으로 빠지지 않습니다.</li><li>압연 중 표면 균열(적열취성)을 막으려면 장입 전에 배합으로 막아야 합니다.</li></ul></div>
+      <div class="card"><h3>불확실한 정보</h3><ul><li>실제 성분은 카탈로그 공칭값과 다르고 로트마다 흔들립니다.</li><li>"모터 혼입" 같은 위험 신호는 숫자가 아니라 검수 메모(글)로 들어옵니다.</li></ul></div>
+    </div>
+  </section>
+
+  <section class="sec" id="s2" aria-labelledby="h2t">
+    <h2 id="h2t"><span class="n">2</span>기존 방식의 한계</h2>
+    <div class="grid2">
+      <div class="card"><h3>숙련자 경험과 고정 배합표</h3><ul>
+        <li>고급 스크랩을 넉넉히 써서 규격은 지키지만 비쌉니다 (톤당 <b id="baseCost">-</b>원).</li>
+        <li>등급별 평균 성분(공칭값)만 쓰고 로트별 편차는 반영하지 못합니다.</li>
+        <li>검수 메모가 배합에 체계적으로 반영되지 않고, 사람마다 결과가 다릅니다.</li></ul></div>
+      <div class="card"><h3>최적화 솔버만 쓰는 경우 (v1)</h3><ul>
+        <li>공칭 성분을 믿고 상한까지 꽉 채우면 원가는 가장 낮지만, 이탈률이 <b id="v1Fail">-</b>까지 오릅니다.</li>
+        <li>실제 성분이 공칭값보다 조금씩 높기 때문입니다 (공칭값은 8개 등급 모두 실제보다 낮음).</li>
+        <li>입력 정리, 제약 수정, 결과 해석은 여전히 사람이 해야 합니다.</li></ul></div>
+    </div>
+  </section>
+
+  <section class="sec" id="s3" aria-labelledby="h3t">
+    <h2 id="h3t"><span class="n">3</span>AI 활용 방법</h2>
+    <p class="lead">숫자는 회귀·선형계획·몬테카를로 도구가 계산하고, AI 에이전트는 도구를 고르고, 비정형 텍스트를 읽고, 결과를 검증해 다시 계산할지 판단합니다.</p>
+    <div class="card scroll-x" role="img" aria-label="에이전트 실행 흐름: 조회, 검수 메모 분석, 성분 추정, 최적화, 시뮬레이션. 이탈 확률이 2%를 넘으면 안전여유를 키워 최적화로 되돌아가고, 통과하면 지시서를 작성한다.">
+      <svg class="flow" viewBox="0 0 1080 170" id="loopSvg"></svg>
+    </div>
+    <div class="grid3">
+      <div class="card"><h3>AI가 맡는 일</h3><ul>
+        <li>검수 메모(비정형 텍스트)를 읽고 배합 제약(제외·5% 제한)으로 바꿉니다.</li>
+        <li>모의 조업 결과를 보고 안전여유를 얼마나 키울지 정합니다.</li>
+        <li>결재자가 읽을 지시서와 판단 근거를 씁니다.</li></ul></div>
+      <div class="card"><h3>도구가 맡는 일 (숫자)</h3><ul>
+        <li>성분 추정: 과거 500 heat 이력 비음수 최소제곱(NNLS) + 이상치 제거</li>
+        <li>원가 최소 배합: 선형계획법, 하루 24 heat 동시 최적화</li>
+        <li>검증: 몬테카를로 모의 조업 1,000회, heat별 이탈 확률</li></ul></div>
+      <div class="card"><h3>사람이 맡는 일</h3><ul>
+        <li>판정 확인·수정, 가정해 보기, 결재 (<a href="agent.html">배합 에이전트 작업실</a>)</li>
+        <li>리보 AI(timelyGPT)에게 결과 설명 듣기</li>
+        <li>최종 결재는 제강팀장 → 생산본부장</li></ul></div>
+    </div>
+  </section>
+
+  <section class="sec" id="s4" aria-labelledby="h4t">
+    <h2 id="h4t"><span class="n">4</span>검증과 개선</h2>
+    <div class="card"><h3>검증 방법: 숨은 정답 채점</h3><ul>
+      <li>등급별 '실제' 성분 분포를 정해 두고 에이전트에게는 숨겼습니다. 에이전트 코드는 이 파일을 읽지 않습니다.</li>
+      <li>에이전트가 성분을 추정한 이력(9/1~9/21, 500 heat)과 평가 기간(9/22~10/30)은 겹치지 않습니다.</li>
+      <li>평가: 39일 × 24 heat = 936 heat. 이 중 이상 로트가 있던 날 6일(144 heat), 헷갈리는 메모가 있던 날 3일.</li>
+      <li>만들어진 배합을 숨은 정답 분포로 heat마다 모의 조업 2,000회 돌려 이탈 확률을 채점했습니다.</li></ul></div>
+    <div class="card scroll-x"><table id="sumTable"><thead><tr><th>방식</th><th>내용</th><th class="r">톤당 원가</th><th class="r">숙련자 대비</th><th class="r">이탈률 전체</th><th class="r">이상 로트 날</th><th class="r">2% 초과 heat/일</th><th class="r">반복</th><th class="r">계산 시간</th></tr></thead><tbody></tbody></table></div>
+    <div class="legend" id="verLegend"></div>
+    <div class="charts">
+      <div class="card chart"><h3>톤당 배합 원가</h3><svg id="cCost" viewBox="0 0 420 240" role="img" aria-label="방식별 톤당 배합 원가 막대그래프"></svg><p class="cap">39일 평균, 원/톤 출강. 세로축은 39만 원에서 시작.</p></div>
+      <div class="card chart"><h3>규격 이탈률</h3><svg id="cFail" viewBox="0 0 420 240" role="img" aria-label="방식별 규격 이탈률 막대그래프"></svg><p class="cap">heat당 이탈 확률의 평균. 진한 막대는 전체 39일, 옅은 막대는 이상 로트가 있던 6일. 점선은 목표 2%.</p></div>
+      <div class="card chart"><h3>날짜별 이탈률</h3><svg id="cDay" viewBox="0 0 420 240" role="img" aria-label="날짜별 이탈률 선그래프"></svg><p class="cap">회색 띠는 이상 로트가 있던 날. v1은 30% 안팎이라 이 축에서 뺐습니다.</p></div>
+      <div class="card chart"><h3>등급별 Cu: 공칭값, 추정값, 숨은 정답</h3><svg id="cEst" viewBox="0 0 420 240" role="img" aria-label="등급별 Cu 공칭값, 추정값, 정답 비교"></svg><p class="cap" id="estCap"></p></div>
+    </div>
+    <div class="card"><h3>개선 과정에서 확인한 것</h3><ol style="margin:0;padding-left:20px;color:var(--ink-2);font-size:.92rem;display:grid;gap:6px">
+      <li><b style="color:var(--ink)">v1 → v2</b> 이력 기반 성분 추정과 모의 조업 검증 루프를 넣자, 이상 로트가 없는 33일의 이탈률이 목표 근처(<span id="v2Normal">-</span>)로 내려왔습니다.</li>
+      <li><b style="color:var(--ink)">v2 → v3</b> v2는 이상 로트가 들어온 6일(144 heat) 동안 이탈률이 <span id="v2Anom">-</span>였습니다. 검수 메모로 위험 로트를 빼자 <span id="v3Anom">-</span>가 됐습니다.</li>
+      <li><b style="color:var(--ink)">안전여유 조정 규칙</b> 처음에는 한 번에 크게 올려서 2회차에 0.5%까지 떨어지는 과잉 보수 배합이 나왔습니다. 부족분만큼만 올리도록 바꿨습니다.</li>
+      <li><b style="color:var(--ink)">이력 데이터의 다양성</b> 과거 배합이 서로 비슷하면 회귀가 등급별 효과를 구분하지 못합니다(선반설 Cu 0.194로 추정, 정답 0.13). 배합 변동폭을 키우자 0.158로 줄었습니다.</li>
+      <li><b style="color:var(--ink)">보수적 평균 실험</b> '추정 평균 + k × 표준오차'(k = 0, 1, 1.5, 2)를 써 봤지만 이탈률 차이가 노이즈 수준이라 쓰지 않았습니다.</li></ol></div>
+  </section>
+
+  <section class="sec" id="s5" aria-labelledby="h5t">
+    <h2 id="h5t"><span class="n">5</span>결과와 기대 효과</h2>
+    <p class="why" id="headline"></p>
+    <div class="grid2">
+      <div class="card"><h3>이탈 비용을 뺀 순절감</h3>
+        <p class="ink2" style="font-size:.88rem">숙련자 배합은 이탈률 0%지만 비쌉니다. v3는 이탈률을 조금 받아들이는 대신 쌉니다. 이탈 heat 1톤당 손실(강등·재처리)을 L이라 하면 순절감은 <span class="mono" id="formula"></span>입니다.</p>
+        <div class="scroll-x"><table class="netbox"><thead><tr><th>이탈 1톤당 손실 L (가정)</th><th class="r">순절감(원/t)</th><th class="r">연간 (80만 t)</th></tr></thead><tbody id="net"></tbody></table></div>
+        <p class="cap">금액은 모두 가상 데이터 기준 추정치입니다. 손실 단가 L은 정해진 값이 없어 범위로 보였습니다.</p></div>
+      <div class="card"><h3>남은 한계와 다음 단계</h3><ul id="limits"></ul></div>
+    </div>
+  </section>
+
+  <p class="disclaimer">리본스틸㈜은 인공지능재료공학 수업 과제를 위해 만든 가상 기업입니다. 회사, 설비, 시세, 성분, 조업 이력은 모두 AI가 생성한 합성 데이터이며 실제 기업이나 공개 데이터와 관계가 없습니다.</p>
+</main>
+</div>
+
+<script src="data/results.js"></script>
+<script src="data/company.js"></script>
+<script src="assets/portal.js"></script>
+<script>
+(function () {
+  "use strict";
+  var P = window.Portal; if (!P || !P.D) return;
+  var D = P.D, $ = P.$, esc = P.esc, svgEl = P.svgEl, hover = P.hover, won = P.won;
+  var VERS = ["baseline", "v1", "v2", "v3"];
+  var VCOL = { baseline: "--s1", v1: "--s2", v2: "--s3", v3: "--s4" };
+  var VNAME = { baseline: "숙련자 규칙", v1: "v1 공칭성분", v2: "v2 추정+검증", v3: "v3 +검수메모" };
+  var VDESC = { baseline: "고정 배합표, 재고 부족 시 고급 스크랩으로 대체", v1: "공칭 성분, 안전여유 0, 검증 없음",
+                v2: "이력 기반 성분 추정 + 안전여유 + 모의 조업 루프", v3: "v2 + 검수 메모로 위험 로트 제외" };
+  var GNAME = P.GNAME, css = P.css;
+  var S = {}; D.summary.forEach(function (r) { S[r.version] = r; });
+  var pct = function (v, d) { return (v * 100).toFixed(d == null ? 1 : d) + "%"; };
+  var anomaly = D.meta.anomaly_dates, dates = Object.keys(D.sheets).sort();
+  var drawn = false;
+
+  function render() {
+    if (drawn) return; drawn = true;           // 보고서는 업무 기준일과 무관하다
+    var base = S.baseline, v3 = S.v3, save = v3.saving_per_t_vs_baseline;
+    $("tiles").innerHTML = [
+      ["숙련자 대비 톤당 절감 (v3)", won(save) + "원", (save / base.cost_per_t * 100).toFixed(1) + "% · 숙련자 " + won(base.cost_per_t) + "원"],
+      ["규격 이탈률 (v3, 정답 기준)", pct(v3.fail_rate, 2), "목표 heat별 2% · 숙련자 " + pct(base.fail_rate, 2)],
+      ["이상 로트가 있던 날 이탈률", pct(v3.fail_rate_anomaly_days, 1), "v2(메모 미반영) " + pct(S.v2.fail_rate_anomaly_days, 1)],
+      ["연간 절감 추정", Math.round(v3.annual_saving_krw_100m) + "억 원", "연 80만 t 가정, 이탈 비용 반영 전"],
+      ["배합 설계 계산 시간", v3.seconds_per_day.toFixed(2) + "초", "하루 24 heat, 반복 평균 " + v3.iterations.toFixed(1) + "회"]
+    ].map(function (t) { return '<div class="tile"><span class="k">' + t[0] + '</span><span class="v">' + t[1] + '</span><span class="s">' + esc(t[2]) + "</span></div>"; }).join("");
+    $("baseCost").textContent = won(base.cost_per_t);
+    $("v1Fail").textContent = pct(S.v1.fail_rate, 1);
+    $("v2Normal").textContent = pct(S.v2.fail_rate_normal_days, 2);
+    $("v2Anom").textContent = pct(S.v2.fail_rate_anomaly_days, 1);
+    $("v3Anom").textContent = pct(v3.fail_rate_anomaly_days, 1);
+
+    /* 에이전트 루프 도식 */
+    (function () {
+      var svg = $("loopSvg");
+      svgEl("defs", {}, svg).innerHTML = '<marker id="ar2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--muted)"/></marker>';
+      var steps = [["1 load_context", "당일 계획·재고·시세", "조회"], ["2 parse_inspection_notes", "검수 메모 → 위험 로트", "LLM"], ["3 estimate_composition", "이력 500 heat 회귀", "회귀 분석"],
+                   ["4 optimize_blend", "원가 최소 배합", "선형계획법"], ["5 simulate_heat", "모의 조업 1,000회", "몬테카를로"], ["6 write_charge_sheet", "지시서·근거 작성", "LLM"]];
+      var w = 160, gap = 14, y = 30, h = 70;
+      steps.forEach(function (s, i) {
+        var x = 4 + i * (w + gap), llm = s[2] === "LLM";
+        svgEl("rect", { x: x, y: y, width: w, height: h, rx: 6, style: "fill:var(--surface);stroke:" + (llm ? "var(--point)" : "var(--line)") + ";stroke-width:" + (llm ? 1.5 : 1) }, svg);
+        svgEl("text", { x: x + 10, y: y + 22, "font-size": 11.5, "font-weight": 600, "font-family": "IBM Plex Mono, monospace", style: "fill:var(--ink)", text: s[0] }, svg);
+        svgEl("text", { x: x + 10, y: y + 42, "font-size": 12, style: "fill:var(--ink-2)", text: s[1] }, svg);
+        svgEl("text", { x: x + 10, y: y + 60, "font-size": 11, style: "fill:" + (llm ? "var(--point-ink)" : "var(--muted)"), text: s[2] }, svg);
+        if (i < steps.length - 1) svgEl("line", { x1: x + w + 1, y1: y + h / 2, x2: x + w + gap - 1, y2: y + h / 2, style: "stroke:var(--muted);stroke-width:1.5", "marker-end": "url(#ar2)" }, svg);
+      });
+      var x4 = 4 + 3 * (w + gap) + w / 2, x5 = 4 + 4 * (w + gap) + w / 2;
+      svgEl("path", { d: "M" + x5 + "," + (y + h) + " V" + (y + h + 34) + " H" + x4 + " V" + (y + h + 4), style: "fill:none;stroke:var(--crit);stroke-width:1.5;stroke-dasharray:4 3", "marker-end": "url(#ar2)" }, svg);
+      svgEl("text", { x: (x4 + x5) / 2, y: y + h + 52, "text-anchor": "middle", "font-size": 12, style: "fill:var(--ink-2)", text: "이탈 확률 > 2% → 안전여유를 키워 다시 최적화 (최대 6회)" }, svg);
+      svgEl("text", { x: 4, y: 16, "font-size": 12, style: "fill:var(--muted)", text: "오케스트레이터(Claude)가 도구를 고르고, 숫자는 도구가 계산" }, svg);
+    })();
+
+    /* 결과 표 */
+    $("sumTable").querySelector("tbody").innerHTML = VERS.map(function (v) {
+      var r = S[v];
+      return '<tr><td><i style="display:inline-block;width:10px;height:10px;border-radius:2px;background:' + css(VCOL[v]) + ';margin-right:6px"></i><b>' + VNAME[v] + '</b></td><td class="wrap ink2">' + VDESC[v] + "</td>" +
+        '<td class="r">' + won(r.cost_per_t) + '</td><td class="r">' + (r.saving_per_t_vs_baseline ? "−" + won(r.saving_per_t_vs_baseline) + " (" + (r.saving_per_t_vs_baseline / S.baseline.cost_per_t * 100).toFixed(1) + "%)" : "0") +
+        '</td><td class="r">' + pct(r.fail_rate, 2) + '</td><td class="r">' + pct(r.fail_rate_anomaly_days, 2) + '</td><td class="r">' + r.heats_over_target_per_day.toFixed(1) +
+        '</td><td class="r">' + (v === "baseline" ? "-" : r.iterations.toFixed(1)) + '</td><td class="r">' + r.seconds_per_day.toFixed(2) + "초</td></tr>";
+    }).join("");
+    $("verLegend").innerHTML = VERS.map(function (v) { return '<span><i style="background:' + css(VCOL[v]) + '"></i>' + VNAME[v] + "</span>"; }).join("");
+
+    /* 차트 공통 */
+    function axisY(svg, x0, x1, y0, y1, lo, hi, ticks, fmt) {
+      for (var i = 0; i <= ticks; i++) {
+        var v = lo + (hi - lo) * i / ticks, yy = y0 - (y0 - y1) * i / ticks;
+        svgEl("line", { x1: x0, x2: x1, y1: yy, y2: yy, style: "stroke:var(" + (i === 0 ? "--axis" : "--grid") + ");stroke-width:1" }, svg);
+        svgEl("text", { x: x0 - 6, y: yy + 4, "text-anchor": "end", "font-size": 11, style: "fill:var(--muted)", text: fmt(v) }, svg);
+      }
+    }
+    function barTop(x, y, w, h, r) {
+      r = Math.min(r, h, w / 2);
+      return "M" + x + "," + (y + h) + " V" + (y + r) + " Q" + x + "," + y + " " + (x + r) + "," + y + " H" + (x + w - r) + " Q" + (x + w) + "," + y + " " + (x + w) + "," + (y + r) + " V" + (y + h) + " Z";
+    }
+
+    /* 원가 막대 */
+    (function () {
+      var svg = $("cCost"), x0 = 64, x1 = 410, y0 = 200, y1 = 24, lo = 390000, hi = 420000;
+      axisY(svg, x0, x1, y0, y1, lo, hi, 3, function (v) { return (v / 1000).toFixed(0) + "천"; });
+      var bw = 46, step = (x1 - x0) / VERS.length;
+      VERS.forEach(function (v, i) {
+        var val = S[v].cost_per_t, x = x0 + step * i + (step - bw) / 2, yy = y0 - (val - lo) / (hi - lo) * (y0 - y1);
+        svgEl("path", { d: barTop(x, yy, bw, y0 - yy, 4), style: "fill:" + css(VCOL[v]) }, svg);
+        var hit = svgEl("rect", { x: x - 8, y: y1, width: bw + 16, height: y0 - y1, style: "fill:transparent" }, svg);
+        hover(hit, "<b>" + VNAME[v] + "</b><br>" + won(val) + "원/t<br>절감 " + won(S[v].saving_per_t_vs_baseline) + "원/t");
+        svgEl("text", { x: x + bw / 2, y: yy - 6, "text-anchor": "middle", "font-size": 11, style: "fill:var(--ink)", text: (val / 1000).toFixed(1) + "천" }, svg);
+        svgEl("text", { x: x + bw / 2, y: y0 + 16, "text-anchor": "middle", "font-size": 11, style: "fill:var(--ink-2)", text: VNAME[v].split(" ")[0] }, svg);
+      });
+    })();
+
+    /* 이탈률 막대 */
+    (function () {
+      var svg = $("cFail"), x0 = 44, x1 = 410, y0 = 200, y1 = 20, hi = 0.45;
+      axisY(svg, x0, x1, y0, y1, 0, hi, 3, function (v) { return Math.round(v * 100) + "%"; });
+      var step = (x1 - x0) / VERS.length, bw = 30;
+      VERS.forEach(function (v, i) {
+        [["fail_rate", 1, "전체 39일"], ["fail_rate_anomaly_days", .45, "이상 로트 6일"]].forEach(function (k, j) {
+          var val = S[v][k[0]], x = x0 + step * i + step / 2 - bw - 1 + j * (bw + 2), hgt = Math.max(val / hi * (y0 - y1), 0), yy = y0 - hgt;
+          if (hgt > 0.5) svgEl("path", { d: barTop(x, yy, bw, hgt, 4), style: "fill:" + css(VCOL[v]) + ";fill-opacity:" + k[1] }, svg);
+          var hit = svgEl("rect", { x: x - 2, y: y1, width: bw + 4, height: y0 - y1, style: "fill:transparent" }, svg);
+          hover(hit, "<b>" + VNAME[v] + "</b> · " + k[2] + "<br>heat당 이탈 확률 " + pct(val, 2));
+          svgEl("text", { x: x + bw / 2, y: yy - 5, "text-anchor": "middle", "font-size": 10, style: "fill:var(--ink)", text: (val * 100).toFixed(1) }, svg);
+        });
+        svgEl("text", { x: x0 + step * i + step / 2, y: y0 + 16, "text-anchor": "middle", "font-size": 11, style: "fill:var(--ink-2)", text: VNAME[v].split(" ")[0] }, svg);
+      });
+      var ty = y0 - 0.02 / hi * (y0 - y1);
+      svgEl("line", { x1: x0, x2: x1, y1: ty, y2: ty, style: "stroke:var(--ink-2);stroke-width:1;stroke-dasharray:4 3" }, svg);   // 목표 2% (설명은 캡션에)
+    })();
+
+    /* 날짜별 이탈률 */
+    (function () {
+      var svg = $("cDay"), x0 = 40, x1 = 410, y0 = 200, y1 = 24, hi = 0.25, n = dates.length;
+      var X = function (i) { return x0 + (x1 - x0) * i / (n - 1); }, Y = function (v) { return y0 - Math.min(v, hi) / hi * (y0 - y1); };
+      dates.forEach(function (d, i) { if (anomaly.indexOf(d) >= 0) svgEl("rect", { x: X(i) - 4, y: y1, width: 8, height: y0 - y1, style: "fill:var(--grid)" }, svg); });
+      axisY(svg, x0, x1, y0, y1, 0, hi, 5, function (v) { return Math.round(v * 100) + "%"; });
+      function row(d, v) { return D.by_day.filter(function (q) { return q.date === d && q.version === v; })[0]; }
+      ["baseline", "v2", "v3"].forEach(function (v) {
+        var pts = dates.map(function (d, i) { return [X(i), Y(row(d, v).fail_rate)]; });
+        svgEl("polyline", { points: pts.map(function (p) { return p.join(","); }).join(" "), style: "fill:none;stroke:" + css(VCOL[v]) + ";stroke-width:2;stroke-linejoin:round" }, svg);
+        var last = pts[pts.length - 1];
+        svgEl("circle", { cx: last[0], cy: last[1], r: 3.5, style: "fill:" + css(VCOL[v]) + ";stroke:var(--surface);stroke-width:2" }, svg);
+      });
+      var ty = Y(0.02);
+      svgEl("line", { x1: x0, x2: x1, y1: ty, y2: ty, style: "stroke:var(--ink-2);stroke-width:1;stroke-dasharray:4 3" }, svg);
+      [0, Math.floor(n / 2), n - 1].forEach(function (i) { svgEl("text", { x: X(i), y: y0 + 16, "text-anchor": i === 0 ? "start" : i === n - 1 ? "end" : "middle", "font-size": 11, style: "fill:var(--muted)", text: P.md(dates[i]) }, svg); });
+      var cross = svgEl("line", { x1: 0, x2: 0, y1: y1, y2: y0, style: "stroke:var(--ink-2);stroke-width:1;opacity:0" }, svg);
+      var hit = svgEl("rect", { x: x0, y: y1, width: x1 - x0, height: y0 - y1, style: "fill:transparent" }, svg);
+      hit.addEventListener("mousemove", function (e) {
+        var b = svg.getBoundingClientRect(), sx = (e.clientX - b.left) / b.width * 420;
+        var i = Math.max(0, Math.min(n - 1, Math.round((sx - x0) / (x1 - x0) * (n - 1))));
+        cross.setAttribute("x1", X(i)); cross.setAttribute("x2", X(i)); cross.style.opacity = 1;
+        P.showTip(e, "<b>" + dates[i] + (anomaly.indexOf(dates[i]) >= 0 ? " · 이상 로트" : "") + "</b><br>" + ["baseline", "v2", "v3"].map(function (v) { return VNAME[v] + " " + pct(row(dates[i], v).fail_rate, 2); }).join("<br>"));
+      });
+      hit.addEventListener("mouseleave", function () { cross.style.opacity = 0; P.hideTip(); });
+    })();
+
+    /* 성분 추정 */
+    (function () {
+      var svg = $("cEst"), x0 = 44, x1 = 410, y0 = 200, y1 = 30, hi = 0.5;
+      axisY(svg, x0, x1, y0, y1, 0, hi, 5, function (v) { return v.toFixed(1); });
+      var step = (x1 - x0) / D.estimate.length;
+      D.estimate.forEach(function (r, i) {
+        var cx = x0 + step * i + step / 2, Y = function (v) { return y0 - v / hi * (y0 - y1); };
+        svgEl("line", { x1: cx - 10, x2: cx + 10, y1: Y(r.true_cu), y2: Y(r.true_cu), style: "stroke:var(--ink);stroke-width:2.5" }, svg);
+        svgEl("circle", { cx: cx - 6, cy: Y(r.nominal_cu), r: 4.5, style: "fill:var(--muted);stroke:var(--surface);stroke-width:2" }, svg);
+        svgEl("circle", { cx: cx + 6, cy: Y(r.est_cu), r: 4.5, style: "fill:var(--s3);stroke:var(--surface);stroke-width:2" }, svg);
+        var hit = svgEl("rect", { x: cx - step / 2, y: y1, width: step, height: y0 - y1, style: "fill:transparent" }, svg);
+        hover(hit, "<b>" + GNAME[r.grade_id] + "</b> Cu<br>공칭 " + r.nominal_cu.toFixed(3) + "%<br>추정 " + r.est_cu.toFixed(3) + "%<br>숨은 정답 " + r.true_cu.toFixed(3) + "%");
+        svgEl("text", { x: cx, y: y0 + 16, "text-anchor": "middle", "font-size": 10.5, style: "fill:var(--ink-2)", text: GNAME[r.grade_id] }, svg);
+      });
+      [["circle", "var(--muted)", "공칭값"], ["circle", "var(--s3)", "이력 기반 추정"], ["line", "var(--ink)", "숨은 정답"]].forEach(function (l, i) {
+        var x = x0 + i * 110;
+        if (l[0] === "circle") svgEl("circle", { cx: x + 5, cy: 12, r: 4.5, style: "fill:" + l[1] }, svg);
+        else svgEl("line", { x1: x, x2: x + 12, y1: 12, y2: 12, style: "stroke:" + l[1] + ";stroke-width:2.5" }, svg);
+        svgEl("text", { x: x + 16, y: 16, "font-size": 11, style: "fill:var(--ink-2)", text: l[2] }, svg);
+      });
+      var e = D.meta.estimation_error;
+      $("estCap").textContent = "Cu %. 8개 등급 평균 절대오차: 공칭값 " + e.mae_cu_nominal.toFixed(4) + "%p → 추정값 " + e.mae_cu_est.toFixed(4) + "%p. Sn: " + e.mae_sn_nominal.toFixed(4) + " → " + e.mae_sn_est.toFixed(4) + "%p.";
+    })();
+
+    /* ⑤ 결과와 기대 효과 */
+    var fr = v3.fail_rate, be = save / fr;
+    $("headline").innerHTML = "숙련자 배합 대비 톤당 <b>" + won(save) + "원(" + (save / base.cost_per_t * 100).toFixed(1) + "%)</b> 절감, 정답 기준 이탈률 <b>" + pct(fr, 2) + "</b>(목표 2% 이내). 이상 로트가 있던 날에도 검수 메모 반영으로 이탈률을 " +
+      pct(S.v2.fail_rate_anomaly_days, 1) + " → " + pct(v3.fail_rate_anomaly_days, 1) + "로 막았습니다. 이탈 1톤당 손실이 약 " + won(Math.round(be / 10000)) + "만 원을 넘지 않는 한 숙련자 배합보다 유리합니다.";
+    $("formula").textContent = won(save) + " − " + (fr * 100).toFixed(2) + "% × L";
+    $("net").innerHTML = [[50000, "5만 원 (강종 강등 손실 수준 가정)"], [400000, "40만 원 (배합 원가 전부 손실 가정)"]].map(function (r) {
+      var n = save - fr * r[0]; return "<tr><td>" + r[1] + '</td><td class="r">약 ' + won(n) + '</td><td class="r">약 ' + Math.round(n * 800000 / 1e8) + "억 원</td></tr>";
+    }).join("") + '<tr class="be"><td>손익분기: 약 ' + won(Math.round(be / 10000)) + '만 원</td><td class="r">0</td><td class="r">0</td></tr>';
+    var na = D.meta.note_accuracy;
+    $("limits").innerHTML = [
+      "v3도 하루 24 heat 중 평균 " + v3.heats_over_target_per_day.toFixed(1) + "개 heat는 정답 기준 이탈 확률이 2%를 넘습니다. 경량A의 Cu 추정이 정답보다 낮게 나온 탓입니다.",
+      "검수 메모 판정(" + (na.method === "llm" ? "Claude" : "키워드 규칙") + "): 이상 로트 " + (na.true_pos + na.false_neg) + "건 중 " + na.true_pos + "건을 잡았지만, '전량 제거 완료' 같은 정상 메모 " + na.false_pos + "건을 잘못 제외했습니다. 작업실에서 사람이 판정을 바로잡으면 원가가 내려갑니다.",
+      "LLM(Claude)로 메모를 판정했을 때의 효과는 API 키로 평가를 다시 돌려 확인할 예정입니다.",
+      "선형계획법은 분산을 모르기 때문에 한두 등급에 몰린 배합을 고릅니다. 분산을 함께 고려하는 최적화가 다음 단계입니다.",
+      "배합 설계 시간은 계산 시간만 쟀습니다. 사람이 배합표를 짜는 시간은 측정하지 않았습니다."
+    ].map(function (t) { return "<li>" + esc(t) + "</li>"; }).join("");
+  }
+  P.start(render);
+})();
+</script>
+</body>
+</html>

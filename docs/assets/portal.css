@@ -2,7 +2,7 @@
    브랜드 가이드(ReBorn_Steel.pdf)의 컬러 팔레트를 따른다.
      Forest Green #123B2A (메인) · Orange #E07A2F (포인트) · Cream #FFF8EE · Gray #D9D9D9 (서브)
    화면 구성은 업무용 앱 형태(상단 바 + 왼쪽 메뉴 + 본문). 좁은 화면에서는 메뉴가 상단 가로 탭으로 바뀐다.
-   차트 시리즈 색(--s1~--s8)은 외부 홈페이지와 같은 검증된 팔레트를 그대로 쓴다. */
+   차트 시리즈 색(--s1~--s8)은 검증된 참고 팔레트(8색, 순서 고정)를 그대로 쓴다. */
 :root {
   --bg: #fff8ee; --surface: #ffffff; --surface-2: #fbf2e4;
   --ink: #14201a; --ink-2: #48544d; --muted: #7b827d; --line: #e6ddcf;
@@ -104,7 +104,7 @@ main > * { min-width: 0; }
   .side { border-right: 0; border-bottom: 1px solid var(--line); display: flex; align-items: center; overflow-x: auto; padding: 6px 12px; gap: 4px;
     -webkit-overflow-scrolling: touch; }
   .side a { white-space: nowrap; flex: none; }
-  .side .sep, .side .ext { display: none; }
+  .side .sep, .side .ext, .side .side-note { display: none; }
   main { padding: 18px 16px 40px; }
   .ctx .lbl { display: none; }
 }
