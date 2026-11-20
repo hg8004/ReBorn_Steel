@@ -45,7 +45,7 @@
   // overrides: {price: {grade: 원/t}, inv: {grade: t}}  (가정해 보기용)
   function makeContext(C, date, overrides) {
     var G = C.config.grades, ov = overrides || {}, mk = C.market[date];
-    if (!mk) throw new Error(date + "의 시세·재고 데이터가 없습니다.");
+    if (!mk) throw new Error(date + "의 시세·재고 데이터가 없어요.");
     var byId = {}; C.scrap.forEach(function (s) { byId[s.grade_id] = s; });
     var specs = {}; C.specs.forEach(function (s) { specs[s.steel_grade] = { cu: s.cu_max_pct, sn: s.sn_max_pct }; });
     return {
@@ -176,7 +176,7 @@
       }
     }
     var res = lp.Solve(model);
-    if (!res.feasible) return { status: "infeasible", message: "조건을 모두 만족하는 배합이 없습니다 (재고나 안전여유를 확인하세요)." };
+    if (!res.feasible) return { status: "infeasible", message: "조건을 모두 만족하는 배합이 없어요. 재고나 안전여유를 확인해 보세요." };
     var x = ctx.plan.map(function (p, hh) {
       return G.map(function (g, ii) { var val = res["x" + hh + "_" + ii] || 0; return val < 1e-6 ? 0 : val; });
     });

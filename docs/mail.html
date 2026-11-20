@@ -50,7 +50,7 @@
     </div>
     <article class="readpane" id="read" aria-live="polite" tabindex="-1"></article>
   </div>
-  <p class="disclaimer" style="border:0;padding:0;margin:0">업무 기준일과 그 전 2일(조업일 기준)의 메일이 보입니다. 메일은 그날의 배합 지시서, 검수 메모, 시세·재고에서 자동으로 만들어집니다.</p>
+  <p class="disclaimer" style="border:0;padding:0;margin:0">업무 기준일과 그 전 이틀(조업일 기준) 메일이 보여요. 메일은 그날의 배합 지시서, 검수 메모, 시세·재고를 보고 자동으로 만들어집니다.</p>
 </main>
 </div>
 
@@ -89,7 +89,7 @@
         '<span class="subj">' + (P.isRead(m) ? "" : '<span class="sr" style="position:absolute;left:-9999px">안 읽음 </span>') + esc(m.subject) + "</span>" +
         '<span class="tags">' + P.tagPill(m.tag) + (t ? (P.isDone(m) ? '<span class="pill good">✓ 완료</span>' : '<span class="pill warn">할 일</span>') : "") + "</span></button></li>";
     });
-    $("list").innerHTML = html || '<li class="empty" style="padding:16px">해당하는 메일이 없습니다.</li>';
+    $("list").innerHTML = html || '<li class="empty" style="padding:16px">해당하는 메일이 없어요.</li>';
     Array.prototype.forEach.call($("list").querySelectorAll("button"), function (b) {
       b.addEventListener("click", function () {
         selId = b.dataset.id; render(c);

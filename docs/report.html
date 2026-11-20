@@ -38,7 +38,7 @@
     <div class="pagehead">
       <div class="eyebrow">생산본부 제강팀 · 사내 보고 · 2026-10-30</div>
       <h1>AI 스크랩 배합 에이전트 도입 보고서</h1>
-      <p>평가 기간 9/22~10/30(39일) 동안 숙련자 배합과 에이전트 v1~v3을 같은 생산 계획으로 비교한 결과입니다. 아래 수치는 모두 실제 실행 결과이며, 회사·설비·시세·성분은 가상 데이터입니다.</p>
+      <p>9/22부터 10/30까지 39일 동안, 숙련자 배합과 에이전트 v1~v3을 같은 생산 계획으로 돌려 비교했다. 숫자는 모두 실제로 실행해서 얻은 값이다. 회사·설비·시세·성분은 가상 데이터다.</p>
     </div>
   </div>
   <nav class="toc" aria-label="보고서 목차">
@@ -48,71 +48,63 @@
 
   <section class="sec" id="s1" aria-labelledby="h1t">
     <h2 id="h1t"><span class="n">1</span>문제 정의</h2>
-    <p class="lead">매일 24 heat마다 8개 등급의 철스크랩을 몇 톤씩 넣을지 정해야 합니다. 등급마다 가격과 성분이 다르고, 시세와 재고는 매일 바뀝니다.</p>
+    <p class="lead">매일 24 heat에 8개 등급의 철스크랩을 몇 톤씩 넣을지 정해야 한다. 등급마다 가격과 성분이 다르고, 시세와 재고는 날마다 바뀐다.</p>
     <div class="grid3">
-      <div class="card"><h3>원가와 품질의 맞교환</h3><ul><li>저급 스크랩은 싸지만 Cu·Sn이 많고 실수율이 낮습니다.</li><li>규격(Cu·Sn 상한)을 넘기면 강등이나 재처리를 해야 합니다.</li></ul></div>
-      <div class="card"><h3>성분은 배합에서 결정</h3><ul><li>Cu·Sn은 철보다 산화되기 어려워 전기로·LF 정련으로 빠지지 않습니다.</li><li>압연 중 표면 균열(적열취성)을 막으려면 장입 전에 배합으로 막아야 합니다.</li></ul></div>
-      <div class="card"><h3>불확실한 정보</h3><ul><li>실제 성분은 카탈로그 공칭값과 다르고 로트마다 흔들립니다.</li><li>"모터 혼입" 같은 위험 신호는 숫자가 아니라 검수 메모(글)로 들어옵니다.</li></ul></div>
+      <div class="card"><h3>싸면 품질이 위험하다</h3><p class="ink2">저급 스크랩은 싸지만 Cu·Sn이 많고 실수율이 낮다. 규격(Cu·Sn 상한)을 넘기면 강종을 낮추거나 다시 처리해야 한다.</p></div>
+      <div class="card"><h3>성분은 배합에서 정해진다</h3><p class="ink2">Cu·Sn은 철보다 잘 산화되지 않아서 전기로나 LF 정련으로 빠지지 않는다. 압연 중 표면 균열(적열취성)을 막으려면 장입 전에 배합으로 막아야 한다.</p></div>
+      <div class="card"><h3>정보가 불확실하다</h3><p class="ink2">실제 성분은 카탈로그 공칭값과 다르고 로트마다 흔들린다. "모터 혼입" 같은 위험 신호도 숫자가 아니라 검수 메모라는 글로 들어온다.</p></div>
     </div>
   </section>
 
   <section class="sec" id="s2" aria-labelledby="h2t">
     <h2 id="h2t"><span class="n">2</span>기존 방식의 한계</h2>
     <div class="grid2">
-      <div class="card"><h3>숙련자 경험과 고정 배합표</h3><ul>
-        <li>고급 스크랩을 넉넉히 써서 규격은 지키지만 비쌉니다 (톤당 <b id="baseCost">-</b>원).</li>
-        <li>등급별 평균 성분(공칭값)만 쓰고 로트별 편차는 반영하지 못합니다.</li>
-        <li>검수 메모가 배합에 체계적으로 반영되지 않고, 사람마다 결과가 다릅니다.</li></ul></div>
-      <div class="card"><h3>최적화 솔버만 쓰는 경우 (v1)</h3><ul>
-        <li>공칭 성분을 믿고 상한까지 꽉 채우면 원가는 가장 낮지만, 이탈률이 <b id="v1Fail">-</b>까지 오릅니다.</li>
-        <li>실제 성분이 공칭값보다 조금씩 높기 때문입니다 (공칭값은 8개 등급 모두 실제보다 낮음).</li>
-        <li>입력 정리, 제약 수정, 결과 해석은 여전히 사람이 해야 합니다.</li></ul></div>
+      <div class="card"><h3>숙련자 경험과 고정 배합표</h3><p class="ink2">고급 스크랩을 넉넉히 써서 규격은 지키지만 비싸다(톤당 <b id="baseCost">-</b>원). 등급별 평균 성분(공칭값)만 보고 로트별 편차는 반영하지 못한다. 검수 메모가 배합에 체계적으로 들어가지 않아서, 같은 날이라도 사람마다 배합이 다르다.</p></div>
+      <div class="card"><h3>최적화 솔버만 쓰는 경우 (v1)</h3><p class="ink2">공칭 성분을 믿고 상한까지 꽉 채우면 원가는 가장 낮다. 그런데 이탈률이 <b id="v1Fail">-</b>까지 오른다. 실제 성분이 공칭값보다 조금씩 높기 때문이다(공칭값은 8개 등급 모두 실제보다 낮다). 입력 정리, 제약 수정, 결과 해석도 여전히 사람이 해야 한다.</p></div>
     </div>
   </section>
 
   <section class="sec" id="s3" aria-labelledby="h3t">
     <h2 id="h3t"><span class="n">3</span>AI 활용 방법</h2>
-    <p class="lead">숫자는 회귀·선형계획·몬테카를로 도구가 계산하고, AI 에이전트는 도구를 고르고, 비정형 텍스트를 읽고, 결과를 검증해 다시 계산할지 판단합니다.</p>
+    <p class="lead">숫자는 회귀·선형계획·몬테카를로 도구가 계산한다. AI 에이전트는 어떤 도구를 쓸지 고르고, 검수 메모 같은 글을 읽고, 결과를 보고 다시 계산할지 판단한다.</p>
     <div class="card scroll-x" role="img" aria-label="에이전트 실행 흐름: 조회, 검수 메모 분석, 성분 추정, 최적화, 시뮬레이션. 이탈 확률이 2%를 넘으면 안전여유를 키워 최적화로 되돌아가고, 통과하면 지시서를 작성한다.">
       <svg class="flow" viewBox="0 0 1080 170" id="loopSvg"></svg>
     </div>
     <div class="grid3">
       <div class="card"><h3>AI가 맡는 일</h3><ul>
-        <li>검수 메모(비정형 텍스트)를 읽고 배합 제약(제외·5% 제한)으로 바꿉니다.</li>
-        <li>모의 조업 결과를 보고 안전여유를 얼마나 키울지 정합니다.</li>
-        <li>결재자가 읽을 지시서와 판단 근거를 씁니다.</li></ul></div>
+        <li>검수 메모를 읽고 배합 제약(제외, 5% 제한)으로 바꾼다.</li>
+        <li>모의 조업 결과를 보고 안전여유를 얼마나 키울지 정한다.</li>
+        <li>결재자가 읽을 지시서와 판단 근거를 쓴다.</li></ul></div>
       <div class="card"><h3>도구가 맡는 일 (숫자)</h3><ul>
-        <li>성분 추정: 과거 500 heat 이력 비음수 최소제곱(NNLS) + 이상치 제거</li>
-        <li>원가 최소 배합: 선형계획법, 하루 24 heat 동시 최적화</li>
-        <li>검증: 몬테카를로 모의 조업 1,000회, heat별 이탈 확률</li></ul></div>
+        <li>성분 추정: 과거 500 heat 이력을 비음수 최소제곱(NNLS)으로 풀고 이상치를 뺀다.</li>
+        <li>원가 최소 배합: 선형계획법으로 하루 24 heat를 한 번에 푼다.</li>
+        <li>검증: 몬테카를로로 1,000번 모의 조업해 heat별 이탈 확률을 구한다.</li></ul></div>
       <div class="card"><h3>사람이 맡는 일</h3><ul>
-        <li>판정 확인·수정, 가정해 보기, 결재 (<a href="agent.html">배합 에이전트 작업실</a>)</li>
-        <li>리보 AI(timelyGPT)에게 결과 설명 듣기</li>
-        <li>최종 결재는 제강팀장 → 생산본부장</li></ul></div>
+        <li>판정을 확인하고 고치고, 조건을 바꿔 보고, 결재를 올린다(<a href="agent.html">배합 에이전트 작업실</a>).</li>
+        <li>궁금한 점은 리보 AI(timelyGPT)에게 물어본다.</li>
+        <li>최종 결재는 제강팀장과 생산본부장이 한다.</li></ul></div>
     </div>
   </section>
 
   <section class="sec" id="s4" aria-labelledby="h4t">
     <h2 id="h4t"><span class="n">4</span>검증과 개선</h2>
-    <div class="card"><h3>검증 방법: 숨은 정답 채점</h3><ul>
-      <li>등급별 '실제' 성분 분포를 정해 두고 에이전트에게는 숨겼습니다. 에이전트 코드는 이 파일을 읽지 않습니다.</li>
-      <li>에이전트가 성분을 추정한 이력(9/1~9/21, 500 heat)과 평가 기간(9/22~10/30)은 겹치지 않습니다.</li>
-      <li>평가: 39일 × 24 heat = 936 heat. 이 중 이상 로트가 있던 날 6일(144 heat), 헷갈리는 메모가 있던 날 3일.</li>
-      <li>만들어진 배합을 숨은 정답 분포로 heat마다 모의 조업 2,000회 돌려 이탈 확률을 채점했습니다.</li></ul></div>
+    <div class="card"><h3>검증 방법: 숨은 정답으로 채점</h3>
+      <p class="ink2">등급별 '실제' 성분 분포를 미리 정해 두고 에이전트에게는 숨겼다. 에이전트 코드는 이 파일을 열지 않는다. 에이전트가 성분을 추정한 이력(9/1~9/21, 500 heat)과 평가 기간(9/22~10/30)도 겹치지 않게 나눴다.</p>
+      <p class="ink2">평가 규모는 39일 × 24 heat = 936 heat다. 이상 로트가 있던 날이 6일(144 heat), 헷갈리는 메모가 있던 날이 3일이다. 에이전트가 만든 배합을 숨은 정답 분포로 heat마다 2,000번 모의 조업해서 이탈 확률을 매겼다.</p></div>
     <div class="card scroll-x"><table id="sumTable"><thead><tr><th>방식</th><th>내용</th><th class="r">톤당 원가</th><th class="r">숙련자 대비</th><th class="r">이탈률 전체</th><th class="r">이상 로트 날</th><th class="r">2% 초과 heat/일</th><th class="r">반복</th><th class="r">계산 시간</th></tr></thead><tbody></tbody></table></div>
     <div class="legend" id="verLegend"></div>
     <div class="charts">
-      <div class="card chart"><h3>톤당 배합 원가</h3><svg id="cCost" viewBox="0 0 420 240" role="img" aria-label="방식별 톤당 배합 원가 막대그래프"></svg><p class="cap">39일 평균, 원/톤 출강. 세로축은 39만 원에서 시작.</p></div>
-      <div class="card chart"><h3>규격 이탈률</h3><svg id="cFail" viewBox="0 0 420 240" role="img" aria-label="방식별 규격 이탈률 막대그래프"></svg><p class="cap">heat당 이탈 확률의 평균. 진한 막대는 전체 39일, 옅은 막대는 이상 로트가 있던 6일. 점선은 목표 2%.</p></div>
-      <div class="card chart"><h3>날짜별 이탈률</h3><svg id="cDay" viewBox="0 0 420 240" role="img" aria-label="날짜별 이탈률 선그래프"></svg><p class="cap">회색 띠는 이상 로트가 있던 날. v1은 30% 안팎이라 이 축에서 뺐습니다.</p></div>
+      <div class="card chart"><h3>톤당 배합 원가</h3><svg id="cCost" viewBox="0 0 420 240" role="img" aria-label="방식별 톤당 배합 원가 막대그래프"></svg><p class="cap">39일 평균, 원/톤 출강. 세로축은 39만 원부터 시작한다.</p></div>
+      <div class="card chart"><h3>규격 이탈률</h3><svg id="cFail" viewBox="0 0 420 240" role="img" aria-label="방식별 규격 이탈률 막대그래프"></svg><p class="cap">heat당 이탈 확률의 평균이다. 진한 막대는 39일 전체, 옅은 막대는 이상 로트가 있던 6일, 점선은 목표 2%.</p></div>
+      <div class="card chart"><h3>날짜별 이탈률</h3><svg id="cDay" viewBox="0 0 420 240" role="img" aria-label="날짜별 이탈률 선그래프"></svg><p class="cap">회색 띠는 이상 로트가 있던 날이다. v1은 30% 안팎이라 이 그래프에서는 뺐다.</p></div>
       <div class="card chart"><h3>등급별 Cu: 공칭값, 추정값, 숨은 정답</h3><svg id="cEst" viewBox="0 0 420 240" role="img" aria-label="등급별 Cu 공칭값, 추정값, 정답 비교"></svg><p class="cap" id="estCap"></p></div>
     </div>
     <div class="card"><h3>개선 과정에서 확인한 것</h3><ol style="margin:0;padding-left:20px;color:var(--ink-2);font-size:var(--fs-base);display:grid;gap:6px">
-      <li><b style="color:var(--ink)">v1 → v2</b> 이력 기반 성분 추정과 모의 조업 검증 루프를 넣자, 이상 로트가 없는 33일의 이탈률이 목표 근처(<span id="v2Normal">-</span>)로 내려왔습니다.</li>
-      <li><b style="color:var(--ink)">v2 → v3</b> v2는 이상 로트가 들어온 6일(144 heat) 동안 이탈률이 <span id="v2Anom">-</span>였습니다. 검수 메모로 위험 로트를 빼자 <span id="v3Anom">-</span>가 됐습니다.</li>
-      <li><b style="color:var(--ink)">안전여유 조정 규칙</b> 처음에는 한 번에 크게 올려서 2회차에 0.5%까지 떨어지는 과잉 보수 배합이 나왔습니다. 부족분만큼만 올리도록 바꿨습니다.</li>
-      <li><b style="color:var(--ink)">이력 데이터의 다양성</b> 과거 배합이 서로 비슷하면 회귀가 등급별 효과를 구분하지 못합니다(선반설 Cu 0.194로 추정, 정답 0.13). 배합 변동폭을 키우자 0.158로 줄었습니다.</li>
-      <li><b style="color:var(--ink)">보수적 평균 실험</b> '추정 평균 + k × 표준오차'(k = 0, 1, 1.5, 2)를 써 봤지만 이탈률 차이가 노이즈 수준이라 쓰지 않았습니다.</li></ol></div>
+      <li><b style="color:var(--ink)">v1 → v2.</b> 이력으로 성분을 다시 추정하고 모의 조업 검증 루프를 넣었더니, 이상 로트가 없는 33일의 이탈률이 <span id="v2Normal">-</span>로 목표 근처까지 내려왔다.</li>
+      <li><b style="color:var(--ink)">v2 → v3.</b> v2는 이상 로트가 들어온 6일(144 heat) 동안 이탈률이 <span id="v2Anom">-</span>였다. 검수 메모를 보고 위험 로트를 빼자 <span id="v3Anom">-</span>로 떨어졌다.</li>
+      <li><b style="color:var(--ink)">안전여유 조정 규칙.</b> 처음엔 여유를 한 번에 크게 올렸다. 그러자 2회차에 이탈률이 0.5%까지 떨어지는, 지나치게 보수적인 배합이 나왔다. 모자란 만큼만 올리도록 바꿨다.</li>
+      <li><b style="color:var(--ink)">이력 데이터의 다양성.</b> 과거 배합끼리 너무 비슷하면 회귀가 등급별 효과를 가려내지 못한다. 처음엔 선반설 Cu를 0.194로 추정했다(정답 0.13). 배합 변동폭을 키우자 0.158로 줄었다.</li>
+      <li><b style="color:var(--ink)">보수적 평균 실험.</b> 최적화에 '추정 평균 + k × 표준오차'(k = 0, 1, 1.5, 2)를 넣어 봤다. 이탈률 차이가 노이즈 수준이라 쓰지 않았다.</li></ol></div>
   </section>
 
   <section class="sec" id="s5" aria-labelledby="h5t">
@@ -120,14 +112,14 @@
     <p class="why" id="headline"></p>
     <div class="grid2">
       <div class="card"><h3>이탈 비용을 뺀 순절감</h3>
-        <p class="ink2" style="font-size:var(--fs-md)">숙련자 배합은 이탈률 0%지만 비쌉니다. v3는 이탈률을 조금 받아들이는 대신 쌉니다. 이탈 heat 1톤당 손실(강등·재처리)을 L이라 하면 순절감은 <span class="mono" id="formula"></span>입니다.</p>
+        <p class="ink2" style="font-size:var(--fs-md)">숙련자 배합은 이탈률이 0%지만 비싸다. v3는 이탈률을 조금 감수하는 대신 싸다. 이탈한 heat 1톤당 손실(강등·재처리)을 L이라고 하면, 순절감은 <span class="mono" id="formula"></span>이다.</p>
         <div class="scroll-x"><table class="netbox"><thead><tr><th>이탈 1톤당 손실 L (가정)</th><th class="r">순절감(원/t)</th><th class="r">연간 (80만 t)</th></tr></thead><tbody id="net"></tbody></table></div>
-        <p class="cap">금액은 모두 가상 데이터 기준 추정치입니다. 손실 단가 L은 정해진 값이 없어 범위로 보였습니다.</p></div>
+        <p class="cap">금액은 모두 가상 데이터로 낸 추정치다. 손실 단가 L은 정해 둔 값이 없어서 범위로 보였다.</p></div>
       <div class="card"><h3>남은 한계와 다음 단계</h3><ul id="limits"></ul></div>
     </div>
   </section>
 
-  <p class="disclaimer">리본스틸㈜은 인공지능재료공학 수업 과제를 위해 만든 가상 기업입니다. 회사, 설비, 시세, 성분, 조업 이력은 모두 AI가 생성한 합성 데이터이며 실제 기업이나 공개 데이터와 관계가 없습니다.</p>
+  <p class="disclaimer">리본스틸㈜은 인공지능재료공학 수업 과제를 위해 만든 가상 기업이다. 회사, 설비, 시세, 성분, 조업 이력은 모두 AI가 만든 합성 데이터이고, 실제 기업이나 공개 데이터와는 관계없다.</p>
 </main>
 </div>
 
@@ -142,7 +134,7 @@
   var VERS = ["baseline", "v1", "v2", "v3"];
   var VCOL = { baseline: "--s1", v1: "--s2", v2: "--s3", v3: "--s4" };
   var VNAME = { baseline: "숙련자 규칙", v1: "v1 공칭성분", v2: "v2 추정+검증", v3: "v3 +검수메모" };
-  var VDESC = { baseline: "고정 배합표, 재고 부족 시 고급 스크랩으로 대체", v1: "공칭 성분, 안전여유 0, 검증 없음",
+  var VDESC = { baseline: "고정 배합표. 재고가 모자라면 고급 스크랩으로 채움", v1: "공칭 성분 그대로, 안전여유 0, 검증 없음",
                 v2: "이력 기반 성분 추정 + 안전여유 + 모의 조업 루프", v3: "v2 + 검수 메모로 위험 로트 제외" };
   var GNAME = P.GNAME, css = P.css;
   var S = {}; D.summary.forEach(function (r) { S[r.version] = r; });
@@ -292,24 +284,24 @@
         svgEl("text", { x: x + 16, y: 16, "font-size": 12, style: "fill:var(--ink-2)", text: l[2] }, svg);
       });
       var e = D.meta.estimation_error;
-      $("estCap").textContent = "Cu %. 8개 등급 평균 절대오차: 공칭값 " + e.mae_cu_nominal.toFixed(4) + "%p → 추정값 " + e.mae_cu_est.toFixed(4) + "%p. Sn: " + e.mae_sn_nominal.toFixed(4) + " → " + e.mae_sn_est.toFixed(4) + "%p.";
+      $("estCap").textContent = "단위 %. 8개 등급 평균 절대오차는 공칭값 " + e.mae_cu_nominal.toFixed(4) + "%p에서 추정값 " + e.mae_cu_est.toFixed(4) + "%p로 줄었다. Sn은 " + e.mae_sn_nominal.toFixed(4) + "%p에서 " + e.mae_sn_est.toFixed(4) + "%p.";
     })();
 
     /* ⑤ 결과와 기대 효과 */
     var fr = v3.fail_rate, be = save / fr;
-    $("headline").innerHTML = "숙련자 배합 대비 톤당 <b>" + won(save) + "원(" + (save / base.cost_per_t * 100).toFixed(1) + "%)</b> 절감, 정답 기준 이탈률 <b>" + pct(fr, 2) + "</b>(목표 2% 이내). 이상 로트가 있던 날에도 검수 메모 반영으로 이탈률을 " +
-      pct(S.v2.fail_rate_anomaly_days, 1) + " → " + pct(v3.fail_rate_anomaly_days, 1) + "로 막았습니다. 이탈 1톤당 손실이 약 " + won(Math.round(be / 10000)) + "만 원을 넘지 않는 한 숙련자 배합보다 유리합니다.";
+    $("headline").innerHTML = "v3는 숙련자 배합보다 톤당 <b>" + won(save) + "원(" + (save / base.cost_per_t * 100).toFixed(1) + "%)</b> 싸고, 정답 기준 이탈률은 <b>" + pct(fr, 2) + "</b>로 목표 2% 안에 들었다. 이상 로트가 들어온 날에도 검수 메모를 반영해서 이탈률을 " +
+      pct(S.v2.fail_rate_anomaly_days, 1) + "에서 " + pct(v3.fail_rate_anomaly_days, 1) + "로 낮췄다. 이탈 1톤당 손실이 약 " + won(Math.round(be / 10000)) + "만 원을 넘지 않으면 숙련자 배합보다 낫다.";
     $("formula").textContent = won(save) + " − " + (fr * 100).toFixed(2) + "% × L";
     $("net").innerHTML = [[50000, "5만 원 (강종 강등 손실 수준 가정)"], [400000, "40만 원 (배합 원가 전부 손실 가정)"]].map(function (r) {
       var n = save - fr * r[0]; return "<tr><td>" + r[1] + '</td><td class="r">약 ' + won(n) + '</td><td class="r">약 ' + Math.round(n * 800000 / 1e8) + "억 원</td></tr>";
     }).join("") + '<tr class="be"><td>손익분기: 약 ' + won(Math.round(be / 10000)) + '만 원</td><td class="r">0</td><td class="r">0</td></tr>';
     var na = D.meta.note_accuracy;
     $("limits").innerHTML = [
-      "v3도 하루 24 heat 중 평균 " + v3.heats_over_target_per_day.toFixed(1) + "개 heat는 정답 기준 이탈 확률이 2%를 넘습니다. 경량A의 Cu 추정이 정답보다 낮게 나온 탓입니다.",
-      "검수 메모 판정(" + (na.method === "llm" ? "Claude" : "키워드 규칙") + "): 이상 로트 " + (na.true_pos + na.false_neg) + "건 중 " + na.true_pos + "건을 잡았지만, '전량 제거 완료' 같은 정상 메모 " + na.false_pos + "건을 잘못 제외했습니다. 작업실에서 사람이 판정을 바로잡으면 원가가 내려갑니다.",
-      "LLM(Claude)로 메모를 판정했을 때의 효과는 API 키로 평가를 다시 돌려 확인할 예정입니다.",
-      "선형계획법은 분산을 모르기 때문에 한두 등급에 몰린 배합을 고릅니다. 분산을 함께 고려하는 최적화가 다음 단계입니다.",
-      "배합 설계 시간은 계산 시간만 쟀습니다. 사람이 배합표를 짜는 시간은 측정하지 않았습니다."
+      "v3도 하루 24 heat 중 평균 " + v3.heats_over_target_per_day.toFixed(1) + "개는 정답 기준 이탈 확률이 2%를 넘는다. 경량A의 Cu 추정이 정답보다 낮게 나온 탓이다.",
+      "검수 메모 판정(" + (na.method === "llm" ? "Claude" : "키워드 규칙") + ")은 이상 로트 " + (na.true_pos + na.false_neg) + "건 중 " + na.true_pos + "건을 잡았다. 대신 '전량 제거 완료' 같은 정상 메모 " + na.false_pos + "건도 위험으로 보고 뺐다. 작업실에서 사람이 판정을 바로잡으면 원가가 내려간다.",
+      "Claude로 메모를 판정했을 때의 효과는 아직 재지 않았다. API 키를 넣고 평가를 다시 돌려 확인할 계획이다.",
+      "선형계획법은 분산을 모르기 때문에 한두 등급에 몰린 배합을 고르는 경향이 있다. 분산까지 따지는 최적화가 다음 과제다.",
+      "배합 설계 시간은 계산 시간만 쟀다. 사람이 배합표를 짜는 시간과는 비교하지 않았다."
     ].map(function (t) { return "<li>" + esc(t) + "</li>"; }).join("");
   }
   P.start(render);

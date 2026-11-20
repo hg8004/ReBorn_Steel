@@ -55,7 +55,7 @@
     <section class="card" aria-labelledby="taskT">
       <div class="card-h"><h2 id="taskT">오늘 할 일</h2><div class="prog"><span class="track"><i id="taskBar" style="width:0%"></i></span><span class="num" id="taskCount"></span></div></div>
       <ul class="tasks" id="tasks"></ul>
-      <p class="card-foot">할 일은 사내 메일에서 만들어집니다. 체크 표시는 이 브라우저에만 저장됩니다.</p>
+      <p class="card-foot">할 일은 사내 메일에서 자동으로 생겨요. 체크 표시는 이 브라우저에만 저장돼요.</p>
     </section>
     <div class="home-side">
       <section class="card mission" id="missionCard" aria-labelledby="msT"></section>
@@ -87,7 +87,7 @@
     </section>
   </div>
 
-  <p class="disclaimer">리본스틸㈜은 인공지능재료공학 수업 과제를 위해 만든 가상 기업입니다. 직원, 메일, 공지, 조업 데이터는 모두 가상입니다.</p>
+  <p class="disclaimer">리본스틸㈜은 인공지능재료공학 수업 과제용으로 만든 가상 기업이에요. 직원, 메일, 공지, 조업 데이터는 모두 가상입니다.</p>
 </main>
 </div>
 
@@ -131,7 +131,7 @@
         return '<li class="' + (d ? "done" : "") + '"><input type="checkbox" id="tk' + i + '" data-i="' + i + '"' + (d ? " checked" : "") + '>' +
           '<label for="tk' + i + '"><span class="t">' + esc(t.text) + '</span><span class="m">' + P.tagPill(m.tag) + "<span>" + esc(m.time) + " · " + esc(P.sender(m.from).name) + "</span></span></label>" +
           '<span class="acts"><a class="go main" href="' + esc(t.href) + '">처리하기</a><a class="go" href="mail.html?id=' + encodeURIComponent(m.id) + '">메일</a></span></li>';
-      }).join("") : '<li><span></span><span class="empty">오늘 배정된 할 일이 없습니다.</span><span></span></li>';
+      }).join("") : '<li><span></span><span class="empty">오늘은 배정된 할 일이 없어요.</span><span></span></li>';
       Array.prototype.forEach.call($("tasks").querySelectorAll("input"), function (cb) {
         cb.addEventListener("change", function () { P.setDone(todays[+cb.dataset.i], cb.checked); drawTasks(); });
       });
@@ -162,13 +162,13 @@
     $("mails").innerHTML = mails.slice(0, 6).map(function (m) {
       return '<li class="' + (P.isRead(m) ? "" : "unread") + '"><a href="mail.html?id=' + encodeURIComponent(m.id) + '">' + P.tagPill(m.tag) +
         '<span class="s">' + esc(m.subject) + '</span><span class="t">' + P.md(m.date) + " " + esc(m.time) + "</span></a></li>";
-    }).join("") || '<li class="empty">받은 메일이 없습니다.</li>';
+    }).join("") || '<li class="empty">받은 메일이 없어요.</li>';
 
     // 공지 (기준일까지)
     var ns = P.NOTICES.filter(function (n) { return n.date <= c.date; }).slice().reverse().slice(0, 6);
     $("notices").innerHTML = ns.map(function (n) {
       return '<li><a href="company.html#' + n.key + '"><span class="pill mute">공지</span><span class="s">' + esc(n.subject) + '</span><span class="t">' + P.md(n.date) + "</span></a></li>";
-    }).join("") || '<li class="empty">공지가 없습니다.</li>';
+    }).join("") || '<li class="empty">공지가 없어요.</li>';
   }
   P.start(render);
 })();

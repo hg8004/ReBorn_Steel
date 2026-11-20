@@ -102,6 +102,16 @@
   function flagged(sheet) { return sheet.flags.filter(function (f) { return f.risk !== "none"; }); }
   function noteMethod() { return D.meta.use_llm ? "LLM(Claude)" : "키워드 규칙"; }
   function noteText(S, lot) { var n = S.notes.filter(function (x) { return x.lot_id === lot; })[0]; return n ? n.note_text : ""; }
+  // 파이썬 실행 기록 문장을 읽기 쉽게: {'SD400': 14.7, ...} → SD400 14.7% · ..., ['LS_A'] → 경량A
+  function prettyLog(s) {
+    return String(s).replace("(keyword)", "(키워드 규칙)").replace("(llm)", "(LLM)").replace("강종별 최대 이탈확률(%)", "강종별 최대 이탈확률")
+      .replace(/\{([^}]*)\}/g, function (m, inner) {
+        return inner.split(/,\s*/).map(function (kv) { var p = kv.split(":"); return p[0].replace(/'/g, "").trim() + " " + (p[1] || "").trim() + "%"; }).join(" · ");
+      })
+      .replace(/\[([^\]]*)\]/g, function (m, inner) {
+        var xs = inner.replace(/'/g, "").split(/,\s*/).filter(Boolean); return xs.length ? xs.map(function (g) { return GNAME[g] || g; }).join(", ") : "없음";
+      });
+  }
 
   /* ---------- 결재 상신·실행 기록 (이 브라우저에만 저장) ---------- */
   function getSubmit(d) { return store.get("rb-submit", {})[d] || null; }
@@ -214,25 +224,26 @@
   /* ---------- 전사 공지 (가상) ---------- */
   var NOTICES = [
     { date: "2026-09-22", from: "admin", time: "08:30", key: "n-agent", subject: "[전사 공지] AI 배합 에이전트 정식 적용 안내",
-      body: [{ p: "오늘부터 스크랩 배합 지시서 초안은 배합 에이전트가 작성합니다. 결재선(배합 담당 → 제강팀장 → 생산본부장)은 그대로이며, 최종 판단은 사람이 합니다." },
-             { list: ["에이전트는 검수 메모, 시세·재고, 과거 조업 이력을 보고 원가 최소 배합을 계산합니다.", "heat별 규격 이탈 확률이 2%를 넘지 않도록 모의 조업으로 검증합니다.", "문의: 생산기술팀 강예린 선임"] }] },
+      body: [{ p: "오늘부터 스크랩 배합 지시서 초안은 배합 에이전트가 씁니다. 결재선(배합 담당 → 제강팀장 → 생산본부장)은 그대로고, 최종 판단은 지금처럼 사람이 합니다." },
+             { p: "에이전트는 검수 메모, 시세·재고, 과거 조업 이력을 보고 가장 싼 배합을 계산합니다. 그다음 모의 조업으로 heat별 규격 이탈 확률이 2%를 넘지 않는지 확인해요." },
+             { p: "궁금한 점은 생산기술팀 강예린 선임에게 물어봐 주세요." }] },
     { date: "2026-09-22", from: "pr", time: "09:00", key: "n-rebo", subject: "[사내 캐릭터] 리보를 소개합니다",
       body: [{ img: "assets/rebo.png", alt: "리본스틸 공식 캐릭터 리보: 새싹이 돋은 흰 안전모와 녹색 작업복을 입은 너구리" },
-             { p: "“버려진 철에 새로운 생명을 불어넣는 착한 지구 지킴이!” 리본스틸 공식 홍보대사 리보입니다. 사내포털과 메일함의 기본 프로필 사진으로 쓰입니다." },
+             { p: "“버려진 철에 새로운 생명을 불어넣는 착한 지구 지킴이!” 리본스틸 공식 홍보대사 리보예요. 오늘부터 사내포털과 메일함의 기본 프로필 사진으로 쓰여요." },
              { kv: [["이름", "리보 (REBO)"], ["성격", "밝고 명랑하며, 환경을 생각하는 책임감 있는 친구"], ["특기", "버려진 고철의 새로운 가치 찾기"],
                     ["꿈", "자원이 순환하는 깨끗하고 튼튼한 세상 만들기"], ["역할", "ReBorn Steel의 공식 홍보대사"]] }] },
     { date: "2026-09-28", from: "safety", time: "08:40", key: "n-safety", subject: "[안전] 10월 전기로 작업자 안전보건 교육 일정",
       body: [{ img: BRAND + "rebo-safety.jpg", alt: "무전기를 들고 안전조끼를 입은 리보", small: true },
-             { p: "안전이 먼저예요! 10월 정기 안전보건 교육을 아래와 같이 진행합니다. 교대조별로 1회 참석해 주세요. 신입사원은 반드시 참석합니다." },
+             { p: "안전이 먼저예요! 10월 정기 안전보건 교육 일정입니다. 교대조별로 한 번씩 참석해 주세요. 신입사원은 꼭 들어야 해요." },
              { kv: [["대상", "제강팀, 원료팀, 생산기술팀 현장 근무자"], ["일정", "10/6(화) ~ 10/8(목) 14:00~16:00"], ["장소", "본관 2층 교육장"], ["내용", "용강 비산·아크 화상 예방, 크레인 신호수 교육"]] }] },
     { date: "2026-10-05", from: "admin", time: "09:10", key: "n-vendor", subject: "[공지] 4분기 스크랩 협력사 평가 일정",
-      body: [{ p: "4분기 협력사 평가에 검수 메모의 위험 판정 이력과 성분 이상 로트 건수를 반영합니다." },
+      body: [{ p: "4분기 협력사 평가에는 검수 메모의 위험 판정 이력과 성분 이상 로트 건수가 들어갑니다." },
              { kv: [["평가 기간", "10/12 ~ 10/23"], ["담당", "구매팀, 품질보증팀"]] }] },
     { date: "2026-10-16", from: "admin", time: "10:00", key: "n-lf", subject: "[설비] 10/18(일) 야간 LF 정기 점검",
-      body: [{ p: "10/18(일) 22:00부터 10/19(월) 06:00까지 LF 래들 정련로 정기 점검이 있습니다. 생산 계획(24 heat)에는 영향이 없도록 점검 전후로 조정합니다." }] },
+      body: [{ p: "10/18(일) 22시부터 10/19(월) 6시까지 LF 래들 정련로를 정기 점검합니다. 하루 24 heat 계획에 차질이 없도록 점검 전후로 일정을 조정할 예정이에요." }] },
     { date: "2026-10-26", from: "admin", time: "08:30", key: "n-report", subject: "[전사 공지] 10월 원가 절감 실적 보고회 (10/30)",
       body: [{ img: BRAND + "rebo-build.jpg", alt: "철근 다발을 든 리보", small: true },
-             { p: "10/30(금) 15:00 대회의실에서 10월 원가 절감 실적 보고회를 엽니다. 생산본부는 AI 배합 적용 효과를 보고합니다." }] }
+             { p: "10/30(금) 15시, 대회의실에서 10월 원가 절감 실적 보고회가 열립니다. 생산본부는 AI 배합을 적용한 효과를 발표해요." }] }
   ];
 
   /* ---------- 메일 만들기: 신입 배합 담당이 받는 메일 ---------- */
@@ -252,9 +263,9 @@
       add({ key: "welcome", from: "hr", to: ["me"], time: "08:00", tag: "공지",
         subject: "[입사 환영] " + u.name + " 사원님, 리본스틸에 오신 것을 환영합니다",
         body: [{ img: BRAND + "rebo-hello.jpg", alt: "손을 들어 인사하는 리보", small: true },
-               { p: u.name + " 사원님, 입사를 진심으로 환영합니다. 리본스틸은 버려진 철스크랩을 녹여 철근으로 다시 태어나게 하는 전기로 제강사입니다." },
+               { p: u.name + " 사원님, 입사를 진심으로 환영합니다. 리본스틸은 버려진 철스크랩을 녹여 철근으로 다시 태어나게 하는 전기로 제강사예요." },
                { kv: [["소속", JOB.dept + " " + JOB.team], ["직무", JOB.roleLong], ["직급", "사원 (신입)"], ["입사일", JOIN_DATE], ["사수", "한지수 대리 (제강팀 배합 담당)"]] },
-               { p: "사내포털의 '공지·조직·설비'에서 회사 소개와 공정, 조직도를 먼저 살펴보세요." }],
+               { p: "먼저 사내포털의 '회사·공지·조직' 메뉴에서 회사 소개와 공정, 조직도를 둘러보세요." }],
         tasks: { me: { text: "회사 소개·공정·조직도 둘러보기", href: "company.html" } } });
       add({ key: "handover", from: "sa", to: ["me"], time: "08:30", tag: "확인",
         subject: "[인수인계] 배합 업무 하루 흐름 안내",
@@ -276,7 +287,7 @@
         subject: "[재고 부족] " + GNAME[g] + " " + inv + "t",
         body: [{ kv: [["현재 재고", inv + "t (기준 " + SHORT_T + "t 미만)"], ["평소 재고", "약 " + Math.round(AVG_INV[g]) + "t"],
                       ["오늘 배합 사용량", use[g].toFixed(1) + "t"]] },
-               { p: "배합 에이전트는 재고 한도 안에서 배합을 계산합니다. 구매팀(최도윤 대리)이 긴급 발주를 검토합니다." }],
+               { p: "배합 에이전트는 재고 한도 안에서만 배합을 짭니다. 긴급 발주는 구매팀 최도윤 대리가 검토해요." }],
         tasks: { me: { text: GNAME[g] + " 재고 " + inv + "t: 오늘 지시서의 사용량이 재고 안인지 확인", href: "yard.html?date=" + d + "&grade=" + g } } });
     });
 
@@ -287,7 +298,7 @@
                   { kv: [["로트", x.lot_id], ["등급", GNAME[x.grade_id] + " (" + x.grade_id + ")"],
                          ["의심 원소", x.element === "cu" ? "Cu (구리)" : x.element === "sn" ? "Sn (주석)" : "-"],
                          ["추정 배수", "평소의 " + x.suspected_multiplier + "배"], ["조치", act], ["판정 방식", noteMethod()]] }];
-      if (!D.meta.use_llm) body.push({ warn: "키워드 규칙은 문맥을 읽지 못합니다. '제거 완료', '분석 결과 정상'처럼 이미 해소된 메모도 위험으로 판정할 수 있습니다. 원문이 이상하면 품질보증팀(이서연 과장)에 확인을 요청하세요." });
+      if (!D.meta.use_llm) body.push({ warn: "키워드 규칙은 문맥을 못 읽어요. '제거 완료', '분석 결과 정상'처럼 이미 해결된 메모도 위험으로 볼 수 있으니, 원문이 이상하면 품질보증팀 이서연 과장에게 확인해 주세요." });
       add({ key: "lot-" + x.lot_id, from: "agent", to: ["me", "qa"], time: "06:20", tag: "확인",
         subject: "[위험 로트] " + x.lot_id + " " + act, body: body,
         tasks: { me: { text: "로트 " + x.lot_id + "의 메모 원문 읽고 '" + act + "'가 맞는지 판단", href: "agent.html?date=" + d + "#notes" } } });
@@ -296,10 +307,10 @@
     // 지시서 초안
     add({ key: "draft", from: "agent", to: ["me"], time: "06:40", tag: "결재",
       subject: "[배합 지시서 초안] " + md(d) + " 24 heat · 톤당 " + won(f.cost_per_t) + "원",
-      body: [{ p: "오늘 생산 계획 24 heat의 배합 지시서 자동 초안을 작성했습니다. '배합 에이전트 작업실'에서 검토하고, 필요하면 판정을 고쳐 다시 실행한 뒤 결재를 올려 주세요." },
+      body: [{ p: "오늘 24 heat 배합 지시서 자동 초안이 나왔어요. 배합 에이전트 작업실에서 검토하고, 필요하면 판정을 고쳐 다시 돌린 뒤 결재를 올려 주세요." },
              { kv: [["톤당 배합 원가", won(f.cost_per_t) + "원 (숙련자 배합 " + won(f.expert_cost_per_t) + "원)"],
                     ["톤당 절감", won(f.saving_per_t) + "원 · 하루 약 " + (daySave / 1e6).toFixed(1) + "백만 원"],
-                    ["최적화–시뮬레이션", f.iterations + "회 반복"],
+                    ["최적화–모의 조업", f.iterations + "회 반복"],
                     ["예측 최대 이탈 확률", maxH.p_fail_pct.toFixed(1) + "% (" + maxH.heat_id + ", " + maxH.steel_grade + ")"],
                     ["배합 제외 등급", excl.length ? excl.join(", ") : "없음"],
                     ["5% 제한 등급", capd.length ? capd.join(", ") : "없음"]] },
@@ -308,8 +319,8 @@
 
     // 실행 기록
     var runBody = [{ kv: [["반복 횟수", f.iterations + "회 (최대 6회)"], ["검수 메모 판정", noteMethod()], ["지시서 근거 작성", S.rationale.method === "llm" ? "LLM(Claude)" : "고정 템플릿"]] },
-                   { list: S.log }];
-    if (!D.meta.use_llm) runBody.push({ warn: "API 키 없이 실행되어 검수 메모는 키워드 규칙, 근거 문장은 템플릿으로 처리됐습니다." });
+                   { list: S.log.map(prettyLog) }];
+    if (!D.meta.use_llm) runBody.push({ warn: "API 키 없이 돌려서, 검수 메모는 키워드 규칙으로, 근거 문장은 템플릿으로 처리했어요." });
     add({ key: "runlog", from: "agent", to: ["me", "ai"], time: "07:00", tag: f.iterations >= 4 ? "확인" : "참고",
       subject: "[실행 기록] " + md(d) + " 반복 " + f.iterations + "회 · 판정 " + noteMethod(), body: runBody,
       tasks: { me: { text: "실행 기록 점검: 반복 " + f.iterations + "회" + (f.iterations >= 4 ? " (평소보다 많음, 원인 확인)" : ""), href: "ops.html?date=" + d + "#log" } } });
@@ -317,7 +328,7 @@
     // 목표에 가까운 heat
     if (maxH.p_fail_pct >= 1.5) add({ key: "heat-" + maxH.heat_id, from: "agent", to: ["me", "jt"], time: "07:10", tag: "확인",
       subject: "[주의 heat] " + maxH.heat_id + " " + maxH.steel_grade + " 예측 이탈 " + maxH.p_fail_pct.toFixed(1) + "%",
-      body: [{ p: "목표(2%) 안이지만 오늘 가장 높은 heat입니다. 장입 후 1차 성분 분석 결과를 바로 확인해 주세요." },
+      body: [{ p: "목표(2%) 안이긴 하지만 오늘 가장 높은 heat예요. 장입하고 나서 1차 성분 분석 결과를 바로 확인해 주세요." },
              { kv: [["예상 Cu", maxH.pred_cu_pct.toFixed(3) + "% (상한 " + maxH.cu_max_pct + "%)"], ["예상 Sn", maxH.pred_sn_pct.toFixed(4) + "% (상한 " + maxH.sn_max_pct + "%)"]] }],
       tasks: { me: { text: maxH.heat_id + " 장입 후 1차 성분 분석 결과 확인", href: "ops.html?date=" + d + "&heat=" + maxH.heat_id } } });
 
@@ -326,7 +337,7 @@
     var top = chg.slice().sort(function (a, b) { return Math.abs(b.c) - Math.abs(a.c); })[0];
     if (Math.abs(top.c) >= 0.5) add({ key: "price", from: "price", to: ["me", "pu"], time: "07:30", tag: "참고",
       subject: "[시세] " + GNAME[top.g] + " 전일 대비 " + (top.c >= 0 ? "+" : "") + top.c.toFixed(2) + "%",
-      body: [{ p: "시세가 바뀌면 원가 최소 배합도 달라집니다. 오늘 지시서에서 " + GNAME[top.g] + " 사용량을 참고하세요." },
+      body: [{ p: "시세가 바뀌면 가장 싼 배합도 달라져요. 오늘 지시서에서 " + GNAME[top.g] + " 사용량이 어떻게 바뀌었는지 봐 두세요." },
              { table: { head: ["등급", "단가(원/t)", "전일 대비"], rows: chg.map(function (x) { return [GNAME[x.g], won(x.p), (x.c >= 0 ? "+" : "") + x.c.toFixed(2) + "%"]; }) } }] });
 
     // 결재 결과 (제강팀장): 작업실에서 결재를 올렸을 때만 온다
@@ -336,9 +347,9 @@
       var memo = mres && mres.ok ? mres.msg + " 잘했어요." : mres ? "다만 " + mres.msg : "오늘도 수고 많았어요.";
       add({ key: "approved", from: "jt", to: ["me"], time: sub.time || "11:00", tag: mres && !mres.ok ? "확인" : "참고",
         subject: "[결재 " + (mres && !mres.ok ? "보완 요청" : "완료") + "] " + md(d) + " 배합 지시서",
-        body: [{ p: u.name + " 씨, " + md(d) + " 배합 지시서 받았습니다. 톤당 " + won(sub.costPerT) + "원, 숙련자 배합 대비 " + won(sub.saving) + "원 절감, 예측 최대 이탈 " + sub.maxP.toFixed(1) + "% 확인했어요." },
+        body: [{ p: u.name + " 씨, " + md(d) + " 배합 지시서 받았어요. 톤당 " + won(sub.costPerT) + "원으로 숙련자 배합보다 " + won(sub.saving) + "원 싸고, 예측 최대 이탈은 " + sub.maxP.toFixed(1) + "%네요." },
                { p: memo }].concat(sub.comment ? [{ quote: "검토 의견: " + sub.comment }] : [])
-               .concat([{ p: mres && !mres.ok ? "작업실에서 다시 확인하고 결재를 올려 주세요." : "생산본부장님 최종 결재로 넘겼습니다." }]),
+               .concat([{ p: mres && !mres.ok ? "작업실에서 다시 확인하고 올려 주세요." : "생산본부장님께 최종 결재로 넘겼어요." }]),
         tasks: mres && !mres.ok ? { me: { text: "팀장 보완 요청: 작업실에서 다시 검토 후 재상신", href: "agent.html?date=" + d } } : null });
     }
 
@@ -540,12 +551,12 @@
     function step2() {
       var p = me();
       w.innerHTML = '<div class="panel join"><div class="join-brand"><img src="' + BRAND + 'logo-mark.png" alt=""><b>ReBorn Steel</b></div>' +
-        '<h2 id="joinT">' + esc(p.name) + " 사원님, 배치가 결정되었어요!</h2>" +
+        '<h2 id="joinT">' + esc(p.name) + " 사원님, 일할 자리가 정해졌어요!</h2>" +
         '<dl class="kv join-kv"><dt>소속</dt><dd>' + JOB.dept + " " + JOB.team + "</dd><dt>직무</dt><dd><b>" + JOB.roleLong + "</b></dd><dt>직급</dt><dd>사원 (신입)</dd>" +
         "<dt>입사일</dt><dd>" + JOIN_DATE + " (" + dow(JOIN_DATE) + ")</dd><dt>사수</dt><dd>한지수 대리</dd></dl>" +
         '<div class="join-job"><img src="' + BRAND + 'rebo-recycle.jpg" alt="재활용 마크 판을 든 리보"><div><b>무슨 일을 하나요?</b><ul>' +
         JOB.duties.map(function (d) { return "<li>" + esc(d) + "</li>"; }).join("") + "</ul></div></div>" +
-        '<p class="ink2" style="font-size:var(--fs-md)">첫날 할 일은 사내 메일함에 와 있어요. 핵심 업무는 <b>배합 에이전트 작업실</b>에서 해요. 상단의 업무 기준일을 바꾸면 다음 날로 넘어갑니다.</p>' +
+        '<p class="ink2" style="font-size:var(--fs-md)">첫날 할 일은 사내 메일함에 와 있어요. 핵심 업무는 <b>배합 에이전트 작업실</b>에서 해요. 위쪽의 업무 기준일을 바꾸면 다음 날로 넘어가요.</p>' +
         '<div style="text-align:right"><button class="btn primary" type="button" id="joinGo">사내포털 시작하기</button></div></div>';
       $("joinGo").addEventListener("click", function () { close(); rerender(); });
       $("joinGo").focus();
@@ -565,7 +576,7 @@
 
   function start(fn) {
     if (!D || !C) {
-      document.body.innerHTML = '<p style="padding:16px">데이터를 불러오지 못했습니다. <code>python src/evaluate.py</code>와 <code>python src/export_intranet.py</code>를 먼저 실행하세요.</p>';
+      document.body.innerHTML = '<p style="padding:16px">데이터를 불러오지 못했어요. <code>python src/evaluate.py</code>와 <code>python src/export_intranet.py</code>를 먼저 실행해 주세요.</p>';
       return;
     }
     renderFn = fn; buildShell(); rerender();
@@ -581,7 +592,7 @@
     flagged: flagged, usage: usage, tapTotal: tapTotal, noteMethod: noteMethod, marketRow: marketRow, prevMarketDate: prevMarketDate,
     hover: hover, showTip: showTip, hideTip: hideTip, svgEl: svgEl, lineChart: lineChart,
     start: start, refresh: function () { updateShell(); }, setDate: setDate,
-    noteText: noteText, getSubmit: getSubmit, setSubmit: setSubmit, getRuns: getRuns, addRun: addRun, hasOverrides: hasOverrides,
+    noteText: noteText, prettyLog: prettyLog, getSubmit: getSubmit, setSubmit: setSubmit, getRuns: getRuns, addRun: addRun, hasOverrides: hasOverrides,
     missionFor: missionFor, checkMission: checkMission, RESOLVED: RESOLVED,
     timely: { chatUrl: TIMELY.chatUrl, ready: timelyReady, token: timelyToken, connect: timelyConnect, disconnect: timelyDisconnect, open: openReboChat }
   };

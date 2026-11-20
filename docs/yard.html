@@ -25,12 +25,12 @@
     <div class="pagehead">
       <div class="eyebrow" id="eb">스크랩 야드·검수</div>
       <h1>등급별 재고·시세와 검수 메모</h1>
-      <p>표의 등급을 누르면 아래 그래프와 검수 이력이 그 등급으로 바뀝니다. 재고가 <span id="shortT"></span>t 아래면 부족으로 표시합니다.</p>
+      <p>표에서 등급을 누르면 아래 그래프와 검수 이력이 그 등급으로 바뀌어요. 재고가 <span id="shortT"></span>t보다 적으면 '부족'으로 표시해요.</p>
     </div>
   </div>
 
   <section class="card" aria-labelledby="invT">
-    <div class="card-h"><h2 id="invT">오늘의 재고·시세</h2><span class="muted">행을 누르면 아래 그래프가 그 등급으로 바뀝니다</span></div>
+    <div class="card-h"><h2 id="invT">오늘의 재고·시세</h2><span class="muted">행을 누르면 아래 그래프가 그 등급으로 바뀌어요</span></div>
     <div class="scroll-x"><table id="inv"><thead><tr><th>등급</th><th class="r">단가(원/t)</th><th class="r">전일 대비</th><th class="r">재고(t)</th><th class="r">오늘 배합 사용(t)</th><th>상태</th><th class="r">공칭 Cu / Sn(%)</th><th>오늘 검수</th></tr></thead><tbody></tbody></table></div>
   </section>
 
@@ -103,8 +103,8 @@
       var fx = flag[n.grade_id] || { risk: "none" };
       return '<li><div class="row"><span>' + esc(n.note_text) + "</span>" + P.riskPill(fx.risk) + '</div><span class="m mono">' + esc(n.lot_id) + " · " + P.GNAME[n.grade_id] + "</span>" +
         (fx.risk !== "none" ? '<span class="m">' + esc(fx.reason) + "</span>" : "") + "</li>";
-    }).join("") : '<li class="empty">오늘 등록된 검수 메모가 없습니다.</li>';
-    $("method").textContent = "판정: " + P.noteMethod() + (P.D.meta.use_llm ? "" : " · 문맥을 읽지 못하므로 '제거 완료' 같은 메모는 품질보증팀이 원문을 확인합니다.");
+    }).join("") : '<li class="empty">오늘 등록된 검수 메모가 없어요.</li>';
+    $("method").textContent = "판정: " + P.noteMethod() + (P.D.meta.use_llm ? "" : " · 키워드 규칙은 문맥을 못 읽어서, '제거 완료' 같은 메모는 품질보증팀이 원문을 다시 확인해요.");
 
     $("hf").innerHTML = [[false, P.GNAME[grade]], [true, "전체 등급"]].map(function (o) {
       return '<button type="button" class="chip" data-all="' + o[0] + '" aria-pressed="' + (histAll === o[0]) + '">' + o[1] + "</button>";
@@ -116,7 +116,7 @@
       var sh = P.D.sheets[n.date], fx = sh ? sh.flags.filter(function (x) { return x.lot_id === n.lot_id; })[0] : null;
       return '<li><div class="row"><span>' + esc(n.note_text) + "</span>" + (fx ? P.riskPill(fx.risk) : '<span class="pill mute">판정 전 기간</span>') +
         '</div><span class="m"><span class="mono">' + esc(n.lot_id) + "</span> · " + P.GNAME[n.grade_id] + " · " + P.md(n.date) + "</span></li>";
-    }).join("") : '<li class="empty">최근 14일 동안 이 등급의 검수 메모가 없습니다.</li>';
+    }).join("") : '<li class="empty">최근 14일 동안 이 등급의 검수 메모가 없어요.</li>';
   }
   P.start(render);
 })();
