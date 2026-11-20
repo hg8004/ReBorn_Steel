@@ -131,9 +131,23 @@
     return summarize(ctx, x, params(comp, G, "cu").mu, params(comp, G, "sn").mu);
   }
 
-  /* ---------- 첫 안전여유 = z × (숙련자 배합 기준 heat 성분 표준편차) ---------- */
+  // 숙련자 배합표를 쓸 수 있는가: 등급 구성이 기본 8종과 같고, 모든 강종의 배합표가 있을 때만
+  function canExpert(ctx, cfg) {
+    if (!cfg || !cfg.expert_recipe || !cfg.grades || ctx.grades.length !== cfg.grades.length) return false;
+    for (var i = 0; i < ctx.grades.length; i++) if (ctx.grades[i] !== cfg.grades[i]) return false;
+    return Object.keys(ctx.specs).every(function (s) { return !!cfg.expert_recipe[s]; });
+  }
+  // 기준 배합: 모든 등급을 같은 무게 비율로 섞은 배합 (사용자 조건처럼 숙련자 배합표가 없을 때 첫 안전여유 계산용)
+  function equalBlend(ctx, comp) {
+    var n = ctx.grades.length, r = ctx.grades.map(function () { return 1 / n; });
+    var x = ctx.plan.map(function (p) { var k = p.W / dot(r, ctx.y); return r.map(function (v) { return v * k; }); });
+    return summarize(ctx, x, params(comp, ctx.grades, "cu").mu, params(comp, ctx.grades, "sn").mu);
+  }
+
+  /* ---------- 첫 안전여유 = z × (기준 배합의 heat 성분 표준편차) ----------
+     기준 배합은 숙련자 배합표(쓸 수 있을 때) 또는 등급별 같은 비율 배합 */
   function initialMargins(ctx, comp, cfg, target) {
-    var z = normInv(1 - target / 2), eb = expertBlend(ctx, comp, cfg), G = ctx.grades, out = {};
+    var z = normInv(1 - target / 2), eb = canExpert(ctx, cfg) ? expertBlend(ctx, comp, cfg) : equalBlend(ctx, comp), G = ctx.grades, out = {};
     Object.keys(ctx.specs).forEach(function (s) {
       var rows = []; ctx.plan.forEach(function (p, h) { if (p.steel === s) rows.push(h); });
       var m = {};
@@ -242,8 +256,15 @@
       detail: "메모 " + flags.length + "건 → 제외 " + (nc.exclude.length ? nc.exclude.join(", ") : "없음") + ", 5% 제한 " + (Object.keys(nc.cap).join(", ") || "없음") });
     steps.push({ tool: "estimate_composition", title: "등급별 실제 성분 (과거 이력 회귀)",
       detail: "과거 " + comp.n_heats + " heat 이력으로 추정한 Cu·Sn 평균과 편차 사용" });
-    var expert = expertBlend(ctx, comp, cfg);
-    var margins = initialMargins(ctx, comp, cfg, target), opt = null, sim = null, it = 0, used = margins, ok = false;
+    return solveCore(ctx, comp, cfg, { flags: flags, nc: nc, target: target, lp: lp, steps: steps });
+  }
+
+  /* ---------- 반복 계산의 본체: 첫 안전여유 → [최적화 → 모의 조업 → 여유 조정] × 최대 N회 ----------
+     o: {flags, nc, target, lp, steps(앞에 붙일 단계), margins(첫 안전여유, 없으면 자동)} */
+  function solveCore(ctx, comp, cfg, o) {
+    var target = o.target, lp = o.lp, nc = o.nc, flags = o.flags, steps = o.steps || [];
+    var expert = canExpert(ctx, cfg) ? expertBlend(ctx, comp, cfg) : null;
+    var margins = o.margins || initialMargins(ctx, comp, cfg, target), opt = null, sim = null, it = 0, used = margins, ok = false;
     for (it = 1; it <= cfg.max_iterations; it++) {
       var o = optimize(ctx, comp, margins, nc, lp);
       if (o.status !== "ok") {
@@ -264,11 +285,29 @@
     }
     if (it > cfg.max_iterations) it = cfg.max_iterations;
     if (opt) steps.push({ tool: "write_charge_sheet", title: ok ? "배합 지시서 작성" : "최대 반복에 도달, 마지막 배합으로 지시서 작성", bad: !ok,
-      detail: "톤당 " + Math.round(opt.costPerT).toLocaleString("ko-KR") + "원 (숙련자 배합 " + Math.round(expert.costPerT).toLocaleString("ko-KR") + "원)" });
-    return { ok: !!opt, pass: ok, ctx: ctx, flags: flags, nc: nc, margins: used, opt: opt, sim: sim, iterations: it, steps: steps, expert: expert, target: target };
+      detail: "톤당 " + Math.round(opt.costPerT).toLocaleString("ko-KR") + "원" + (expert ? " (숙련자 배합 " + Math.round(expert.costPerT).toLocaleString("ko-KR") + "원)" : "") });
+    return { ok: !!opt, pass: ok, ctx: ctx, comp: comp, flags: flags, nc: nc, margins: used, opt: opt, sim: sim, iterations: it, steps: steps, expert: expert, target: target };
+  }
+
+  /* ---------- 사용자가 입력한 조건으로 계산 준비 ----------
+     spec = { grades: [{id, name, price, inv, y, dens, cu, cuSd, sn, snSd}],
+              steels: [{steel, cu, sn, heats, W}], vol, measSd: {cu, sn} }
+     → {ctx, comp}: 고정 데이터 대신 입력값으로 만든 '오늘의 조건'과 성분 분포 */
+  function customSetup(spec) {
+    var G = spec.grades.map(function (g) { return g.id; }), specs = {}, plan = [], k = 1;
+    spec.steels.forEach(function (s) {
+      specs[s.steel] = { cu: +s.cu, sn: +s.sn };
+      for (var i = 0; i < s.heats; i++) plan.push({ heat_id: "P" + (k < 10 ? "0" : "") + (k++), steel: s.steel, W: +s.W });
+    });
+    var num = function (key) { return spec.grades.map(function (g) { return +g[key]; }); };
+    var ctx = { date: "custom", grades: G, plan: plan, price: num("price"), inv: num("inv"), basePrice: num("price"), baseInv: num("inv"),
+                y: num("y"), dens: num("dens"), name: spec.grades.map(function (g) { return g.name; }), specs: specs, vol: +spec.vol };
+    var comp = { grades: {}, meas_sd: spec.measSd || { cu: 0.005, sn: 0.0008 } };
+    spec.grades.forEach(function (g) { comp.grades[g.id] = { cu_mean: +g.cu, cu_sd: +g.cuSd, cu_se: 0, sn_mean: +g.sn, sn_sd: +g.snSd, sn_se: 0 }; });
+    return { ctx: ctx, comp: comp };
   }
 
   return { normInv: normInv, makeRng: makeRng, makeContext: makeContext, keywordJudge: keywordJudge, toConstraints: toConstraints,
-           expertBlend: expertBlend, initialMargins: initialMargins, optimize: optimize, simulate: simulate,
-           suggestMargins: suggestMargins, run: run };
+           expertBlend: expertBlend, equalBlend: equalBlend, canExpert: canExpert, initialMargins: initialMargins, optimize: optimize, simulate: simulate,
+           suggestMargins: suggestMargins, run: run, solveCore: solveCore, customSetup: customSetup };
 });

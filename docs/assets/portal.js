@@ -19,7 +19,7 @@
   var NAME_MAX = 12;
 
   /* ---------- timelyGPT (리보 AI 채팅) 설정 ----------
-     chatUrl: timelyai.io에 만든 리본스틸 스페이스. 작업실에서 결과 요약을 복사해 이 채팅에 붙여 넣는다 (기본 방식, 키 불필요).
+     chatUrl: timelyai.io에 만든 리본스틸 스페이스. 지난 기록·미션 화면에서 결과 요약을 복사해 이 채팅에 붙여 넣는다 (기본 방식, 키 불필요).
      아래 SDK 연동은 'TimelyChat SDK용 API 키'(ai.timelygpt.co.kr)가 있을 때만 동작한다.
      timelyai.io에서 받은 키로는 "해당하는 조직을 찾을 수 없습니다"가 나온다 (2026-11 확인).
      API 키는 코드에 적지 않는다. 입력하면 로그인에만 쓰고 버리며, 받은 토큰(24시간)만 이 창(sessionStorage)에 보관한다. */
@@ -271,9 +271,9 @@
         subject: "[인수인계] 배합 업무 하루 흐름 안내",
         body: [{ p: u.name + "님, 사수 한지수입니다. 우리 일은 매일 24 heat의 스크랩 배합을 정하는 거예요. 계산은 배합 에이전트가 하지만, 결과를 확인하고 책임지고 결재를 올리는 건 우리 몫이에요." },
                { list: ["06:00~06:20 재고 부족·위험 로트 알림이 오면 먼저 읽어 두기",
-                        "06:40 에이전트의 자동 초안 도착 → '배합 에이전트 작업실'에서 직접 다시 실행해 보며 확인",
-                        "검수 메모 판정이 이상하면 작업실에서 판정을 고치고 다시 실행 (에이전트는 메모를 키워드로만 읽어요)",
-                        "예측 이탈 확률(heat별 2% 이하)과 원가를 확인하고, 작업실에서 박준영 팀장님께 결재 상신",
+                        "06:40 에이전트의 자동 초안 도착 → '지난 기록·미션'에서 직접 다시 실행해 보며 확인",
+                        "검수 메모 판정이 이상하면 판정을 고치고 다시 실행 (자동 초안은 메모를 키워드로만 읽어요)",
+                        "예측 이탈 확률(heat별 2% 이하)과 원가를 확인하고 박준영 팀장님께 결재 상신",
                         "Cu·Sn은 전기로·LF에서 빠지지 않으니, 배합에서 못 막으면 끝이에요!"] },
                { p: "모르는 건 언제든 메신저로 물어보세요." }],
         tasks: { me: { text: "인수인계 메일 읽고 하루 업무 흐름 익히기", href: "ops.html?date=" + d } } });
@@ -301,13 +301,13 @@
       if (!D.meta.use_llm) body.push({ warn: "키워드 규칙은 문맥을 못 읽어요. '제거 완료', '분석 결과 정상'처럼 이미 해결된 메모도 위험으로 볼 수 있으니, 원문이 이상하면 품질보증팀 이서연 과장에게 확인해 주세요." });
       add({ key: "lot-" + x.lot_id, from: "agent", to: ["me", "qa"], time: "06:20", tag: "확인",
         subject: "[위험 로트] " + x.lot_id + " " + act, body: body,
-        tasks: { me: { text: "로트 " + x.lot_id + "의 메모 원문 읽고 '" + act + "'가 맞는지 판단", href: "agent.html?date=" + d + "#notes" } } });
+        tasks: { me: { text: "로트 " + x.lot_id + "의 메모 원문 읽고 '" + act + "'가 맞는지 판단", href: "history.html?date=" + d + "#notes" } } });
     });
 
     // 지시서 초안
     add({ key: "draft", from: "agent", to: ["me"], time: "06:40", tag: "결재",
       subject: "[배합 지시서 초안] " + md(d) + " 24 heat · 톤당 " + won(f.cost_per_t) + "원",
-      body: [{ p: "오늘 24 heat 배합 지시서 자동 초안이 나왔어요. 배합 에이전트 작업실에서 검토하고, 필요하면 판정을 고쳐 다시 돌린 뒤 결재를 올려 주세요." },
+      body: [{ p: "오늘 24 heat 배합 지시서 자동 초안이 나왔어요. '지난 기록·미션'에서 검토하고, 필요하면 판정을 고쳐 다시 돌린 뒤 결재를 올려 주세요." },
              { kv: [["톤당 배합 원가", won(f.cost_per_t) + "원 (숙련자 배합 " + won(f.expert_cost_per_t) + "원)"],
                     ["톤당 절감", won(f.saving_per_t) + "원 · 하루 약 " + (daySave / 1e6).toFixed(1) + "백만 원"],
                     ["최적화–모의 조업", f.iterations + "회 반복"],
@@ -315,7 +315,7 @@
                     ["배합 제외 등급", excl.length ? excl.join(", ") : "없음"],
                     ["5% 제한 등급", capd.length ? capd.join(", ") : "없음"]] },
              { p: S.rationale.day_summary }],
-      tasks: { me: { text: "작업실에서 배합 지시서 검토·실행 후 제강팀장에게 결재 상신", href: "agent.html?date=" + d } } });
+      tasks: { me: { text: "배합 지시서 검토·실행 후 제강팀장에게 결재 상신", href: "history.html?date=" + d } } });
 
     // 실행 기록
     var runBody = [{ kv: [["반복 횟수", f.iterations + "회 (최대 6회)"], ["검수 메모 판정", noteMethod()], ["지시서 근거 작성", S.rationale.method === "llm" ? "LLM(Claude)" : "고정 템플릿"]] },
@@ -340,7 +340,7 @@
       body: [{ p: "시세가 바뀌면 가장 싼 배합도 달라져요. 오늘 지시서에서 " + GNAME[top.g] + " 사용량이 어떻게 바뀌었는지 봐 두세요." },
              { table: { head: ["등급", "단가(원/t)", "전일 대비"], rows: chg.map(function (x) { return [GNAME[x.g], won(x.p), (x.c >= 0 ? "+" : "") + x.c.toFixed(2) + "%"]; }) } }] });
 
-    // 결재 결과 (제강팀장): 작업실에서 결재를 올렸을 때만 온다
+    // 결재 결과 (제강팀장): 지난 기록·미션에서 결재를 올렸을 때만 온다
     var sub = getSubmit(d);
     if (sub) {
       var mres = checkMission(d, sub);
@@ -349,8 +349,8 @@
         subject: "[결재 " + (mres && !mres.ok ? "보완 요청" : "완료") + "] " + md(d) + " 배합 지시서",
         body: [{ p: u.name + " 씨, " + md(d) + " 배합 지시서 받았어요. 톤당 " + won(sub.costPerT) + "원으로 숙련자 배합보다 " + won(sub.saving) + "원 싸고, 예측 최대 이탈은 " + sub.maxP.toFixed(1) + "%네요." },
                { p: memo }].concat(sub.comment ? [{ quote: "검토 의견: " + sub.comment }] : [])
-               .concat([{ p: mres && !mres.ok ? "작업실에서 다시 확인하고 올려 주세요." : "생산본부장님께 최종 결재로 넘겼어요." }]),
-        tasks: mres && !mres.ok ? { me: { text: "팀장 보완 요청: 작업실에서 다시 검토 후 재상신", href: "agent.html?date=" + d } } : null });
+               .concat([{ p: mres && !mres.ok ? "다시 확인하고 올려 주세요." : "생산본부장님께 최종 결재로 넘겼어요." }]),
+        tasks: mres && !mres.ok ? { me: { text: "팀장 보완 요청: 다시 검토 후 재상신", href: "history.html?date=" + d } } : null });
     }
 
     NOTICES.forEach(function (nt) { if (nt.date === d) add({ key: nt.key, from: nt.from, to: ["all"], time: nt.time, tag: "공지", subject: nt.subject, body: nt.body }); });
@@ -476,12 +476,13 @@
   store.set("rb-date", state.date);
   var renderFn = null;
 
-  var NAV = [["home", "index.html", "홈"], ["agent", "agent.html", "배합 에이전트 작업실"], ["mail", "mail.html", "사내 메일함"], ["ops", "ops.html", "오늘의 조업 현황"],
-             ["yard", "yard.html", "스크랩 야드·검수"], ["company", "company.html", "회사·공지·조직"], ["report", "report.html", "AI 도입 보고서"]];
+  var NAV = [["home", "index.html", "홈"], ["agent", "agent.html", "AI 배합 설계"], ["history", "history.html", "지난 기록·미션"], ["mail", "mail.html", "사내 메일함"],
+             ["ops", "ops.html", "오늘의 조업 현황"], ["yard", "yard.html", "스크랩 야드·검수"], ["company", "company.html", "회사·공지·조직"], ["report", "report.html", "AI 도입 보고서"]];
   // 메뉴 아이콘 (24×24 선 그림, 색은 글자색을 따른다)
   var ICON = {
     home: '<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/>',
     agent: '<path d="M9 3h6"/><path d="M10 3v6L4.5 18.5A1.6 1.6 0 0 0 5.9 21h12.2a1.6 1.6 0 0 0 1.4-2.5L14 9V3"/><path d="M7.5 14h9"/>',
+    history: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
     mail: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
     ops: '<path d="M3 21V10l5 3V10l5 3V6l8 4v11z"/><path d="M7 17h2M12 17h2M17 17h1"/>',
     yard: '<path d="M7 7h10l3 4-8 9-8-9z"/><path d="M4 11h16"/><path d="M12 20l-3-9 3-4 3 4z"/>',
@@ -556,7 +557,7 @@
         "<dt>입사일</dt><dd>" + JOIN_DATE + " (" + dow(JOIN_DATE) + ")</dd><dt>사수</dt><dd>한지수 대리</dd></dl>" +
         '<div class="join-job"><img src="' + BRAND + 'rebo-recycle.jpg" alt="재활용 마크 판을 든 리보"><div><b>무슨 일을 하나요?</b><ul>' +
         JOB.duties.map(function (d) { return "<li>" + esc(d) + "</li>"; }).join("") + "</ul></div></div>" +
-        '<p class="ink2" style="font-size:var(--fs-md)">첫날 할 일은 사내 메일함에 와 있어요. 핵심 업무는 <b>배합 에이전트 작업실</b>에서 해요. 위쪽의 업무 기준일을 바꾸면 다음 날로 넘어가요.</p>' +
+        '<p class="ink2" style="font-size:var(--fs-md)">첫날 할 일은 사내 메일함에 와 있어요. 조건을 넣고 AI에게 배합을 풀게 하는 건 <b>AI 배합 설계</b>, 날짜별 미션과 결재는 <b>지난 기록·미션</b>에서 해요. 위쪽의 업무 기준일을 바꾸면 다음 날로 넘어가요.</p>' +
         '<div style="text-align:right"><button class="btn primary" type="button" id="joinGo">사내포털 시작하기</button></div></div>';
       $("joinGo").addEventListener("click", function () { close(); rerender(); });
       $("joinGo").focus();

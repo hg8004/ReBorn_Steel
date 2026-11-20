@@ -116,7 +116,7 @@
       '<h2 id="msT">' + esc(ms.title) + "</h2></div></div>" +
       "<p>" + esc(ms.story) + "</p>" +
       '<div class="foot">' + (mr ? (mr.ok ? '<span class="pill good">✓ 미션 성공</span>' : '<span class="pill warn">보완 필요</span>') : '<span class="pill info">진행 전</span>') +
-      '<a class="btn accent" href="agent.html?date=' + c.date + '">' + (sub ? "작업실 다시 보기" : "작업실에서 시작 →") + "</a></div>";
+      '<a class="btn accent" href="history.html?date=' + c.date + '">' + (sub ? "결재 다시 보기" : "미션 시작 →") + "</a></div>";
 
     // 오늘 할 일 = 기준일 메일 중 할 일이 있는 것
     var mails = P.mailbox(c.date);
