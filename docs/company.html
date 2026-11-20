@@ -6,45 +6,51 @@
 <title>회사·공지·조직</title>
 <meta name="description" content="리본스틸 사내포털: 회사 소개, 공정, 사내 캐릭터 리보, 전사 공지, 조직도, 설비, 품질 기준 (가상 데이터)">
 <link rel="icon" href="assets/rebo-face.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <link rel="stylesheet" href="assets/portal.css">
 <style>
-.about { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 22px; align-items: center; }
-.about img { width: 150px; height: auto; }
-.about h2 { font-size: 1.35rem; color: var(--accent); }
-.about .slogan { font-size: 1.02rem; font-weight: 600; }
-.about .slogan mark { background: var(--point-soft); color: var(--point-ink); padding: 0 4px; border-radius: 3px; }
-.steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr)); gap: 10px; }
-.step { border: 1px solid var(--line); border-radius: var(--r); padding: 12px 14px; display: grid; gap: 4px; background: var(--surface); }
-.step h3 { display: flex; align-items: center; gap: 8px; }
-.step .n { width: 24px; height: 24px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: inline-grid; place-items: center; font-size: .8rem; flex: none; }
-.step p { font-size: .86rem; color: var(--ink-2); }
-.step.mine { background: var(--point-soft); border-color: var(--point); }
+.about { display: grid; grid-template-columns: 140px minmax(0, 1fr); gap: 28px; align-items: center; }
+.about img { width: 140px; height: auto; }
+.about h2 { font-size: var(--fs-xl); color: var(--accent); }
+.about .slogan { font-size: var(--fs-lg); font-weight: 650; line-height: 1.5; }
+.about .slogan mark { background: var(--point-soft); color: var(--point-ink); padding: 0 4px; border-radius: 4px; }
+.about p { line-height: 1.7; }
+/* 공정 6단계: 넓은 화면 3×2, 태블릿 2×3, 모바일 1열 → 빈 칸 없이 */
+.steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.step { border: 1px solid var(--line); border-radius: var(--r); padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; background: var(--surface); }
+.step h3 { display: flex; align-items: center; gap: 10px; font-size: var(--fs-base); }
+.step .n { width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: inline-grid; place-items: center; font-size: var(--fs-sm); flex: none; }
+.step p { font-size: var(--fs-md); color: var(--ink-2); line-height: 1.65; }
+.step.mine { background: var(--cream); border-color: var(--point); box-shadow: inset 4px 0 0 var(--point); }
 .step.mine .n { background: var(--point); color: #fff; }
 .step.mine h3 { color: var(--point-ink); }
-.why { background: var(--accent); color: var(--accent-ink); border-radius: var(--r); padding: 14px 16px; font-size: .92rem; }
-.rebo { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 22px; align-items: start; }
+.rebo { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 28px; align-items: start; }
 .rebo > img { width: 200px; height: auto; }
-.variants { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; }
-.variants figure { margin: 0; display: grid; gap: 4px; justify-items: center; text-align: center; font-size: .8rem; color: var(--ink-2); }
-.variants img { width: 100%; max-width: 130px; height: auto; border-radius: 50%; }
-.swatches { display: flex; flex-wrap: wrap; gap: 10px 18px; }
-.swatches div { display: flex; align-items: center; gap: 8px; font-size: .8rem; }
-.swatches i { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--line); flex: none; }
-.swatches b { display: block; font-size: .84rem; }
-details.notice { border-bottom: 1px solid var(--line); padding: 10px 0; }
+.rebo .kv { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 16px; margin: 0; font-size: var(--fs-base); }
+.rebo .kv dt { color: var(--muted); font-weight: 600; } .rebo .kv dd { margin: 0; }
+.variants { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
+.variants figure { margin: 0; display: grid; gap: 6px; justify-items: center; text-align: center; font-size: var(--fs-sm); color: var(--ink-2); font-weight: 600; }
+.variants img { width: 100%; max-width: 128px; height: auto; border-radius: 50%; }
+.swatches { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.swatches div { display: flex; align-items: center; gap: 10px; font-size: var(--fs-sm); color: var(--ink-2); border: 1px solid var(--line); border-radius: var(--r); padding: 8px 10px; }
+.swatches i { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--line); flex: none; }
+.swatches b { display: block; font-size: var(--fs-md); color: var(--ink); }
+details.notice { border-bottom: 1px solid var(--line); }
 details.notice:last-child { border-bottom: 0; }
-details.notice summary { cursor: pointer; display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; }
-details.notice summary b { font-weight: 600; }
-details.notice .mailbody { padding: 10px 0 4px 2px; }
-.people { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 250px), 1fr)); gap: 8px; }
-.person { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0 10px; align-items: center; border: 1px solid var(--line); border-radius: var(--r); padding: 8px 10px; }
-.person.me { border-color: var(--point); background: var(--point-soft); }
-.person b { font-size: .9rem; }
-.person span { font-size: .78rem; color: var(--ink-2); }
-@media (max-width: 600px) { .about, .rebo { grid-template-columns: 1fr; } .about img { width: 110px; } .rebo > img { width: 150px; } }
+details.notice summary { cursor: pointer; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; min-height: 48px; padding: 8px 0; list-style-position: outside; }
+details.notice summary b { font-weight: 650; }
+details.notice[open] summary { color: var(--accent); }
+details.notice .mailbody { padding: 4px 0 16px 18px; }
+.people { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.person { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 0 12px; align-items: center; border: 1px solid var(--line); border-radius: var(--r); padding: 10px 12px; min-height: 64px; }
+.person.me { border-color: var(--point); background: var(--cream); box-shadow: inset 4px 0 0 var(--point); }
+.person b { font-size: var(--fs-base); }
+.person span { font-size: var(--fs-sm); color: var(--ink-2); }
+.rules { margin: 0; padding-left: 18px; display: grid; gap: 6px; font-size: var(--fs-md); color: var(--ink-2); line-height: 1.6; }
+@media (max-width: 1200px) { .people { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 1100px) { .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); } .variants { grid-template-columns: repeat(3, minmax(0, 1fr)); } .swatches { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 768px) { .about, .rebo { grid-template-columns: 1fr; } .about img { width: 96px; } .rebo > img { width: 150px; } .steps, .people { grid-template-columns: 1fr; } }
 </style>
 </head>
 <body data-page="company">
@@ -52,6 +58,15 @@ details.notice .mailbody { padding: 10px 0 4px 2px; }
 <div class="shell">
 <nav class="side" id="side" aria-label="사내 메뉴"></nav>
 <main>
+  <div class="headpic">
+    <img src="assets/brand/rebo-safety.jpg" alt="">
+    <div class="pagehead">
+      <div class="eyebrow">회사·공지·조직</div>
+      <h1>회사 소개와 전사 공지</h1>
+      <p>리본스틸의 공정과 브랜드, 공지, 조직, 설비와 품질 기준을 한곳에 모았습니다.</p>
+    </div>
+  </div>
+
   <section class="card" aria-labelledby="aT">
     <div class="about">
       <img src="assets/brand/logo-mark.png" alt="ReBorn Steel 로고: R 글자와 상승 막대, 초록 궤도">
@@ -59,7 +74,7 @@ details.notice .mailbody { padding: 10px 0 4px 2px; }
         <div class="eyebrow">회사 소개</div>
         <h2 id="aT">ReBorn Steel · 리본스틸㈜</h2>
         <p class="slogan">버려진 철스크랩을 녹여 <mark>철근으로 다시 태어나게</mark> 하는 전기로 제강사입니다.</p>
-        <p class="ink2" style="font-size:.9rem">100톤 전기로 1기로 연 80만 톤의 철근(SD400~SD600)을 만듭니다. 원가는 낮추고 Cu·Sn 규격은 지키기 위해, 스크랩 배합을 AI 배합 에이전트와 함께 정합니다.</p>
+        <p class="ink2">100톤 전기로 1기로 연 80만 톤의 철근(SD400~SD600)을 만듭니다. 원가는 낮추고 Cu·Sn 규격은 지키기 위해, 스크랩 배합을 AI 배합 에이전트와 함께 정합니다.</p>
       </div>
     </div>
   </section>
@@ -75,22 +90,22 @@ details.notice .mailbody { padding: 10px 0 4px 2px; }
       <div class="step"><h3><span class="n">6</span>압연</h3><p>빌릿을 가열한 뒤 압연기에서 눌러 철근으로 만들고 건설 현장으로 출하합니다.</p></div>
     </div>
     <p class="why"><b>왜 배합이 중요한가:</b> Cu·Sn은 철보다 산화되기 어려워 용해·정련으로 제거되지 않습니다. 과다하면 압연 중 표면 균열(적열취성)이 생기므로, 최종 성분은 스크랩 배합 단계에서 사실상 결정됩니다.</p>
-    <p class="ink2" style="font-size:.86rem"><b style="color:var(--ink)">부산물</b> 배가스는 집진기를 거쳐 배출하고 제강분진은 아연 회수에 재활용합니다. 슬래그는 파쇄·시효 후 도로용 골재로 판매합니다.</p>
+    <p class="ink2" style="font-size:var(--fs-md);line-height:1.7"><b style="color:var(--ink)">부산물</b> 배가스는 집진기를 거쳐 배출하고 제강분진은 아연 회수에 재활용합니다. 슬래그는 파쇄·시효 후 도로용 골재로 판매합니다.</p>
   </section>
 
   <section class="card" aria-labelledby="rT">
-    <div class="card-h"><h2 id="rT">공식 캐릭터 리보 (REBO)</h2><span class="muted" style="font-size:.78rem">사내포털·메일함의 기본 프로필 사진</span></div>
+    <div class="card-h"><h2 id="rT">공식 캐릭터 리보 (REBO)</h2><span class="muted">사내포털·메일함의 기본 프로필 사진</span></div>
     <div class="rebo">
       <img src="assets/rebo.png" alt="리보: 새싹이 돋은 흰 안전모와 녹색 작업복, 자석 주머니를 단 너구리">
-      <div style="display:grid;gap:14px">
-        <p class="slogan" style="font-weight:600">“버려진 철에 새로운 생명을 불어넣는 <span style="color:var(--point-ink)">착한 지구 지킴이!</span>”</p>
-        <dl class="kv" style="display:grid;grid-template-columns:max-content minmax(0,1fr);gap:4px 14px;margin:0;font-size:.9rem">
-          <dt class="muted">이름</dt><dd style="margin:0">리보 (REBO)</dd>
-          <dt class="muted">성격</dt><dd style="margin:0">밝고 명랑하며, 환경을 생각하는 책임감 있는 친구</dd>
-          <dt class="muted">특기</dt><dd style="margin:0">버려진 고철의 새로운 가치 찾기</dd>
-          <dt class="muted">꿈</dt><dd style="margin:0">자원이 순환하는 깨끗하고 튼튼한 세상 만들기</dd>
-          <dt class="muted">역할</dt><dd style="margin:0">ReBorn Steel의 공식 홍보대사</dd>
-          <dt class="muted">상징</dt><dd style="margin:0">재활용 마크(자원 순환) · 자석(재활용·회수, 고철 수거) · 새싹(친환경·지속가능)</dd>
+      <div style="display:grid;gap:18px">
+        <p style="font-weight:650;font-size:var(--fs-lg)">“버려진 철에 새로운 생명을 불어넣는 <span style="color:var(--point-ink)">착한 지구 지킴이!</span>”</p>
+        <dl class="kv">
+          <dt>이름</dt><dd>리보 (REBO)</dd>
+          <dt>성격</dt><dd>밝고 명랑하며, 환경을 생각하는 책임감 있는 친구</dd>
+          <dt>특기</dt><dd>버려진 고철의 새로운 가치 찾기</dd>
+          <dt>꿈</dt><dd>자원이 순환하는 깨끗하고 튼튼한 세상 만들기</dd>
+          <dt>역할</dt><dd>ReBorn Steel의 공식 홍보대사</dd>
+          <dt>상징</dt><dd>재활용 마크(자원 순환) · 자석(재활용·회수, 고철 수거) · 새싹(친환경·지속가능)</dd>
         </dl>
         <div class="variants">
           <figure><img src="assets/brand/rebo-hello.jpg" alt=""><figcaption>반가워요!</figcaption></figure>
@@ -110,12 +125,12 @@ details.notice .mailbody { padding: 10px 0 4px 2px; }
   </section>
 
   <section class="card" id="notices" aria-labelledby="nT">
-    <div class="card-h"><h2 id="nT">전사 공지</h2><span class="muted" style="font-size:.78rem">업무 기준일까지 게시된 공지</span></div>
+    <div class="card-h"><h2 id="nT">전사 공지</h2><span class="muted">업무 기준일까지 게시된 공지 · 제목을 누르면 펼쳐집니다</span></div>
     <div id="nlist"></div>
   </section>
 
   <section class="card" aria-labelledby="oT">
-    <div class="card-h"><h2 id="oT">조직도</h2><span class="muted" style="font-size:.78rem">초록 테두리: 내 부서</span></div>
+    <div class="card-h"><h2 id="oT">조직도</h2><span class="muted">주황 테두리: 내 부서</span></div>
     <div class="org" id="org"></div>
   </section>
 
@@ -132,14 +147,19 @@ details.notice .mailbody { padding: 10px 0 4px 2px; }
     <section class="card" aria-labelledby="qT">
       <h2 id="qT">제품 품질 기준 (Cu·Sn 상한)</h2>
       <div class="scroll-x"><table><thead><tr><th>강종</th><th class="r">Cu 상한</th><th class="r">Sn 상한</th><th class="r">하루 계획</th></tr></thead><tbody id="spec"></tbody></table></div>
-      <p class="ink2" style="font-size:.86rem">heat별 규격 이탈 확률 목표는 2% 이하입니다.</p>
+      <h3>관리 원칙</h3>
+      <ul class="rules">
+        <li>heat별 규격 이탈 확률 목표는 <b>2% 이하</b>입니다.</li>
+        <li>Cu·Sn은 정련으로 빠지지 않으므로, 배합 단계에서 안전여유를 두고 관리합니다.</li>
+        <li>위험 메모가 붙은 로트는 제외하거나 장입 비율 5% 이하로 제한합니다.</li>
+      </ul>
     </section>
   </div>
 
   <section class="card" aria-labelledby="cT">
     <h2 id="cT">스크랩 등급 카탈로그</h2>
     <div class="scroll-x"><table><thead><tr><th>등급</th><th class="r">기준 단가(원/t)</th><th class="r">실수율</th><th class="r">부피밀도(t/m³)</th><th class="r">공칭 Cu(%)</th><th class="r">공칭 Sn(%)</th></tr></thead><tbody id="cat"></tbody></table></div>
-    <p class="muted" style="font-size:.78rem">공칭값은 카탈로그 값입니다. 배합 에이전트는 과거 조업 이력으로 실제 성분을 다시 추정해 씁니다.</p>
+    <p class="card-foot">공칭값은 카탈로그 값입니다. 배합 에이전트는 과거 조업 이력으로 실제 성분을 다시 추정해 씁니다.</p>
   </section>
 </main>
 </div>
@@ -163,7 +183,7 @@ details.notice .mailbody { padding: 10px 0 4px 2px; }
     $("nlist").innerHTML = ns.map(function (n) {
       var s = P.sender(n.from);
       return '<details class="notice" id="' + n.key + '"' + (location.hash === "#" + n.key ? " open" : "") + '><summary><span class="pill mute">공지</span><b>' + esc(n.subject) +
-        '</b><span class="muted" style="font-size:.8rem">' + esc(s.name) + " · " + n.date + "</span></summary>" + '<div class="mailbody"><div class="txt">' + P.renderBody(n.body) + "</div></div></details>";
+        '</b><span class="muted" style="font-size:var(--fs-sm)">' + esc(s.name) + " · " + n.date + "</span></summary>" + '<div class="mailbody"><div class="txt">' + P.renderBody(n.body) + "</div></div></details>";
     }).join("") || '<p class="empty">게시된 공지가 없습니다.</p>';
     if (location.hash && $(location.hash.slice(1))) $(location.hash.slice(1)).scrollIntoView();
 
@@ -194,7 +214,7 @@ details.notice .mailbody { padding: 10px 0 4px 2px; }
     }).join("");
     $("cat").innerHTML = P.C.scrap.map(function (s) {
       return '<tr><td><span style="display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;background:' + P.css(P.GCOL[s.grade_id]) + '"></span><b>' + esc(s.name_kr) +
-        '</b> <span class="mono muted" style="font-size:.76rem">' + s.grade_id + '</span></td><td class="r">' + P.won(s.price_krw_per_t) + '</td><td class="r">' + s.yield.toFixed(2) +
+        '</b> <span class="mono muted" style="font-size:var(--fs-sm)">' + s.grade_id + '</span></td><td class="r">' + P.won(s.price_krw_per_t) + '</td><td class="r">' + s.yield.toFixed(2) +
         '</td><td class="r">' + s.bulk_density_t_per_m3.toFixed(2) + '</td><td class="r">' + s.nominal_cu_pct.toFixed(2) + '</td><td class="r">' + s.nominal_sn_pct.toFixed(3) + "</td></tr>";
     }).join("");
   }

@@ -6,17 +6,13 @@
 <title>스크랩 야드·검수</title>
 <meta name="description" content="리본스틸 사내포털: 스크랩 등급별 재고·시세와 검수 메모 판정 (가상 데이터)">
 <link rel="icon" href="assets/rebo-face.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <link rel="stylesheet" href="assets/portal.css">
 <style>
-.notes { list-style: none; margin: 0; padding: 0; display: grid; }
-.notes li { display: grid; gap: 2px; padding: 9px 0; border-bottom: 1px dashed var(--line); }
-.notes li:last-child { border-bottom: 0; }
-.notes .row { display: flex; justify-content: space-between; gap: 8px; align-items: start; }
-.notes .m { font-size: .78rem; color: var(--muted); }
-.sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+/* 공통 부품(.notes, .sw)은 portal.css에 있다. 이 페이지는 표 수치 색만 정한다. */
+.up { color: var(--crit-ink); } .down { color: var(--good-ink); }
+#hist { max-height: 420px; overflow-y: auto; padding-right: 4px; }
 </style>
 </head>
 <body data-page="yard">
@@ -34,20 +30,18 @@
   </div>
 
   <section class="card" aria-labelledby="invT">
-    <h2 id="invT">오늘의 재고·시세</h2>
+    <div class="card-h"><h2 id="invT">오늘의 재고·시세</h2><span class="muted">행을 누르면 아래 그래프가 그 등급으로 바뀝니다</span></div>
     <div class="scroll-x"><table id="inv"><thead><tr><th>등급</th><th class="r">단가(원/t)</th><th class="r">전일 대비</th><th class="r">재고(t)</th><th class="r">오늘 배합 사용(t)</th><th>상태</th><th class="r">공칭 Cu / Sn(%)</th><th>오늘 검수</th></tr></thead><tbody></tbody></table></div>
   </section>
 
   <div class="grid2">
     <section class="card chart" aria-labelledby="pT">
-      <h2 id="pT">단가 추이</h2>
+      <div class="card-h"><h2 id="pT">단가 추이</h2><span class="muted">9/1부터 기준일까지, 원/t</span></div>
       <svg id="price" role="img" aria-label="선택한 등급의 날짜별 단가"></svg>
-      <p class="muted" style="font-size:.78rem">9/1부터 기준일까지, 원/t</p>
     </section>
     <section class="card chart" aria-labelledby="iT">
-      <h2 id="iT">재고 추이</h2>
+      <div class="card-h"><h2 id="iT">재고 추이</h2><span class="muted">점선은 재고 부족 기준</span></div>
       <svg id="stock" role="img" aria-label="선택한 등급의 날짜별 재고와 부족 기준선"></svg>
-      <p class="muted" style="font-size:.78rem">점선은 재고 부족 기준</p>
     </section>
   </div>
 
@@ -55,7 +49,7 @@
     <section class="card" aria-labelledby="nT">
       <h2 id="nT">오늘 검수 메모</h2>
       <ul class="notes" id="today"></ul>
-      <p class="muted" style="font-size:.78rem" id="method"></p>
+      <p class="card-foot" id="method"></p>
     </section>
     <section class="card" aria-labelledby="hT">
       <div class="card-h"><h2 id="hT">최근 14일 검수 이력</h2><div class="chips" id="hf" role="group" aria-label="검수 이력 등급"></div></div>
@@ -87,9 +81,10 @@
       var p = mk[g][0], inv = mk[g][1], ch = (p - pm[g][0]) / pm[g][0] * 100, fx = flag[g];
       var st = inv < P.SHORT_T ? '<span class="pill crit">▲ 부족</span>' : inv < P.AVG_INV[g] * 0.85 ? '<span class="pill warn">△ 평소보다 적음</span>' : '<span class="pill good">● 정상</span>';
       var tr = document.createElement("tr"); tr.className = "click"; tr.tabIndex = 0; tr.setAttribute("aria-selected", g === grade ? "true" : "false");
-      tr.innerHTML = '<td><span class="sw" style="background:' + P.css(P.GCOL[g]) + '"></span><b>' + P.GNAME[g] + '</b> <span class="mono muted" style="font-size:.76rem">' + g + "</span></td>" +
-        '<td class="r">' + P.won(p) + '</td><td class="r">' + (ch >= 0 ? "+" : "") + ch.toFixed(2) + '%</td><td class="r">' + inv + '</td><td class="r">' + use[g].toFixed(1) + "</td><td>" + st + "</td>" +
-        '<td class="r">' + SCRAP[g].nominal_cu_pct.toFixed(2) + " / " + SCRAP[g].nominal_sn_pct.toFixed(3) + "</td><td>" + (fx ? P.riskPill(fx.risk) : '<span class="muted">-</span>') + "</td>";
+      tr.innerHTML = '<td><span class="sw" style="background:' + P.css(P.GCOL[g]) + '"></span><b>' + P.GNAME[g] + '</b> <span class="mono muted">' + g + "</span></td>" +
+        '<td class="r"><b class="chem">' + P.won(p) + '</b></td><td class="r num ' + (ch > 0.0001 ? "up" : ch < -0.0001 ? "down" : "") + '">' + (ch >= 0 ? "+" : "") + ch.toFixed(2) + "%</td>" +
+        '<td class="r"><b class="chem">' + inv + '</b></td><td class="r num">' + use[g].toFixed(1) + "</td><td>" + st + "</td>" +
+        '<td class="r num">' + SCRAP[g].nominal_cu_pct.toFixed(2) + ' <span class="lim">/ ' + SCRAP[g].nominal_sn_pct.toFixed(3) + "</span></td><td>" + (fx ? P.riskPill(fx.risk) : '<span class="muted">-</span>') + "</td>";
       function choose() { grade = g; render(c); }
       tr.addEventListener("click", choose);
       tr.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); choose(); } });

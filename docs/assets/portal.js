@@ -380,7 +380,7 @@
     return blocks.map(function (b) {
       if (b.p) return "<p>" + esc(b.p) + "</p>";
       if (b.quote != null) return "<blockquote>" + esc(b.quote) + "</blockquote>";
-      if (b.warn) return '<p class="ink2" style="font-size:.86rem"><span class="pill warn">주의</span> ' + esc(b.warn) + "</p>";
+      if (b.warn) return '<p class="ink2" style="font-size:var(--fs-md)"><span class="pill warn">주의</span> ' + esc(b.warn) + "</p>";
       if (b.list) return '<ul style="margin:0;padding-left:18px">' + b.list.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul>";
       if (b.kv) return '<dl class="kv">' + b.kv.map(function (x) { return "<dt>" + esc(x[0]) + "</dt><dd>" + esc(x[1]) + "</dd>"; }).join("") + "</dl>";
       if (b.img) return '<img class="' + (b.small ? "mailpic" : "") + '" src="' + esc(b.img) + '" alt="' + esc(b.alt) + '" style="width:' + (b.small ? 120 : 160) + 'px;height:auto">';
@@ -424,23 +424,23 @@
     var Y = function (v) { return y0 - (v - r.lo) / (r.hi - r.lo) * (y0 - y1); };
     for (var v = r.lo; v <= r.hi + r.step / 2; v += r.step) {
       svgEl("line", { x1: x0, x2: x1, y1: Y(v), y2: Y(v), style: "stroke:var(" + (v === r.lo ? "--axis" : "--grid") + ");stroke-width:1" }, svg);
-      svgEl("text", { x: x0 - 6, y: Y(v) + 4, "text-anchor": "end", "font-size": 11, style: "fill:var(--muted)", text: o.fmt(v) }, svg);
+      svgEl("text", { x: x0 - 6, y: Y(v) + 4, "text-anchor": "end", "font-size": 12, style: "fill:var(--muted)", text: o.fmt(v) }, svg);
     }
     if (o.ref) {
       svgEl("line", { x1: x0, x2: x1, y1: Y(o.ref.v), y2: Y(o.ref.v), style: "stroke:var(--ink-2);stroke-width:1;stroke-dasharray:4 3" }, svg);
-      svgEl("text", { x: x0 + 4, y: Y(o.ref.v) - 5, "font-size": 10.5, style: "fill:var(--ink-2)", text: o.ref.label }, svg);
+      svgEl("text", { x: x0 + 4, y: Y(o.ref.v) - 5, "font-size": 11.5, style: "fill:var(--ink-2)", text: o.ref.label }, svg);
     }
     var ticks = n > 2 ? [0, Math.floor((n - 1) / 2), n - 1] : n === 2 ? [0, 1] : [0];
     ticks.forEach(function (i, k) {
       svgEl("text", { x: X(i), y: y0 + 18, "text-anchor": ticks.length > 1 && k === 0 ? "start" : k === ticks.length - 1 && ticks.length > 1 ? "end" : "middle",
-        "font-size": 11, style: "fill:var(--muted)", text: md(o.x[i]) }, svg);
+        "font-size": 12, style: "fill:var(--muted)", text: md(o.x[i]) }, svg);
     });
     o.series.forEach(function (s) {
       var pts = s.vals.map(function (v, i) { return X(i) + "," + Y(v); }).join(" ");
       if (n > 1) svgEl("polyline", { points: pts, style: "fill:none;stroke:" + s.color + ";stroke-width:2;stroke-linejoin:round;stroke-linecap:round" }, svg);
       var lx = X(n - 1), ly = Y(s.vals[n - 1]);
       svgEl("circle", { cx: lx, cy: ly, r: 4, style: "fill:" + s.color + ";stroke:var(--surface);stroke-width:2" }, svg);
-      if (o.series.length > 1) svgEl("text", { x: lx + 8, y: ly + 4, "font-size": 11, style: "fill:var(--ink-2)", text: s.name }, svg);
+      if (o.series.length > 1) svgEl("text", { x: lx + 8, y: ly + 4, "font-size": 12, style: "fill:var(--ink-2)", text: s.name }, svg);
     });
     var cross = svgEl("line", { x1: 0, x2: 0, y1: y1, y2: y0, style: "stroke:var(--ink-2);stroke-width:1;opacity:0" }, svg);
     var hit = svgEl("rect", { x: x0 - 6, y: y1, width: x1 - x0 + 12, height: y0 - y1, style: "fill:transparent" }, svg);
@@ -467,6 +467,16 @@
 
   var NAV = [["home", "index.html", "홈"], ["agent", "agent.html", "배합 에이전트 작업실"], ["mail", "mail.html", "사내 메일함"], ["ops", "ops.html", "오늘의 조업 현황"],
              ["yard", "yard.html", "스크랩 야드·검수"], ["company", "company.html", "회사·공지·조직"], ["report", "report.html", "AI 도입 보고서"]];
+  // 메뉴 아이콘 (24×24 선 그림, 색은 글자색을 따른다)
+  var ICON = {
+    home: '<path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/>',
+    agent: '<path d="M9 3h6"/><path d="M10 3v6L4.5 18.5A1.6 1.6 0 0 0 5.9 21h12.2a1.6 1.6 0 0 0 1.4-2.5L14 9V3"/><path d="M7.5 14h9"/>',
+    mail: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/>',
+    ops: '<path d="M3 21V10l5 3V10l5 3V6l8 4v11z"/><path d="M7 17h2M12 17h2M17 17h1"/>',
+    yard: '<path d="M7 7h10l3 4-8 9-8-9z"/><path d="M4 11h16"/><path d="M12 20l-3-9 3-4 3 4z"/>',
+    company: '<rect x="4" y="3" width="16" height="18" rx="1.5"/><path d="M9 7h2M13 7h2M9 11h2M13 11h2M9 15h2M13 15h2"/><path d="M10 21v-3h4v3"/>',
+    report: '<path d="M6 3h9l4 4v14H6z"/><path d="M14 3v5h5"/><path d="M9 17v-3M12 17v-6M15 17v-4"/>'
+  };
 
   function buildShell() {
     var page = document.body.dataset.page;
@@ -481,17 +491,21 @@
     });
     sel.addEventListener("change", function () { setDate(sel.value); });
     $("side").innerHTML = NAV.map(function (n) {
-      return '<a href="' + n[1] + '"' + (n[0] === page ? ' aria-current="page"' : "") + "><span>" + n[2] + "</span>" + (n[0] === "mail" ? '<span id="navBadge"></span>' : "") + "</a>";
+      return '<a href="' + n[1] + '"' + (n[0] === page ? ' aria-current="page"' : "") + '><svg viewBox="0 0 24 24" aria-hidden="true">' + ICON[n[0]] + "</svg><span>" + n[2] + "</span>" +
+        (n[0] === "mail" ? '<span id="navBadge"></span>' : "") + "</a>";
     }).join("") + '<div class="sep"></div><p class="side-note">가상 기업 · 수업 과제<br>모든 데이터는 AI가 생성</p>';
+    // 좁은 화면에서는 메뉴가 가로 탭이 되므로, 지금 페이지 탭이 보이게 스크롤한다
+    var cur = $("side").querySelector('[aria-current="page"]');
+    if (cur && window.matchMedia && window.matchMedia("(max-width: 900px)").matches) $("side").scrollLeft = Math.max(0, cur.offsetLeft - 16);
     if (!$("tip")) tipEl();
   }
   function updateShell() {
     $("dateSel").value = state.date;
     if (!state.name) { $("me").innerHTML = ""; $("navBadge").innerHTML = ""; return; }
     var p = me();
-    $("me").innerHTML = profilePic() + '<div style="line-height:1.25"><b style="font-size:.88rem">' + esc(p.name) + " " + esc(p.title) +
-      ' <span class="pill point" style="font-size:.66rem">신입</span></b><br><span class="muted" style="font-size:.76rem">' + esc(p.team) + " · " + esc(p.role) +
-      '</span></div><button class="btn" type="button" id="renameBtn" style="font-size:.78rem;padding:2px 8px">이름 변경</button>';
+    $("me").innerHTML = profilePic() + '<div class="who-text"><b>' + esc(p.name) + " " + esc(p.title) +
+      ' <span class="pill point">신입</span></b><br><span>' + esc(p.team) + " · " + esc(p.role) +
+      '</span></div><button class="btn sm" type="button" id="renameBtn">이름 변경</button>';
     $("renameBtn").addEventListener("click", function () { openJoin(true); });
     var unread = mailbox(state.date).filter(function (m) { return !isRead(m); }).length;
     $("navBadge").innerHTML = unread ? '<span class="badge" aria-label="안 읽은 메일 ' + unread + '통">' + unread + "</span>" : "";
@@ -531,7 +545,7 @@
         "<dt>입사일</dt><dd>" + JOIN_DATE + " (" + dow(JOIN_DATE) + ")</dd><dt>사수</dt><dd>한지수 대리</dd></dl>" +
         '<div class="join-job"><img src="' + BRAND + 'rebo-recycle.jpg" alt="재활용 마크 판을 든 리보"><div><b>무슨 일을 하나요?</b><ul>' +
         JOB.duties.map(function (d) { return "<li>" + esc(d) + "</li>"; }).join("") + "</ul></div></div>" +
-        '<p class="ink2" style="font-size:.88rem">첫날 할 일은 사내 메일함에 와 있어요. 핵심 업무는 <b>배합 에이전트 작업실</b>에서 해요. 상단의 업무 기준일을 바꾸면 다음 날로 넘어갑니다.</p>' +
+        '<p class="ink2" style="font-size:var(--fs-md)">첫날 할 일은 사내 메일함에 와 있어요. 핵심 업무는 <b>배합 에이전트 작업실</b>에서 해요. 상단의 업무 기준일을 바꾸면 다음 날로 넘어갑니다.</p>' +
         '<div style="text-align:right"><button class="btn primary" type="button" id="joinGo">사내포털 시작하기</button></div></div>';
       $("joinGo").addEventListener("click", function () { close(); rerender(); });
       $("joinGo").focus();

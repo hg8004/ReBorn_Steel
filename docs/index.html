@@ -6,34 +6,34 @@
 <title>리본스틸 사내포털</title>
 <meta name="description" content="가상 기업 리본스틸의 사내 포털: 신입 배합 담당의 오늘 할 일과 메일 (수업 과제, 모든 데이터는 가상)">
 <link rel="icon" href="assets/rebo-face.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
 <link rel="stylesheet" href="assets/portal.css">
 <style>
-.hero { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 16px; align-items: end; background: var(--accent); color: var(--accent-ink);
-  border-radius: var(--r); padding: 20px 22px; position: relative; overflow: hidden; }
-.hero .eyebrow { color: inherit; opacity: .8; }
-.hero h1 { color: inherit; }
-.hero .pagehead p { color: inherit; opacity: .9; font-size: .92rem; }
-.hero .day { text-align: right; }
-.hero .day b { display: block; font-size: 2rem; line-height: 1; color: var(--point); }
-.hero .day span { font-size: .8rem; opacity: .85; }
-.welcome { display: grid; grid-template-columns: 120px minmax(0, 1fr); gap: 16px; align-items: center; }
-.welcome img { width: 120px; height: auto; border-radius: 50%; }
-.bubble { position: relative; background: var(--point-soft); border-radius: 10px; padding: 10px 14px; font-size: .92rem; }
-.bubble::before { content: ""; position: absolute; left: -8px; top: 22px; border: 8px solid transparent; border-left: 0; border-right-color: var(--point-soft); }
-.duties { margin: 0; padding-left: 18px; color: var(--ink-2); font-size: .88rem; }
-.mini { list-style: none; margin: 0; padding: 0; display: grid; }
-.mini li { border-bottom: 1px solid var(--line); }
-.mini li:last-child { border-bottom: 0; }
-.mini a { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 10px; align-items: center; padding: 8px 0; color: var(--ink); text-decoration: none; }
-.mini a:hover .s { text-decoration: underline; }
-.mini .s { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: .9rem; }
-.mini .unread .s { font-weight: 600; }
-.mini .t { font-size: .76rem; color: var(--muted); white-space: nowrap; }
-@media (max-width: 640px) { #missionCard { grid-template-columns: 60px minmax(0, 1fr) !important; } #missionCard img { width: 60px !important; } #missionCard .btn { grid-column: 1 / 3; justify-self: start; } }
-@media (max-width: 520px) { .welcome { grid-template-columns: 76px minmax(0, 1fr); } .welcome img { width: 76px; } .hero { grid-template-columns: 1fr; } .hero .day { text-align: left; } }
+/* 홈: 왼쪽 오늘 할 일, 오른쪽 미션·리보 (높이 맞춤) */
+.daybox { display: grid; justify-items: end; gap: 2px; background: var(--accent); color: var(--accent-ink); border-radius: var(--radius); padding: 12px 18px; min-width: 132px; }
+.daybox span { font-size: var(--fs-sm); opacity: .85; font-weight: 600; }
+.daybox b { font-size: var(--fs-kpi); line-height: 1.1; letter-spacing: -.02em; white-space: nowrap; }
+.home-grid { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr); gap: var(--gap); align-items: stretch; }
+.home-side { display: flex; flex-direction: column; gap: var(--gap); min-width: 0; }
+.home-side > .card:last-child { flex: 1; }
+.prog { display: flex; align-items: center; gap: 10px; font-size: var(--fs-sm); color: var(--ink-2); font-weight: 600; }
+.prog .track { width: 120px; height: 8px; border-radius: 4px; background: var(--surface-2); border: 1px solid var(--line); overflow: hidden; }
+.prog .track i { display: block; height: 100%; background: var(--good); }
+.mission { background: var(--cream); border-color: #f3d9bf; border-left: 4px solid var(--point); }
+.mission .top { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 14px; align-items: center; }
+.mission img { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; background: var(--surface); }
+.mission h2 { color: var(--point-ink); }
+.mission p { font-size: var(--fs-md); color: var(--ink-2); line-height: 1.6; }
+.mission .foot { margin-top: auto; display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.welcome { display: grid; grid-template-columns: 88px minmax(0, 1fr); gap: 16px; align-items: start; }
+.welcome img { width: 88px; height: 88px; border-radius: 50%; object-fit: cover; background: #eef3ee; }
+.bubble { position: relative; background: var(--accent-soft); border-radius: 10px; padding: 10px 14px; font-size: var(--fs-md); line-height: 1.55; }
+.bubble::before { content: ""; position: absolute; left: -8px; top: 18px; border: 8px solid transparent; border-left: 0; border-right-color: var(--accent-soft); }
+.duties { margin: 0; padding-left: 18px; color: var(--ink-2); font-size: var(--fs-md); display: grid; gap: 4px; }
+.tile.alert { box-shadow: inset 4px 0 0 var(--point), var(--shadow); }
+@media (max-width: 1100px) { .home-grid { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 768px) { .daybox { justify-items: start; } .welcome { grid-template-columns: 64px minmax(0, 1fr); } .welcome img { width: 64px; height: 64px; } }
 </style>
 </head>
 <body data-page="home">
@@ -41,36 +41,38 @@
 <div class="shell">
 <nav class="side" id="side" aria-label="사내 메뉴"></nav>
 <main>
-  <div class="hero">
+  <div class="headpic has-aside">
+    <img src="assets/rebo-face.png" alt="">
     <div class="pagehead">
       <div class="eyebrow" id="today"></div>
       <h1 id="hello">사내포털</h1>
       <p id="job"></p>
     </div>
-    <div class="day"><b id="dayNo">-</b><span>입사 일차</span></div>
+    <div class="daybox"><span>입사</span><b id="dayNo">-</b></div>
   </div>
 
-  <section class="card" id="missionCard" aria-labelledby="msT" style="grid-template-columns:84px minmax(0,1fr) auto;align-items:center;border:2px solid var(--point);background:var(--point-soft)"></section>
-
-  <div class="grid2">
+  <div class="home-grid">
     <section class="card" aria-labelledby="taskT">
-      <div class="card-h"><h2 id="taskT">오늘 할 일</h2><span class="muted num" id="taskCount" style="font-size:.84rem"></span></div>
+      <div class="card-h"><h2 id="taskT">오늘 할 일</h2><div class="prog"><span class="track"><i id="taskBar" style="width:0%"></i></span><span class="num" id="taskCount"></span></div></div>
       <ul class="tasks" id="tasks"></ul>
-      <p class="muted" style="font-size:.78rem">할 일은 사내 메일에서 만들어집니다. 체크 표시는 이 브라우저에만 저장됩니다.</p>
+      <p class="card-foot">할 일은 사내 메일에서 만들어집니다. 체크 표시는 이 브라우저에만 저장됩니다.</p>
     </section>
-    <section class="card" aria-labelledby="meT">
-      <div class="welcome">
-        <img id="reboPic" src="assets/brand/rebo-hello.jpg" alt="">
-        <div style="display:grid;gap:10px">
-          <div class="bubble" id="bubble"></div>
-          <div><h2 id="meT" style="font-size:.95rem">내 직무: 스크랩 배합 담당</h2><ul class="duties" id="duties"></ul></div>
+    <div class="home-side">
+      <section class="card mission" id="missionCard" aria-labelledby="msT"></section>
+      <section class="card" aria-labelledby="meT">
+        <div class="welcome">
+          <img id="reboPic" src="assets/brand/rebo-hello.jpg" alt="">
+          <div style="display:grid;gap:12px">
+            <div class="bubble" id="bubble"></div>
+            <div style="display:grid;gap:6px"><h2 id="meT" style="font-size:var(--fs-base)">내 직무: 스크랩 배합 담당</h2><ul class="duties" id="duties"></ul></div>
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
+    </div>
   </div>
 
-  <section style="display:grid;gap:10px" aria-labelledby="opsT">
-    <div class="card-h"><h2 id="opsT">오늘 조업 한눈에</h2><a href="ops.html" id="opsLink">조업 현황 자세히 →</a></div>
+  <section style="display:grid;gap:14px" aria-labelledby="opsT">
+    <div class="section-h"><h2 id="opsT">오늘 조업 한눈에</h2><a href="ops.html" id="opsLink">조업 현황 자세히 →</a></div>
     <div class="tiles" id="tiles"></div>
   </section>
 
@@ -110,11 +112,11 @@
 
     // 오늘의 미션
     var ms = P.missionFor(c.date), sub = P.getSubmit(c.date), mr = sub && P.checkMission(c.date, sub);
-    $("missionCard").innerHTML = '<img src="assets/brand/' + ms.pic + '" alt="" style="width:84px;height:auto;border-radius:50%;background:var(--surface)">' +
-      '<div style="display:grid;gap:4px"><div class="eyebrow" style="color:var(--point-ink)">오늘의 미션</div><h2 id="msT" style="color:var(--point-ink)">' + esc(ms.title) + "</h2>" +
-      '<p style="font-size:.9rem">' + esc(ms.story) + "</p>" +
-      (mr ? "<p>" + (mr.ok ? '<span class="pill good">✓ 미션 성공</span>' : '<span class="pill warn">보완 필요</span>') + "</p>" : "") + "</div>" +
-      '<a class="btn primary" href="agent.html?date=' + c.date + '">' + (sub ? "작업실 다시 보기" : "작업실에서 시작 →") + "</a>";
+    $("missionCard").innerHTML = '<div class="top"><img src="assets/brand/' + ms.pic + '" alt=""><div style="display:grid;gap:2px"><div class="eyebrow" style="color:var(--point-ink)">오늘의 미션</div>' +
+      '<h2 id="msT">' + esc(ms.title) + "</h2></div></div>" +
+      "<p>" + esc(ms.story) + "</p>" +
+      '<div class="foot">' + (mr ? (mr.ok ? '<span class="pill good">✓ 미션 성공</span>' : '<span class="pill warn">보완 필요</span>') : '<span class="pill info">진행 전</span>') +
+      '<a class="btn accent" href="agent.html?date=' + c.date + '">' + (sub ? "작업실 다시 보기" : "작업실에서 시작 →") + "</a></div>";
 
     // 오늘 할 일 = 기준일 메일 중 할 일이 있는 것
     var mails = P.mailbox(c.date);
@@ -123,11 +125,12 @@
     function drawTasks() {
       var done = todays.filter(function (m) { return P.isDone(m); }).length;
       $("taskCount").textContent = todays.length ? done + " / " + todays.length + " 완료" : "";
+      $("taskBar").style.width = (todays.length ? done / todays.length * 100 : 0) + "%";
       $("tasks").innerHTML = todays.length ? todays.map(function (m, i) {
         var t = P.taskOf(m), d = P.isDone(m);
         return '<li class="' + (d ? "done" : "") + '"><input type="checkbox" id="tk' + i + '" data-i="' + i + '"' + (d ? " checked" : "") + '>' +
-          '<label for="tk' + i + '" style="display:grid;gap:1px"><span class="t">' + esc(t.text) + '</span><span class="m">' + P.tagPill(m.tag) + " " + esc(m.time) + " · " + esc(P.sender(m.from).name) + '</span></label>' +
-          '<span style="display:grid;gap:2px;text-align:right"><a class="go" href="' + esc(t.href) + '">처리하러 가기</a><a class="go" href="mail.html?id=' + encodeURIComponent(m.id) + '">메일 보기</a></span></li>';
+          '<label for="tk' + i + '"><span class="t">' + esc(t.text) + '</span><span class="m">' + P.tagPill(m.tag) + "<span>" + esc(m.time) + " · " + esc(P.sender(m.from).name) + "</span></span></label>" +
+          '<span class="acts"><a class="go main" href="' + esc(t.href) + '">처리하기</a><a class="go" href="mail.html?id=' + encodeURIComponent(m.id) + '">메일</a></span></li>';
       }).join("") : '<li><span></span><span class="empty">오늘 배정된 할 일이 없습니다.</span><span></span></li>';
       Array.prototype.forEach.call($("tasks").querySelectorAll("input"), function (cb) {
         cb.addEventListener("change", function () { P.setDone(todays[+cb.dataset.i], cb.checked); drawTasks(); });
@@ -136,7 +139,7 @@
       var pic = !left && todays.length ? PICS.earth : mails.some(function (m) { return m.date === c.date && /안전/.test(m.subject); }) ? PICS.safety : PICS.hello;
       $("reboPic").src = "assets/brand/" + pic[0]; $("reboPic").alt = pic[1];
       $("bubble").innerHTML = left
-        ? "<b>" + esc(u.name) + "님</b>, 오늘 처리할 업무가 <b>" + left + "건</b> 남았어요." + (c.day === 1 ? '<br><span class="ink2" style="font-size:.84rem">첫날이니까 사수님 인수인계 메일부터 읽어 봐요!</span>' : "")
+        ? "<b>" + esc(u.name) + "님</b>, 오늘 처리할 업무가 <b>" + left + "건</b> 남았어요." + (c.day === 1 ? '<br><span class="ink2">첫날이니까 사수님 인수인계 메일부터 읽어 봐요!</span>' : "")
         : "<b>" + esc(u.name) + "님</b>, 오늘 할 일을 모두 마쳤어요. 오늘도 지구를 지켰어요!";
     }
     drawTasks();
@@ -150,10 +153,10 @@
     $("tiles").innerHTML = [
       ["톤당 배합 원가", P.won(f.cost_per_t) + "원", "숙련자 배합 " + P.won(f.expert_cost_per_t) + "원"],
       ["톤당 절감", P.won(f.saving_per_t) + "원", "하루 약 " + (f.saving_per_t * P.tapTotal(S) / 1e6).toFixed(1) + "백만 원"],
-      ["예측 최대 이탈 확률", maxP.toFixed(1) + "%", "목표 heat별 2% 이하"],
-      ["위험 로트", fl.length + "건", fl.length ? fl.map(function (x) { return P.GNAME[x.grade_id]; }).join(", ") + " 조치" : "검수 메모 이상 없음"],
-      ["재고 부족 등급", short.length + "개", short.length ? short.map(function (g) { return P.GNAME[g] + " " + mk[g][1] + "t"; }).join(", ") : P.SHORT_T + "t 미만 없음"]
-    ].map(function (t) { return '<div class="tile"><span class="k">' + t[0] + '</span><span class="v">' + t[1] + '</span><span class="s">' + esc(t[2]) + "</span></div>"; }).join("");
+      ["예측 최대 이탈 확률", maxP.toFixed(1) + "%", "목표 heat별 2% 이하", maxP >= 1.5],
+      ["위험 로트", fl.length + "건", fl.length ? fl.map(function (x) { return P.GNAME[x.grade_id]; }).join(", ") + " 조치" : "검수 메모 이상 없음", fl.length > 0],
+      ["재고 부족 등급", short.length + "개", short.length ? short.map(function (g) { return P.GNAME[g] + " " + mk[g][1] + "t"; }).join(", ") : P.SHORT_T + "t 미만 없음", short.length > 0]
+    ].map(function (t) { return '<div class="tile' + (t[3] ? " alert" : "") + '"><span class="k">' + t[0] + '</span><span class="v">' + t[1] + '</span><span class="s">' + esc(t[2]) + "</span></div>"; }).join("");
 
     // 받은 메일 미리보기
     $("mails").innerHTML = mails.slice(0, 6).map(function (m) {
@@ -162,7 +165,7 @@
     }).join("") || '<li class="empty">받은 메일이 없습니다.</li>';
 
     // 공지 (기준일까지)
-    var ns = P.NOTICES.filter(function (n) { return n.date <= c.date; }).slice().reverse().slice(0, 5);
+    var ns = P.NOTICES.filter(function (n) { return n.date <= c.date; }).slice().reverse().slice(0, 6);
     $("notices").innerHTML = ns.map(function (n) {
       return '<li><a href="company.html#' + n.key + '"><span class="pill mute">공지</span><span class="s">' + esc(n.subject) + '</span><span class="t">' + P.md(n.date) + "</span></a></li>";
     }).join("") || '<li class="empty">공지가 없습니다.</li>';
