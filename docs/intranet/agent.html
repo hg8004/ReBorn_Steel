@@ -1,0 +1,517 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>배합 에이전트 작업실</title>
+<meta name="description" content="리본스틸 사내포털: 스크랩 배합 AI 에이전트를 브라우저에서 직접 실행하고, 판정을 고치고, 결재를 올리는 작업실 (가상 데이터)">
+<link rel="icon" href="assets/rebo-face.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="assets/portal.css">
+<style>
+.intro { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 18px; align-items: start; }
+.intro ol { margin: 0; padding-left: 20px; display: grid; gap: 6px; font-size: .9rem; color: var(--ink-2); }
+.intro ol b { color: var(--ink); }
+details.card > summary { cursor: pointer; font-weight: 600; font-size: 1.02rem; }
+details.card > summary span { font-weight: 400; font-size: .82rem; color: var(--muted); margin-left: 6px; }
+.mission { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 16px; align-items: start; border: 2px solid var(--point); background: var(--point-soft); }
+.mission img { width: 96px; height: auto; border-radius: 50%; background: var(--surface); }
+.mission h2 { color: var(--point-ink); }
+.mission ul { margin: 6px 0 0; padding-left: 20px; font-size: .9rem; }
+.mission .res { margin-top: 8px; padding: 8px 10px; border-radius: var(--r); background: var(--surface); font-size: .9rem; }
+.stepno { display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); font-size: .76rem; font-weight: 700; margin-right: 6px; vertical-align: 1px; }
+.cond input { width: 96px; font: inherit; font-size: .85rem; padding: 3px 6px; border: 1px solid var(--line); border-radius: 4px; background: var(--surface); text-align: right; font-variant-numeric: tabular-nums; }
+.cond input.changed { border-color: var(--point); background: var(--point-soft); }
+.cond td { padding: 5px 6px; }
+.judge { list-style: none; margin: 0; padding: 0; display: grid; }
+.judge li { display: grid; gap: 4px; padding: 10px 0; border-bottom: 1px dashed var(--line); }
+.judge li:last-child { border-bottom: 0; }
+.judge .row { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; justify-content: space-between; }
+.judge select { font-size: .85rem; padding: 3px 6px; }
+.judge li.changed select { border-color: var(--point); background: var(--point-soft); }
+.runbar { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; background: var(--accent); color: var(--accent-ink); border-radius: var(--r); padding: 12px 16px; }
+.runbar label { font-size: .88rem; }
+.runbar select { border-color: transparent; }
+.runbar .btn.run { background: var(--point); border-color: var(--point); color: #fff; font-weight: 700; font-size: 1rem; padding: 8px 20px; }
+.runbar .btn.run:disabled { opacity: .6; cursor: wait; }
+.runbar .btn.ghost { background: transparent; color: var(--accent-ink); border-color: rgba(255,255,255,.5); }
+.runbar .note { font-size: .8rem; opacity: .85; margin-left: auto; }
+.steps { list-style: none; margin: 0; padding: 0; display: grid; gap: 0; }
+.steps li { display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 2px 10px; padding: 7px 0; border-left: 2px solid var(--line); margin-left: 12px; padding-left: 14px; position: relative; animation: fadein .25s ease; }
+.steps li::before { content: ""; position: absolute; left: -7px; top: 12px; width: 12px; height: 12px; border-radius: 50%; background: var(--accent); border: 2px solid var(--surface); }
+.steps li.loop::before { background: var(--point); }
+.steps li.bad::before { background: var(--crit); }
+.steps li.done::before { background: var(--good); }
+.steps .tool { grid-column: 1 / 3; font-family: var(--mono); font-size: .74rem; color: var(--muted); }
+.steps .t { grid-column: 1 / 3; font-weight: 600; font-size: .92rem; }
+.steps .d { grid-column: 1 / 3; font-size: .84rem; color: var(--ink-2); }
+.steps .chips { grid-column: 1 / 3; }
+@keyframes fadein { from { opacity: 0; transform: translateY(-3px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .steps li { animation: none; } }
+.cmp { display: grid; gap: 14px; }
+.cmp .steel { display: grid; gap: 4px; }
+.cmp .lane { display: grid; grid-template-columns: 74px minmax(0, 1fr) 96px; gap: 8px; align-items: center; font-size: .82rem; }
+.cmp .lane .lbl { color: var(--ink-2); }
+.cmp .lane .val { text-align: right; font-variant-numeric: tabular-nums; }
+.sbar { display: flex; height: 16px; gap: 2px; }
+.sbar i { display: block; height: 100%; }
+.sbar i:first-child { border-radius: 3px 0 0 3px; }
+.sbar i:last-child { border-radius: 0 3px 3px 0; }
+.runs tr.cur { background: var(--accent-soft); }
+.runs td.wrap { white-space: normal; min-width: 180px; font-size: .8rem; color: var(--ink-2); }
+.submit textarea { width: 100%; min-height: 64px; font: inherit; font-size: .9rem; padding: 8px 10px; border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); resize: vertical; }
+.submit .why { font-size: .84rem; color: var(--crit-ink); }
+.ai { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 14px; align-items: center; }
+.ai img { width: 64px; height: 64px; border-radius: 50%; border: 1px solid var(--line); background: #e6f0e4; }
+.ai .join-row input { font-size: .9rem; padding: 6px 10px; }
+#scatter { max-width: 560px; }
+@media (max-width: 760px) { .intro { grid-template-columns: 1fr; } .mission { grid-template-columns: 64px minmax(0, 1fr); } .mission img { width: 64px; } .runbar .note { margin-left: 0; } }
+</style>
+</head>
+<body data-page="agent">
+<header id="topbar"></header>
+<div class="shell">
+<nav class="side" id="side" aria-label="사내 메뉴"></nav>
+<main>
+  <div class="headpic">
+    <img src="assets/brand/rebo-recycle.jpg" alt="">
+    <div class="pagehead">
+      <div class="eyebrow" id="eb">배합 에이전트 작업실</div>
+      <h1>스크랩을 싸고 질 좋게 섞는 법, 에이전트와 함께 정하기</h1>
+      <p>에이전트가 계산하고, 판단과 결재는 내가 합니다. 계산은 이 브라우저에서 실제로 돌아갑니다.</p>
+    </div>
+  </div>
+
+  <details class="card" id="introBox" open>
+    <summary>스크랩 배합이란? <span>처음이라면 먼저 읽어 보세요</span></summary>
+    <div class="intro">
+      <div style="display:grid;gap:10px">
+        <p class="ink2" style="font-size:.92rem">철근은 철스크랩을 녹여 만듭니다. 스크랩은 8개 등급이 있고 <b style="color:var(--ink)">등급마다 가격과 성분(Cu·Sn)이 다릅니다.</b> 싼 스크랩일수록 Cu가 많아요. Cu·Sn은 전기로에서 빠지지 않아서, 싼 것만 넣으면 규격을 넘깁니다.</p>
+        <ol>
+          <li><b>원가 최소 배합</b> 에이전트가 24 heat 각각에 등급별로 몇 톤씩 넣을지, 규격·재고·버킷 용적을 지키면서 가장 싸게 계산해요 (선형계획법).</li>
+          <li><b>모의 조업 검증</b> 스크랩 성분은 로트마다 흔들려요. 1,000번 가상으로 녹여 보고, heat별 규격 이탈 확률이 목표(2%)를 넘으면 안전여유를 키워 다시 계산해요.</li>
+          <li><b>사람의 판단</b> 검수 메모처럼 숫자가 아닌 정보는 에이전트가 키워드로만 읽어요. 판정을 확인·수정하고, 결과를 보고 결재하는 건 나예요.</li>
+        </ol>
+      </div>
+      <div class="chart" style="display:grid;gap:6px">
+        <h3>등급별 가격과 Cu 함량 <span class="muted" style="font-weight:400;font-size:.8rem">(오늘 시세 · 이력 기반 추정 Cu)</span></h3>
+        <svg id="scatter" role="img" aria-label="스크랩 8개 등급의 Cu 함량과 톤당 가격 산점도. Cu가 많은 등급일수록 싸다."></svg>
+        <p class="muted" style="font-size:.78rem">왼쪽 위는 비싸지만 깨끗하고, 오른쪽 아래는 싸지만 Cu가 많아요. 이 둘을 잘 섞는 게 배합이에요.</p>
+      </div>
+    </div>
+  </details>
+
+  <section class="card mission" id="mission" aria-labelledby="mT"></section>
+
+  <div class="grid2">
+    <section class="card" aria-labelledby="cT">
+      <div class="card-h"><h2 id="cT"><span class="stepno">1</span>오늘 조건</h2><span class="muted" style="font-size:.78rem">값을 바꾸면 '가정해 보기'가 돼요</span></div>
+      <p class="ink2" style="font-size:.84rem" id="planText"></p>
+      <div class="scroll-x"><table class="cond"><thead><tr><th>등급</th><th class="r">단가(원/t)</th><th class="r">재고(t)</th><th class="r">Cu 공칭 → 추정</th></tr></thead><tbody id="cond"></tbody></table></div>
+    </section>
+    <section class="card" id="notes" aria-labelledby="nT">
+      <div class="card-h"><h2 id="nT"><span class="stepno">2</span>검수 메모 판정</h2><span class="muted" style="font-size:.78rem">에이전트 판정: 키워드 규칙</span></div>
+      <ul class="judge" id="judge"></ul>
+      <p class="muted" style="font-size:.78rem">제외: 오늘 배합에서 뺌 · 5% 제한: 장입 비율 5% 이하, 성분을 2배로 가정 · 영향 없음: 평소처럼 사용</p>
+    </section>
+  </div>
+
+  <div class="runbar">
+    <span class="stepno" style="background:var(--point)">3</span>
+    <label for="target">목표 이탈 확률</label>
+    <select id="target"><option value="0.01">heat별 1% 이하 (보수적)</option><option value="0.02" selected>heat별 2% 이하 (회사 기준)</option><option value="0.03">heat별 3% 이하 (공격적)</option></select>
+    <button class="btn run" type="button" id="runBtn">▶ 에이전트 실행</button>
+    <button class="btn ghost" type="button" id="resetBtn">조건·판정 원래대로</button>
+    <span class="note" id="runNote"></span>
+  </div>
+
+  <section class="card" id="stepsBox" aria-labelledby="sT" hidden>
+    <div class="card-h"><h2 id="sT">에이전트가 한 일</h2><span class="muted" style="font-size:.78rem" id="stepsMeta"></span></div>
+    <ol class="steps" id="steps" aria-live="polite"></ol>
+  </section>
+
+  <section class="card" id="result" aria-labelledby="rT" hidden>
+    <div class="card-h"><h2 id="rT"><span class="stepno">4</span>결과 확인</h2><span class="muted" style="font-size:.78rem" id="resMeta"></span></div>
+    <div class="tiles" id="tiles"></div>
+    <div class="legend" id="gl"></div>
+    <div class="cmp" id="cmp"></div>
+    <details><summary style="cursor:pointer;font-size:.9rem">heat별 배합 24개 보기</summary>
+      <div class="scroll-x" style="margin-top:8px"><table><thead><tr><th>heat</th><th>강종</th><th>배합 비율</th><th class="r">장입(t)</th><th class="r">예상 Cu / 상한</th><th class="r">예상 Sn / 상한</th><th class="r">예측 이탈</th><th class="r">원/t</th></tr></thead><tbody id="heats"></tbody></table></div>
+    </details>
+  </section>
+
+  <section class="card" aria-labelledby="hT">
+    <div class="card-h"><h2 id="hT">실행 기록 비교</h2><span class="muted" style="font-size:.78rem">행을 누르면 그때의 조건을 불러와요</span></div>
+    <div class="scroll-x"><table class="runs"><thead><tr><th>실행</th><th>바꾼 것</th><th class="r">톤당 원가</th><th class="r">숙련자 대비</th><th class="r">예측 최대 이탈</th><th class="r">반복</th></tr></thead><tbody id="runs"></tbody></table></div>
+    <p class="muted" style="font-size:.76rem">자동 초안은 06:40에 서버(파이썬)가 실행한 결과예요. 모의 조업은 무작위 표본이라 같은 조건이어도 0.1% 안팎 달라질 수 있어요.</p>
+  </section>
+
+  <div class="grid2">
+    <section class="card submit" aria-labelledby="bT">
+      <h2 id="bT"><span class="stepno">5</span>결재 상신</h2>
+      <p class="ink2" style="font-size:.86rem">마지막으로 실행한 배합을 제강팀장(박준영 팀장)에게 올립니다.</p>
+      <label for="comment" style="font-size:.86rem;font-weight:600">검토 의견 <span class="muted" style="font-weight:400">(선택)</span></label>
+      <textarea id="comment" maxlength="300" placeholder="예: 9/29 경량A 메모는 '전량 제거 완료'라 판정을 해제함"></textarea>
+      <p class="why" id="whyNot"></p>
+      <div><button class="btn primary" type="button" id="submitBtn">제강팀장에게 결재 상신</button></div>
+      <div id="subState"></div>
+    </section>
+    <section class="card" aria-labelledby="aT">
+      <div class="ai"><img src="assets/rebo-face.png" alt=""><div>
+        <h2 id="aT">리보 AI에게 물어보기</h2>
+        <p class="ink2" style="font-size:.86rem">timelyGPT(timelyai.io)의 리본스틸 스페이스에서, 지금 화면의 배합 결과를 리보 AI가 설명해 줘요. 예: "왜 경량A를 이렇게 많이 썼어?"</p>
+      </div></div>
+      <div id="aiBox"></div>
+    </section>
+  </div>
+</main>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/javascript-lp-solver@0.4.24/prod/solver.js"></script>
+<script src="../data/results.js"></script>
+<script src="data/company.js"></script>
+<script src="assets/engine.js"></script>
+<script src="assets/portal.js"></script>
+<script>
+(function () {
+  "use strict";
+  var P = window.Portal, E = window.RebornEngine; if (!P || !P.D || !E) return;
+  var $ = P.$, esc = P.esc, C = P.C, G = C.config.grades;
+  var RISK_TXT = { high: "제외", medium: "5% 제한", none: "영향 없음" };
+  var ui = null;                // 날짜별 화면 상태
+  var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  $("gl").innerHTML = G.map(function (g) { return '<span><i style="background:' + P.css(P.GCOL[g]) + '"></i>' + P.GNAME[g] + "</span>"; }).join("");
+
+  function fresh(c) {
+    var S = c.sheet, kw = E.keywordJudge(S.notes, C.config), risk = {};
+    kw.forEach(function (f) { risk[f.lot_id] = f.risk; });
+    return { date: c.date, S: S, kw: kw, risk: risk, target: 0.02, ov: { price: {}, inv: {} }, result: null, rec: null, dirty: false, busy: false };
+  }
+  function settings() { return { risk: JSON.parse(JSON.stringify(ui.risk)), target: ui.target, overrides: JSON.parse(JSON.stringify(ui.ov)) }; }
+  function flagsNow() {
+    return ui.kw.map(function (f) {
+      var r = ui.risk[f.lot_id]; if (r === f.risk) return f;
+      return { lot_id: f.lot_id, grade_id: f.grade_id, element: f.element !== "none" ? f.element : "cu", risk: r,
+               suspected_multiplier: r === "none" ? 1 : (f.suspected_multiplier > 1 ? f.suspected_multiplier : 2), reason: "담당자 판정" };
+    });
+  }
+  function changes(st) {
+    var out = [];
+    ui.kw.forEach(function (f) { if (st.risk[f.lot_id] !== f.risk) out.push(f.lot_id + " " + RISK_TXT[f.risk] + "→" + RISK_TXT[st.risk[f.lot_id]]); });
+    if (st.target !== 0.02) out.push("목표 " + (st.target * 100) + "%");
+    Object.keys(st.overrides.price).forEach(function (g) { out.push(P.GNAME[g] + " 단가 " + P.won(st.overrides.price[g])); });
+    Object.keys(st.overrides.inv).forEach(function (g) { out.push(P.GNAME[g] + " 재고 " + st.overrides.inv[g] + "t (가정)"); });
+    return out;
+  }
+  function markDirty() { ui.dirty = true; drawSubmit(); $("runNote").textContent = ui.result ? "조건이 바뀌었어요. 다시 실행하세요." : ""; }
+
+  /* ---------- 그리기: 미션 ---------- */
+  function drawMission() {
+    var m = P.missionFor(ui.date), sub = P.getSubmit(ui.date), res = sub && P.checkMission(ui.date, sub);
+    $("mission").innerHTML = '<img src="assets/brand/' + m.pic + '" alt=""><div><div class="eyebrow" style="color:var(--point-ink)">오늘의 미션 · ' + ui.date + " (" + P.dow(ui.date) + ")</div>" +
+      '<h2 id="mT">' + esc(m.title) + '</h2><p style="font-size:.92rem;margin-top:4px">' + esc(m.story) + "</p><ul>" + m.goals.map(function (g) { return "<li>" + esc(g) + "</li>"; }).join("") + "</ul>" +
+      (res ? '<div class="res">' + (res.ok ? '<span class="pill good">✓ 미션 성공</span> ' : '<span class="pill warn">보완 필요</span> ') + esc(res.msg) + "</div>" : "") + "</div>";
+  }
+
+  /* ---------- 그리기: 조건 ---------- */
+  function drawConditions() {
+    var mk = C.market[ui.date], est = C.estimate.grades, byId = {};
+    C.scrap.forEach(function (s) { byId[s.grade_id] = s; });
+    var cnt = {}; C.plan.forEach(function (p) { cnt[p.steel_grade] = (cnt[p.steel_grade] || 0) + 1; });
+    $("planText").textContent = "생산 계획 24 heat: " + Object.keys(cnt).sort().map(function (s) { var sp = C.specs.filter(function (x) { return x.steel_grade === s; })[0];
+      return s + " " + cnt[s] + " heat (Cu ≤ " + sp.cu_max_pct + "%)"; }).join(" · ") + ". heat당 출강 약 100t, 버킷 용적 180m³ 이하.";
+    $("cond").innerHTML = G.map(function (g) {
+      var p = ui.ov.price[g] != null ? ui.ov.price[g] : mk[g][0], v = ui.ov.inv[g] != null ? ui.ov.inv[g] : mk[g][1];
+      return '<tr><td><i style="display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;background:' + P.css(P.GCOL[g]) + '"></i><b>' + P.GNAME[g] + "</b>" +
+        (v < P.SHORT_T ? ' <span class="pill crit" style="font-size:.66rem">부족</span>' : "") + "</td>" +
+        '<td class="r"><input type="number" step="1000" min="0" data-k="price" data-g="' + g + '" value="' + p + '" aria-label="' + P.GNAME[g] + ' 단가"' + (ui.ov.price[g] != null ? ' class="changed"' : "") + "></td>" +
+        '<td class="r"><input type="number" step="10" min="0" data-k="inv" data-g="' + g + '" value="' + v + '" aria-label="' + P.GNAME[g] + ' 재고"' + (ui.ov.inv[g] != null ? ' class="changed"' : "") + "></td>" +
+        '<td class="r num">' + byId[g].nominal_cu_pct.toFixed(2) + " → <b>" + est[g].cu_mean.toFixed(3) + "</b></td></tr>";
+    }).join("");
+    Array.prototype.forEach.call($("cond").querySelectorAll("input"), function (inp) {
+      inp.addEventListener("change", function () {
+        var k = inp.dataset.k, g = inp.dataset.g, base = C.market[ui.date][g][k === "price" ? 0 : 1], v = Math.max(0, Math.round(+inp.value || 0));
+        if (v === base) delete ui.ov[k][g]; else ui.ov[k][g] = v;
+        drawConditions(); markDirty();
+      });
+    });
+  }
+
+  /* ---------- 그리기: 검수 메모 판정 ---------- */
+  function drawJudge() {
+    var S = ui.S;
+    $("judge").innerHTML = S.notes.length ? S.notes.map(function (n, i) {
+      var f = ui.kw[i], r = ui.risk[n.lot_id], changed = r !== f.risk;
+      return '<li class="' + (changed ? "changed" : "") + '"><span style="font-size:.92rem">“' + esc(n.note_text) + '”</span>' +
+        '<span class="muted mono" style="font-size:.74rem">' + esc(n.lot_id) + " · " + P.GNAME[n.grade_id] + "</span>" +
+        '<div class="row"><span style="font-size:.8rem">에이전트 판정 ' + P.riskPill(f.risk) + "</span>" +
+        '<label style="font-size:.8rem">내 판정 <select data-lot="' + esc(n.lot_id) + '">' +
+        ["high", "medium", "none"].map(function (k) { return '<option value="' + k + '"' + (k === r ? " selected" : "") + ">" + RISK_TXT[k] + (k === f.risk ? " (에이전트)" : "") + "</option>"; }).join("") +
+        "</select></label></div></li>";
+    }).join("") : '<li class="empty">오늘 등록된 검수 메모가 없어요.</li>';
+    Array.prototype.forEach.call($("judge").querySelectorAll("select"), function (s) {
+      s.addEventListener("change", function () { ui.risk[s.dataset.lot] = s.value; drawJudge(); markDirty(); });
+    });
+  }
+
+  /* ---------- 산점도: 등급별 가격 vs Cu ---------- */
+  function drawScatter() {
+    var svg = $("scatter"), W = 520, H = 250, x0 = 64, x1 = W - 70, y0 = H - 34, y1 = 14;
+    svg.setAttribute("viewBox", "0 0 " + W + " " + H); svg.innerHTML = "";
+    var mk = C.market[ui.date], est = C.estimate.grades;
+    var pts = G.map(function (g) { return { g: g, x: est[g].cu_mean, y: (ui.ov.price[g] != null ? ui.ov.price[g] : mk[g][0]) }; });
+    var xl = 0, xh = 0.5, yl = 300000, yh = 440000;
+    var X = function (v) { return x0 + (v - xl) / (xh - xl) * (x1 - x0); }, Y = function (v) { return y0 - (v - yl) / (yh - yl) * (y0 - y1); };
+    for (var v = yl; v <= yh; v += 35000) {
+      P.svgEl("line", { x1: x0, x2: x1, y1: Y(v), y2: Y(v), style: "stroke:var(" + (v === yl ? "--axis" : "--grid") + ");stroke-width:1" }, svg);
+      P.svgEl("text", { x: x0 - 6, y: Y(v) + 4, "text-anchor": "end", "font-size": 11, style: "fill:var(--muted)", text: (v / 1000) + "천" }, svg);
+    }
+    [0, 0.1, 0.2, 0.3, 0.4, 0.5].forEach(function (t) { P.svgEl("text", { x: X(t), y: y0 + 16, "text-anchor": "middle", "font-size": 11, style: "fill:var(--muted)", text: t.toFixed(1) }, svg); });
+    P.svgEl("text", { x: x1, y: y0 + 30, "text-anchor": "end", "font-size": 11, style: "fill:var(--ink-2)", text: "Cu 함량(%) →" }, svg);
+    P.svgEl("text", { x: x0, y: y1 - 2, "font-size": 11, style: "fill:var(--ink-2)", text: "톤당 가격(원)" }, svg);
+    pts.forEach(function (p) {
+      var cx = X(p.x), cy = Y(p.y);
+      P.svgEl("circle", { cx: cx, cy: cy, r: 6, style: "fill:" + P.css(P.GCOL[p.g]) + ";stroke:var(--surface);stroke-width:2" }, svg);
+      P.svgEl("text", { x: cx + 9, y: cy + 4, "font-size": 11, style: "fill:var(--ink-2)", text: P.GNAME[p.g] }, svg);
+      var hit = P.svgEl("circle", { cx: cx, cy: cy, r: 14, style: "fill:transparent" }, svg);
+      P.hover(hit, "<b>" + P.GNAME[p.g] + "</b><br>톤당 " + P.won(p.y) + "원<br>Cu 추정 " + p.x.toFixed(3) + "%");
+    });
+  }
+
+  /* ---------- 실행 ---------- */
+  function run() {
+    if (ui.busy) return;
+    if (!window.solver) { $("runNote").textContent = "계산 라이브러리를 불러오지 못했어요. 인터넷 연결을 확인하세요."; return; }
+    ui.busy = true; $("runBtn").disabled = true; $("runBtn").textContent = "계산 중…"; $("runNote").textContent = "";
+    var st = settings();
+    setTimeout(function () {
+      var t0 = performance.now(), res;
+      try { res = E.run(C, ui.date, { flags: flagsNow(), target: st.target, overrides: st.overrides, lp: window.solver }); }
+      catch (err) { ui.busy = false; $("runBtn").disabled = false; $("runBtn").textContent = "▶ 에이전트 실행"; $("runNote").textContent = "오류: " + err.message; return; }
+      var ms = performance.now() - t0;
+      animate(res, ms, function () {
+        ui.result = res; ui.dirty = false;
+        if (res.ok) {
+          var maxP = Math.max.apply(null, res.sim.map(function (r) { return r.p_fail; })) * 100;
+          ui.rec = P.addRun(ui.date, { at: new Date().toTimeString().slice(0, 5), risk: st.risk, target: st.target, overrides: st.overrides, changes: changes(st),
+            costPerT: res.opt.costPerT, saving: res.expert.costPerT - res.opt.costPerT, maxP: maxP, iterations: res.iterations, pass: res.pass });
+        } else ui.rec = null;
+        ui.busy = false; $("runBtn").disabled = false; $("runBtn").textContent = "▶ 다시 실행";
+        drawResult(); drawRuns(); drawSubmit(); drawAI();
+      });
+    }, 30);
+  }
+
+  function animate(res, ms, done) {
+    $("stepsBox").hidden = false; $("steps").innerHTML = "";
+    $("stepsMeta").textContent = "계산 " + Math.round(ms) + "ms · 모의 조업 " + C.config.n_sim.toLocaleString("ko-KR") + "회 × 24 heat";
+    var i = 0;
+    (function next() {
+      if (i >= res.steps.length) { done(); return; }
+      var s = res.steps[i++], li = document.createElement("li");
+      li.className = s.bad ? "bad" : s.tool === "write_charge_sheet" ? "done" : s.iter > 1 ? "loop" : "";
+      var chips = "";
+      if (s.worst) chips = '<div class="chips">' + Object.keys(s.worst).sort().map(function (k) {
+        var p = s.worst[k] * 100, ok = s.worst[k] <= res.target;
+        return '<span class="pill ' + (ok ? "good" : "crit") + '">' + k + " 최대 " + p.toFixed(1) + "% " + (ok ? "✓" : "✗") + "</span>"; }).join("") + "</div>";
+      if (s.margins) chips = '<div class="chips">' + Object.keys(s.margins).sort().map(function (k) { return '<span class="pill mute">' + k + " Cu 여유 " + s.margins[k].cu.toFixed(3) + "%p</span>"; }).join("") + "</div>";
+      li.innerHTML = '<span class="tool">' + esc(s.tool) + (s.iter ? " · " + s.iter + "회차" : "") + '</span><span class="t">' + esc(s.title) + '</span><span class="d">' + esc(s.detail) + "</span>" + chips;
+      $("steps").appendChild(li);
+      setTimeout(next, reduce ? 0 : 260);
+    })();
+  }
+
+  /* ---------- 그리기: 결과 ---------- */
+  function shares(heats, idx, steel) {
+    var sum = G.map(function () { return 0; }), tot = 0;
+    heats.forEach(function (h) { if (h.steel === steel) { h.x.forEach(function (v, i) { sum[i] += v; tot += v; }); } });
+    return sum.map(function (v) { return tot ? v / tot * 100 : 0; });
+  }
+  function bar(sh) {
+    return '<div class="sbar">' + sh.map(function (v, i) { return v > 0.05 ? '<i style="width:' + v + "%;background:" + P.css(P.GCOL[G[i]]) + '" data-g="' + G[i] + '" data-v="' + v.toFixed(1) + '"></i>' : ""; }).join("") + "</div>";
+  }
+  function drawResult() {
+    var res = ui.result;
+    $("result").hidden = !res;
+    if (!res) return;
+    if (!res.ok) { $("tiles").innerHTML = '<p class="why">조건을 모두 만족하는 배합을 찾지 못했어요. 재고를 너무 줄였거나 판정으로 너무 많은 등급을 뺐는지 확인하세요.</p>'; $("cmp").innerHTML = ""; $("heats").innerHTML = ""; return; }
+    var o = res.opt, ex = res.expert, sv = ex.costPerT - o.costPerT;
+    var maxH = res.sim.reduce(function (a, r) { return r.p_fail > a.p_fail ? r : a; }, res.sim[0]);
+    var draft = ui.S.summary.cost_per_t, tap = o.heats.reduce(function (a, h) { return a + h.tap; }, 0);
+    $("resMeta").textContent = "실행 #" + (ui.rec ? ui.rec.no : "-") + " · 목표 " + (res.target * 100) + "% · " + (P.hasOverrides(ui.rec && ui.rec.overrides) ? "가정 조건 포함" : "실제 조건");
+    $("tiles").innerHTML = [
+      ["톤당 배합 원가", P.won(o.costPerT) + "원", "자동 초안 " + P.won(draft) + "원 (" + (o.costPerT <= draft ? "−" : "+") + P.won(Math.abs(o.costPerT - draft)) + ")"],
+      ["숙련자 배합 대비", "−" + P.won(sv) + "원/t", (sv / ex.costPerT * 100).toFixed(1) + "% 절감 · 숙련자 " + P.won(ex.costPerT) + "원"],
+      ["하루 절감액", (sv * tap / 1e6).toFixed(1) + "백만 원", "24 heat, 출강 약 " + Math.round(tap).toLocaleString("ko-KR") + "t"],
+      ["예측 최대 이탈 확률", (maxH.p_fail * 100).toFixed(1) + "%", maxH.heat_id + " " + maxH.steel + " · 목표 " + (res.target * 100) + "% " + (res.pass ? "통과" : "초과")],
+      ["최적화–검증 반복", res.iterations + "회", "안전여유를 키워 다시 계산한 횟수"]
+    ].map(function (t) { return '<div class="tile"><span class="k">' + t[0] + '</span><span class="v">' + t[1] + '</span><span class="s">' + esc(t[2]) + "</span></div>"; }).join("");
+    $("cmp").innerHTML = Object.keys(res.ctx.specs).sort().map(function (s) {
+      var a = shares(o.heats, 0, s), b = shares(ex.heats, 0, s);
+      var hs = o.heats.filter(function (h) { return h.steel === s; }), es = ex.heats.filter(function (h) { return h.steel === s; });
+      var cA = hs.reduce(function (x, h) { return x + h.cost; }, 0) / hs.reduce(function (x, h) { return x + h.tap; }, 0);
+      var cB = es.reduce(function (x, h) { return x + h.cost; }, 0) / es.reduce(function (x, h) { return x + h.tap; }, 0);
+      var cu = hs.reduce(function (x, h) { return x + h.predCu; }, 0) / hs.length, m = res.margins[s];
+      return '<div class="steel"><div style="display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline"><b>' + s + '</b><span class="muted" style="font-size:.8rem">' + hs.length + " heat · 예상 Cu " + cu.toFixed(3) + "% (상한 " + res.ctx.specs[s].cu +
+        "%, 안전여유 " + m.cu.toFixed(3) + "%p)</span></div>" +
+        '<div class="lane"><span class="lbl">에이전트</span>' + bar(a) + '<span class="val">' + P.won(cA) + "원/t</span></div>" +
+        '<div class="lane"><span class="lbl">숙련자</span>' + bar(b) + '<span class="val muted">' + P.won(cB) + "원/t</span></div></div>";
+    }).join("");
+    Array.prototype.forEach.call($("cmp").querySelectorAll(".sbar i"), function (seg) { P.hover(seg, P.GNAME[seg.dataset.g] + " " + seg.dataset.v + "%"); });
+    var simd = {}; res.sim.forEach(function (r) { simd[r.heat_id] = r; });
+    $("heats").innerHTML = o.heats.map(function (h) {
+      var p = simd[h.heat_id].p_fail * 100, sh = h.x.map(function (v) { return v / h.charge * 100; });
+      return '<tr><td class="mono">' + h.heat_id + "</td><td>" + h.steel + "</td><td>" + bar(sh).replace('class="sbar"', 'class="sbar" style="width:180px"') + '</td><td class="r">' + h.charge.toFixed(1) +
+        '</td><td class="r">' + h.predCu.toFixed(3) + ' <span class="muted">/ ' + h.cuMax.toFixed(2) + '</span></td><td class="r">' + h.predSn.toFixed(4) + ' <span class="muted">/ ' + h.snMax.toFixed(3) +
+        '</span></td><td class="r">' + (p > res.target * 100 ? '<span class="pill crit">' + p.toFixed(1) + "%</span>" : p >= 1.5 ? '<span class="pill warn">' + p.toFixed(1) + "%</span>" : p.toFixed(1) + "%") + '</td><td class="r">' + P.won(h.costPerT) + "</td></tr>";
+    }).join("");
+  }
+
+  /* ---------- 그리기: 실행 기록 ---------- */
+  function drawRuns() {
+    var f = ui.S.summary, runs = P.getRuns(ui.date);
+    var maxD = Math.max.apply(null, ui.S.heats.map(function (h) { return h.p_fail_pct; }));
+    var rows = ['<tr><td><b>자동 초안</b> <span class="muted" style="font-size:.76rem">06:40</span></td><td class="wrap">키워드 판정 그대로, 목표 2%</td><td class="r">' + P.won(f.cost_per_t) +
+      '</td><td class="r">−' + P.won(f.saving_per_t) + '</td><td class="r">' + maxD.toFixed(1) + '%</td><td class="r">' + f.iterations + "</td></tr>"];
+    runs.slice().reverse().forEach(function (r) {
+      rows.push('<tr class="click' + (ui.rec && ui.rec.no === r.no ? " cur" : "") + '" tabindex="0" data-no="' + r.no + '"><td><b>#' + r.no + '</b> <span class="muted" style="font-size:.76rem">' + esc(r.at) + "</span>" +
+        (P.hasOverrides(r.overrides) ? ' <span class="pill warn" style="font-size:.66rem">가정</span>' : "") + '</td><td class="wrap">' + esc(r.changes.length ? r.changes.join(", ") : "변경 없음") +
+        '</td><td class="r">' + P.won(r.costPerT) + '</td><td class="r">−' + P.won(r.saving) + '</td><td class="r">' + (r.pass ? "" : '<span class="pill crit">초과</span> ') + r.maxP.toFixed(1) + '%</td><td class="r">' + r.iterations + "</td></tr>");
+    });
+    $("runs").innerHTML = rows.join("");
+    Array.prototype.forEach.call($("runs").querySelectorAll("tr.click"), function (tr) {
+      function load() {
+        var r = runs.filter(function (x) { return x.no === +tr.dataset.no; })[0]; if (!r) return;
+        ui.risk = JSON.parse(JSON.stringify(r.risk)); ui.target = r.target; ui.ov = JSON.parse(JSON.stringify(r.overrides));
+        $("target").value = String(ui.target); drawConditions(); drawJudge(); drawScatter(); markDirty();
+        $("runNote").textContent = "#" + r.no + "의 조건을 불러왔어요. 실행을 누르세요.";
+        $("runBtn").scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "center" });
+      }
+      tr.addEventListener("click", load);
+      tr.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); load(); } });
+    });
+  }
+
+  /* ---------- 결재 상신 ---------- */
+  function blocker() {
+    if (!ui.result || !ui.rec) return "먼저 에이전트를 실행하세요.";
+    if (ui.dirty) return "조건을 바꾼 뒤 아직 실행하지 않았어요. 다시 실행하세요.";
+    if (P.hasOverrides(ui.rec.overrides)) return "가정 조건(단가·재고 변경)으로 계산한 배합은 결재할 수 없어요. '조건·판정 원래대로'를 누르고 실제 조건으로 실행하세요.";
+    if (!ui.result.pass) return "목표 이탈 확률을 넘는 heat가 있어요. 그대로 올리면 팀장님이 보완을 요청할 거예요.";
+    return "";
+  }
+  function drawSubmit() {
+    var why = blocker(), sub = P.getSubmit(ui.date), hard = why && !/목표 이탈/.test(why);
+    $("whyNot").textContent = why;
+    $("submitBtn").disabled = !!hard;
+    $("submitBtn").textContent = sub ? "다시 결재 상신" : "제강팀장에게 결재 상신";
+    if (!sub) { $("subState").innerHTML = ""; return; }
+    var res = P.checkMission(ui.date, sub);
+    $("subState").innerHTML = '<p style="font-size:.86rem;margin-top:8px"><span class="pill good">● 상신 완료 ' + esc(sub.time) + "</span> 톤당 " + P.won(sub.costPerT) + "원 · 예측 최대 이탈 " + sub.maxP.toFixed(1) +
+      '% · <a href="mail.html?id=' + encodeURIComponent(ui.date + "|approved") + '">팀장 회신 보기</a></p>' +
+      (res ? '<p style="font-size:.86rem;margin-top:4px">' + (res.ok ? '<span class="pill good">✓ 미션 성공</span> ' : '<span class="pill warn">보완 필요</span> ') + esc(res.msg) + "</p>" : "");
+  }
+  $("submitBtn").addEventListener("click", function () {
+    var why = blocker(); if (why && !/목표 이탈/.test(why)) return;
+    var r = ui.rec;
+    P.setSubmit(ui.date, { time: new Date().toTimeString().slice(0, 5), runNo: r.no, costPerT: r.costPerT, saving: r.saving, maxP: r.maxP, pass: r.pass,
+      iterations: r.iterations, target: r.target, risk: r.risk, comment: $("comment").value.trim().slice(0, 300) });
+    P.refresh(); drawSubmit(); drawMission();
+    $("mission").scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+  });
+
+  /* ---------- 리보 AI (timelyGPT) ---------- */
+  function aiContext() {
+    var res = ui.result, m = P.missionFor(ui.date), lines = [];
+    lines.push("너는 리본스틸(가상 전기로 제강사)의 공식 캐릭터 '리보'야. 밝고 친절하게, 신입 스크랩 배합 담당에게 아래 배합 결과를 쉽게 설명해 줘.");
+    lines.push("숫자는 아래에 적힌 값만 쓰고 새로 지어내지 마. 모르는 건 모른다고 말해. 답은 한국어로 짧게.");
+    lines.push("[회사·공정] 철스크랩 8개 등급을 섞어 100톤 전기로에서 철근(SD400/500/600)을 만든다. Cu·Sn은 정련으로 빠지지 않아 배합에서 막아야 한다. 강종별 Cu 상한: SD400 0.40%, SD500 0.35%, SD600 0.30%.");
+    lines.push("[에이전트 방법] 선형계획법으로 원가 최소 배합 → 몬테카를로 1,000회 모의 조업으로 heat별 이탈 확률 계산 → 목표를 넘으면 안전여유를 키워 다시 계산. 등급 성분은 과거 500 heat 이력 회귀로 추정.");
+    lines.push("[오늘 " + ui.date + "] 미션: " + m.title + ". 시세(원/t)·재고(t)·추정 Cu(%): " + G.map(function (g, i) {
+      var ctx = res ? res.ctx : null; return P.GNAME[g] + " " + (ctx ? ctx.price[i] : C.market[ui.date][g][0]) + "원/" + (ctx ? ctx.inv[i] : C.market[ui.date][g][1]) + "t/Cu " + C.estimate.grades[g].cu_mean.toFixed(3); }).join(", "));
+    lines.push("[검수 메모 판정] " + (ui.S.notes.length ? ui.S.notes.map(function (n) { return n.lot_id + " '" + n.note_text + "' → " + RISK_TXT[ui.risk[n.lot_id]]; }).join("; ") : "메모 없음"));
+    if (res && res.ok) {
+      var o = res.opt;
+      lines.push("[결과] 톤당 " + Math.round(o.costPerT) + "원, 숙련자 배합 " + Math.round(res.expert.costPerT) + "원, 반복 " + res.iterations + "회, 목표 이탈 " + (res.target * 100) + "%.");
+      Object.keys(res.ctx.specs).sort().forEach(function (s) {
+        var sh = shares(o.heats, 0, s), ex = shares(res.expert.heats, 0, s);
+        lines.push(s + " 배합 비율(%): " + G.map(function (g, i) { return P.GNAME[g] + " " + sh[i].toFixed(1) + "(숙련자 " + ex[i].toFixed(0) + ")"; }).join(", ") +
+          ". Cu 안전여유 " + res.margins[s].cu.toFixed(3) + "%p, 최대 이탈 " + (Math.max.apply(null, res.sim.filter(function (r) { return r.steel === s; }).map(function (r) { return r.p_fail; })) * 100).toFixed(1) + "%.");
+      });
+    } else lines.push("[결과] 아직 실행하지 않았음.");
+    return lines.join("\n");
+  }
+  // 클립보드 복사 (권한이 없으면 숨긴 입력칸으로 대신 복사)
+  function copyText(text) {
+    if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text);
+    return new Promise(function (ok, fail) {
+      var ta = document.createElement("textarea"); ta.value = text; ta.setAttribute("readonly", ""); ta.style.position = "fixed"; ta.style.opacity = "0";
+      document.body.appendChild(ta); ta.select();
+      try { document.execCommand("copy") ? ok() : fail(new Error("복사 실패")); } catch (e) { fail(e); } finally { document.body.removeChild(ta); }
+    });
+  }
+  function drawAI() {
+    var box = $("aiBox"), T = P.timely, ctxText = aiContext() + "\n\n[질문] ";
+    var html = '<ol style="margin:0;padding-left:20px;font-size:.88rem;display:grid;gap:8px">' +
+      '<li><button class="btn primary" type="button" id="copyBtn">결과 요약 복사</button> <span class="muted" style="font-size:.78rem">' + (ui.result ? "마지막 실행 결과가 들어가요" : "먼저 에이전트를 실행하면 결과까지 들어가요") + "</span></li>" +
+      '<li><a class="btn" href="' + esc(T.chatUrl) + '" target="_blank" rel="noopener">timelyai.io 리보 AI 채팅 열기 ↗</a> <span class="muted" style="font-size:.78rem">새 탭, 로그인 필요</span></li>' +
+      "<li>채팅창에 붙여 넣고(Ctrl+V) 맨 끝 [질문] 뒤에 궁금한 걸 적어 보내기</li></ol>" +
+      '<p class="join-err" id="copyMsg" role="status" style="color:var(--good-ink)"></p>' +
+      '<details style="font-size:.84rem"><summary style="cursor:pointer">복사될 내용 미리 보기</summary><pre style="white-space:pre-wrap;font-family:inherit;font-size:.78rem;color:var(--ink-2);background:var(--surface-2);padding:8px 10px;border-radius:var(--r);max-height:220px;overflow:auto">' + esc(ctxText) + "</pre></details>";
+    // TimelyChat SDK 직접 연동 (SDK용 API 키가 있는 경우)
+    html += '<details style="font-size:.84rem;margin-top:4px"><summary style="cursor:pointer">TimelyChat SDK로 이 화면에 바로 띄우기 (SDK용 키가 있는 경우)</summary><div id="sdkBox" style="margin-top:8px"></div></details>';
+    box.innerHTML = html;
+    $("copyBtn").addEventListener("click", function () {
+      copyText(aiContext() + "\n\n[질문] ").then(function () { $("copyMsg").textContent = "복사했어요! timelyai.io 채팅창에 붙여 넣으세요."; },
+        function () { $("copyMsg").textContent = "복사하지 못했어요. 미리 보기의 내용을 직접 선택해 복사하세요."; });
+    });
+    drawSdk();
+  }
+  function drawSdk() {
+    var sb = $("sdkBox"), T = P.timely; if (!sb) return;
+    if (!T.token()) {
+      sb.innerHTML = '<p class="muted" style="font-size:.76rem">timelyai.io에서 받은 키로는 연결되지 않아요(“해당하는 조직을 찾을 수 없습니다”). TimelyChat SDK용으로 발급된 키만 쓸 수 있어요. 키는 저장하지 않고 로그인 토큰(24시간)만 이 창에 보관해요.</p>' +
+        '<form id="aiForm" class="join-form" novalidate><div class="join-row"><input id="aiKey" type="password" autocomplete="off" spellcheck="false" placeholder="SDK용 API 키" aria-label="TimelyChat SDK용 API 키">' +
+        '<button class="btn" type="submit">연결</button></div><p class="join-err" id="aiErr" role="alert"></p></form>';
+      $("aiForm").addEventListener("submit", function (e) {
+        e.preventDefault(); var k = $("aiKey").value.trim(); if (!k) { $("aiErr").textContent = "API 키를 입력하세요."; return; }
+        $("aiErr").textContent = "연결 중…"; T.connect(k).then(drawSdk, function (err) { $("aiErr").textContent = err.message; });
+      });
+      return;
+    }
+    sb.innerHTML = '<div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center"><span class="pill good">● 연결됨</span><button class="btn primary" type="button" id="askBtn">리보 AI 채팅 열기</button>' +
+      '<button class="btn" type="button" id="aiOut" style="font-size:.8rem">연결 끊기</button></div><p class="join-err" id="aiErr2" role="alert"></p>';
+    $("askBtn").addEventListener("click", function () {
+      $("aiErr2").textContent = "";
+      T.open({ refId: "reborn-" + ui.date, name: ui.date + " 배합" }, aiContext(), ["왜 이 등급을 많이 썼어?", "안전여유가 뭐야?", "이탈 확률은 어떻게 계산했어?"])
+        .catch(function (err) { $("aiErr2").textContent = err.message; });
+    });
+    $("aiOut").addEventListener("click", function () { T.disconnect(); drawSdk(); });
+  }
+
+  /* ---------- 공통 ---------- */
+  $("runBtn").addEventListener("click", run);
+  $("target").addEventListener("change", function () { ui.target = +$("target").value; markDirty(); });
+  $("resetBtn").addEventListener("click", function () {
+    ui.kw.forEach(function (f) { ui.risk[f.lot_id] = f.risk; }); ui.ov = { price: {}, inv: {} }; ui.target = 0.02; $("target").value = "0.02";
+    drawConditions(); drawJudge(); drawScatter(); markDirty();
+  });
+  try { if (P.store.get("rb-intro-closed", false)) $("introBox").open = false; } catch (e) { /* 무시 */ }
+  $("introBox").addEventListener("toggle", function () { P.store.set("rb-intro-closed", !$("introBox").open); });
+
+  function render(c) {
+    if (!ui || ui.date !== c.date) ui = fresh(c);
+    $("eb").textContent = "배합 에이전트 작업실 · " + c.date + " (" + P.dow(c.date) + ") · 입사 " + c.day + "일차";
+    $("runBtn").textContent = ui.result ? "▶ 다시 실행" : "▶ 에이전트 실행";
+    drawMission(); drawConditions(); drawJudge(); drawScatter(); drawResult(); drawRuns(); drawSubmit(); drawAI();
+    if (!ui.result) $("stepsBox").hidden = true;
+    if (location.hash === "#notes") $("notes").scrollIntoView();
+  }
+  P.start(render);
+})();
+</script>
+</body>
+</html>

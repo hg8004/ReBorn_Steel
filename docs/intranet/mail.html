@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>사내 메일함</title>
+<meta name="description" content="리본스틸 사내 메일함: 접속한 직원의 받은 메일과 할 일 (가상 데이터)">
+<link rel="icon" href="assets/rebo-face.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="assets/portal.css">
+<style>
+.box-head { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.box-head .avatar { width: 52px; height: 52px; }
+.mailapp { display: grid; grid-template-columns: minmax(280px, 380px) minmax(0, 1fr); background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); min-height: 520px; }
+.mailapp > * { min-width: 0; }
+.listpane { border-right: 1px solid var(--line); display: grid; grid-template-rows: auto 1fr; min-height: 0; }
+.listpane > * { min-width: 0; }
+.listpane .filters { padding: 10px 12px; border-bottom: 1px solid var(--line); }
+.listpane .scroll { overflow-y: auto; max-height: 70vh; }
+.readpane { padding: 18px 20px; }
+@media (max-width: 860px) {
+  .mailapp { grid-template-columns: 1fr; }
+  .listpane { border-right: 0; border-bottom: 1px solid var(--line); }
+  .listpane .scroll { max-height: 46vh; }
+  .readpane { padding: 16px; }
+}
+</style>
+</head>
+<body data-page="mail">
+<header id="topbar"></header>
+<div class="shell">
+<nav class="side" id="side" aria-label="사내 메뉴"></nav>
+<main>
+  <div class="box-head">
+    <span id="ownerPic"></span>
+    <div class="pagehead">
+      <div class="eyebrow">사내 메일함</div>
+      <h1 id="ownerT">메일함</h1>
+      <p id="ownerS" style="font-size:.88rem"></p>
+    </div>
+  </div>
+
+  <div class="mailapp">
+    <div class="listpane">
+      <div class="filters chips" id="filters" role="group" aria-label="메일 걸러 보기"></div>
+      <div class="scroll"><ul class="maillist" id="list"></ul></div>
+    </div>
+    <article class="readpane" id="read" aria-live="polite" tabindex="-1"></article>
+  </div>
+  <p class="muted" style="font-size:.78rem">업무 기준일과 그 전 2일(조업일 기준)의 메일이 보입니다. 메일은 그날의 배합 지시서, 검수 메모, 시세·재고에서 자동으로 만들어집니다.</p>
+</main>
+</div>
+
+<script src="../data/results.js"></script>
+<script src="data/company.js"></script>
+<script src="assets/portal.js"></script>
+<script>
+(function () {
+  "use strict";
+  var P = window.Portal; if (!P || !P.D) return;
+  var $ = P.$, esc = P.esc;
+  var filter = "all", selId = P.params.get("id");
+  var FILTERS = [["all", "전체"], ["unread", "안 읽음"], ["task", "할 일"], ["notice", "공지"]];
+
+  function render(c) {
+    var u = c.user, mails = P.mailbox(c.date);
+    $("ownerPic").innerHTML = P.profilePic("lg");
+    $("ownerT").textContent = u.name + " " + u.title + "의 메일함";
+    var todo = mails.filter(function (m) { return m.date === c.date && P.taskOf(m) && !P.isDone(m); }).length;
+    $("ownerS").textContent = u.team + " · " + u.role + " · 기준일 남은 할 일 " + todo + "건";
+
+    $("filters").innerHTML = FILTERS.map(function (f) {
+      var n = mails.filter(match(f[0], u)).length;
+      return '<button type="button" class="chip" data-f="' + f[0] + '" aria-pressed="' + (filter === f[0]) + '">' + f[1] + ' <span class="num muted">' + n + "</span></button>";
+    }).join("");
+    Array.prototype.forEach.call($("filters").children, function (b) { b.addEventListener("click", function () { filter = b.dataset.f; render(c); }); });
+
+    var shown = mails.filter(match(filter, u));
+    if (!mails.some(function (m) { return m.id === selId; })) selId = shown.length ? shown[0].id : null;
+    var html = "", lastDay = null;
+    shown.forEach(function (m) {
+      if (m.date !== lastDay) { html += '<li class="mailday" aria-hidden="true">' + P.md(m.date) + " (" + P.dow(m.date) + ")" + (m.date === c.date ? " · 기준일" : "") + "</li>"; lastDay = m.date; }
+      var t = P.taskOf(m);
+      html += '<li class="' + (P.isRead(m) ? "" : "unread") + '"><button type="button" data-id="' + esc(m.id) + '"' + (m.id === selId ? ' aria-current="true"' : "") + ">" +
+        '<span class="dot" aria-hidden="true"></span><span class="from">' + esc(P.sender(m.from).name) + '</span><span class="time">' + esc(m.time) + "</span>" +
+        '<span class="subj">' + (P.isRead(m) ? "" : '<span class="sr" style="position:absolute;left:-9999px">안 읽음 </span>') + esc(m.subject) + "</span>" +
+        '<span class="tags">' + P.tagPill(m.tag) + (t ? (P.isDone(m) ? '<span class="pill good">✓ 완료</span>' : '<span class="pill warn">할 일</span>') : "") + "</span></button></li>";
+    });
+    $("list").innerHTML = html || '<li class="empty" style="padding:14px">해당하는 메일이 없습니다.</li>';
+    Array.prototype.forEach.call($("list").querySelectorAll("button"), function (b) {
+      b.addEventListener("click", function () {
+        selId = b.dataset.id; render(c);
+        if (window.matchMedia("(max-width: 860px)").matches) $("read").scrollIntoView({ behavior: "smooth", block: "start" });
+        $("read").focus({ preventScroll: true });
+      });
+    });
+
+    var m = mails.filter(function (x) { return x.id === selId; })[0];
+    if (!m) { $("read").innerHTML = '<p class="empty">메일을 고르세요.</p>'; return; }
+    var wasUnread = !P.isRead(m);
+    P.setRead(m);
+    var s = P.sender(m.from), t = P.taskOf(m);
+    var toNames = m.to.indexOf("all") >= 0 ? "전 직원" : m.to.map(function (id) { var p = P.person(id); return id === "me" ? p.name + " " + p.title + " (나)" : p.name + " " + p.title; }).join(", ");
+    $("read").innerHTML = '<div class="mailbody"><div class="head"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">' + P.tagPill(m.tag) + '<h2 style="font-size:1.1rem">' + esc(m.subject) + "</h2></div>" +
+      '<div style="display:flex;gap:10px;align-items:center">' + P.senderAvatar(m.from) + '<div class="meta"><span><b style="color:var(--ink)">' + esc(s.name) + "</b> · " + esc(s.sub) + "</span>" +
+      "<span>받는 사람: " + esc(toNames) + "</span><span>" + m.date + " (" + P.dow(m.date) + ") " + esc(m.time) + "</span></div></div></div>" +
+      (t ? '<div class="todo"><label><input type="checkbox" id="doneCb"' + (P.isDone(m) ? " checked" : "") + "> 할 일: " + esc(t.text) + '</label><a class="btn primary" href="' + esc(t.href) + '">처리하러 가기</a></div>' : "") +
+      '<div class="txt">' + P.renderBody(m.body) + "</div></div>";
+    if (t) $("doneCb").addEventListener("change", function (e) { P.setDone(m, e.target.checked); render(c); });
+    if (wasUnread) { P.refresh(); render(c); }
+  }
+  function match(f, u) {
+    return function (m) {
+      if (f === "unread") return !P.isRead(m);
+      if (f === "task") return !!P.taskOf(m);
+      if (f === "notice") return m.tag === "공지";
+      return true;
+    };
+  }
+  P.start(render);
+})();
+</script>
+</body>
+</html>

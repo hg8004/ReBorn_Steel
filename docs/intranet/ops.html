@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>오늘의 조업 현황</title>
+<meta name="description" content="리본스틸 사내포털: 날짜별 배합 지시서, heat별 예측 이탈 확률, 원가 추이 (가상 데이터)">
+<link rel="icon" href="assets/rebo-face.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="assets/portal.css">
+<style>
+.charges { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 6px; }
+.charges div { border: 1px solid var(--line); border-radius: 4px; padding: 6px 8px; font-size: .85rem; display: flex; justify-content: space-between; gap: 6px; }
+.log { margin: 0; padding-left: 18px; font-size: .85rem; color: var(--ink-2); display: grid; gap: 4px; font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body data-page="ops">
+<header id="topbar"></header>
+<div class="shell">
+<nav class="side" id="side" aria-label="사내 메뉴"></nav>
+<main>
+  <div class="headpic">
+    <img src="assets/brand/rebo-build.jpg" alt="">
+    <div class="pagehead">
+      <div class="eyebrow" id="eb">오늘의 조업 현황</div>
+      <h1 id="title">배합 지시서</h1>
+      <p>배합 에이전트가 쓴 초안입니다. 숫자는 모두 회귀·선형계획·모의 조업 도구가 계산했고, 검토와 결재 상신은 배합 담당(나)이 합니다.</p>
+    </div>
+  </div>
+  <div class="tiles" id="tiles"></div>
+
+  <div class="grid2">
+    <section class="card" aria-labelledby="stT">
+      <h2 id="stT">강종별 요약</h2>
+      <div class="scroll-x"><table id="steel"><thead><tr><th>강종</th><th class="r">heat</th><th class="r">톤당 원가</th><th class="r">예상 Cu / 상한</th><th class="r">Cu 안전여유</th><th class="r">최대 이탈</th></tr></thead><tbody></tbody></table></div>
+      <p class="ink2" style="font-size:.86rem" id="dayText"></p>
+    </section>
+    <section class="card chart" aria-labelledby="costT">
+      <div class="card-h"><h2 id="costT">톤당 배합 원가 추이</h2><span class="muted" style="font-size:.78rem">에이전트 적용일부터 기준일까지</span></div>
+      <div class="legend"><span><i class="ln" style="background:var(--s4)"></i>에이전트 배합</span><span><i class="ln" style="background:var(--s1)"></i>숙련자 배합표</span></div>
+      <svg id="cost" role="img" aria-label="날짜별 톤당 배합 원가: 에이전트 배합과 숙련자 배합표 비교"></svg>
+    </section>
+  </div>
+
+  <section class="card" aria-labelledby="heatT">
+    <div class="card-h"><h2 id="heatT">heat별 배합</h2><span class="muted" style="font-size:.78rem">행을 누르면 아래에 지시서가 열립니다</span></div>
+    <div class="legend" id="gl"></div>
+    <div class="scroll-x"><table id="heats"><thead><tr><th>heat</th><th>강종</th><th>배합 비율</th><th class="r">장입(t)</th><th class="r">예상 Cu(%)</th><th class="r">예상 Sn(%)</th><th class="r">예측 이탈</th><th class="r">원/t</th></tr></thead><tbody></tbody></table></div>
+  </section>
+  <section class="card" id="detail" aria-live="polite"></section>
+
+  <section class="card" id="log" aria-labelledby="logT">
+    <h2 id="logT">최적화 ↔ 시뮬레이션 반복 기록</h2>
+    <ol class="log" id="logList"></ol>
+  </section>
+</main>
+</div>
+
+<script src="../data/results.js"></script>
+<script src="data/company.js"></script>
+<script src="assets/portal.js"></script>
+<script>
+(function () {
+  "use strict";
+  var P = window.Portal; if (!P || !P.D) return;
+  var $ = P.$, esc = P.esc, cur = null, curHeat = P.params.get("heat");
+
+  $("gl").innerHTML = P.GRADES.map(function (g) { return '<span><i style="background:' + P.css(P.GCOL[g]) + '"></i>' + P.GNAME[g] + "</span>"; }).join("");
+
+  function render(c) {
+    var S = c.sheet, f = S.summary; cur = S;
+    $("eb").textContent = "오늘의 조업 현황 · " + c.date + " (" + P.dow(c.date) + ")";
+    $("title").textContent = P.md(c.date) + " 배합 지시서 · 24 heat";
+    var maxP = Math.max.apply(null, S.heats.map(function (h) { return h.p_fail_pct; }));
+    var fl = P.flagged(S);
+    $("tiles").innerHTML = [
+      ["톤당 배합 원가", P.won(f.cost_per_t) + "원", "숙련자 배합 " + P.won(f.expert_cost_per_t) + "원"],
+      ["톤당 절감", P.won(f.saving_per_t) + "원", "하루 약 " + (f.saving_per_t * P.tapTotal(S) / 1e6).toFixed(1) + "백만 원"],
+      ["반복 횟수", f.iterations + "회", "최적화–시뮬레이션 (최대 6회)"],
+      ["예측 최대 이탈", maxP.toFixed(1) + "%", "에이전트 추정 분포 기준"],
+      ["위험 로트 조치", fl.length + "건", fl.length ? fl.map(function (x) { return x.lot_id; }).join(", ") : "없음"]
+    ].map(function (t) { return '<div class="tile"><span class="k">' + t[0] + '</span><span class="v">' + t[1] + '</span><span class="s">' + esc(t[2]) + "</span></div>"; }).join("");
+
+    var cnt = {}; S.heats.forEach(function (h) { cnt[h.steel_grade] = (cnt[h.steel_grade] || 0) + 1; });
+    $("steel").querySelector("tbody").innerHTML = Object.keys(f.by_steel).sort().map(function (s) {
+      var v = f.by_steel[s];
+      return "<tr><td><b>" + s + '</b></td><td class="r">' + cnt[s] + '</td><td class="r">' + P.won(v.cost_per_t) + '</td><td class="r">' + v.pred_cu_pct.toFixed(3) +
+        ' <span class="muted">/ ' + v.cu_max_pct.toFixed(2) + '</span></td><td class="r">' + v.margin_cu_pct.toFixed(3) + '%p</td><td class="r">' + v.max_p_fail_pct.toFixed(1) + "%</td></tr>";
+    }).join("");
+    $("dayText").textContent = S.rationale.day_summary;
+    $("logList").innerHTML = S.log.map(function (l) { return "<li>" + esc(l) + "</li>"; }).join("");
+
+    // 원가 추이: 기준일까지 (미래 날짜는 아직 모른다)
+    var xs = P.DATES.filter(function (d) { return d <= c.date; });
+    P.lineChart($("cost"), {
+      x: xs, fmt: function (v) { return (v / 1000).toFixed(0) + "천"; }, tipFmt: function (v) { return P.won(v) + "원/t"; },
+      series: [{ name: "에이전트", color: "var(--s4)", vals: xs.map(function (d) { return P.D.sheets[d].summary.cost_per_t; }) },
+               { name: "숙련자", color: "var(--s1)", vals: xs.map(function (d) { return P.D.sheets[d].summary.expert_cost_per_t; }) }]
+    });
+
+    var tb = $("heats").querySelector("tbody"); tb.innerHTML = "";
+    var idx = 0; S.heats.forEach(function (h, i) { if (h.heat_id === curHeat) idx = i; });
+    S.heats.forEach(function (h, i) {
+      var tr = document.createElement("tr"); tr.className = "click"; tr.tabIndex = 0;
+      var bar = '<div class="bar" aria-hidden="true">' + h.charges.map(function (ch) { return '<i style="width:' + ch.pct + "%;background:" + P.css(P.GCOL[ch.grade_id]) + '" data-g="' + ch.grade_id + '" data-t="' + ch.t + '" data-p="' + ch.pct + '"></i>'; }).join("") + "</div>";
+      var risk = h.p_fail_pct >= 1.5 ? '<span class="pill warn">' + h.p_fail_pct.toFixed(1) + "%</span>" : h.p_fail_pct.toFixed(1) + "%";
+      tr.innerHTML = '<td class="mono">' + h.heat_id + "</td><td>" + h.steel_grade + "</td><td>" + bar + '</td><td class="r">' + h.charge_t.toFixed(1) + '</td><td class="r">' + h.pred_cu_pct.toFixed(3) +
+        ' <span class="muted">/ ' + h.cu_max_pct.toFixed(2) + '</span></td><td class="r">' + h.pred_sn_pct.toFixed(4) + ' <span class="muted">/ ' + h.sn_max_pct.toFixed(3) +
+        '</span></td><td class="r">' + risk + '</td><td class="r">' + P.won(h.cost_per_t) + "</td>";
+      tr.addEventListener("click", function () { pick(i); });
+      tr.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pick(i); } });
+      Array.prototype.forEach.call(tr.querySelectorAll(".bar i"), function (seg) { P.hover(seg, P.GNAME[seg.dataset.g] + " " + seg.dataset.t + "t (" + seg.dataset.p + "%)"); });
+      tb.appendChild(tr);
+    });
+    pick(idx);
+    if (location.hash === "#log") $("log").scrollIntoView();
+  }
+
+  function pick(i) {
+    var h = cur.heats[i]; curHeat = h.heat_id;
+    Array.prototype.forEach.call($("heats").querySelectorAll("tbody tr"), function (tr, k) { tr.setAttribute("aria-selected", k === i ? "true" : "false"); });
+    function meter(label, v, lim, d) {
+      var max = lim * 1.25, w = Math.min(v / max, 1) * 100, l = lim / max * 100;
+      return '<div class="meter"><span>' + label + ' 예상 <b class="num">' + v.toFixed(d) + "%</b> · 상한 " + lim.toFixed(d) + "% · 여유 " + (lim - v).toFixed(d) + "%p</span>" +
+        '<div class="track"><div class="fill" style="width:' + w + '%"></div><div class="lim" style="left:calc(' + l + '% - 1px)"></div></div></div>';
+    }
+    $("detail").innerHTML = '<div class="card-h"><h2>배합 지시서 · ' + cur.date + " · " + h.heat_id + '</h2><span class="ink2">' + h.steel_grade + " · 목표 출강 " + h.target_tap_t + "t · 장입 " + h.charge_t.toFixed(1) +
+      "t · 용적 " + h.volume_m3.toFixed(1) + " / 180 m³</span></div>" +
+      '<div class="charges">' + h.charges.map(function (ch) { return '<div><span><i style="display:inline-block;width:9px;height:9px;border-radius:2px;background:' + P.css(P.GCOL[ch.grade_id]) + ';margin-right:6px"></i>' + ch.name_kr + '</span><span class="num">' + ch.t.toFixed(1) + "t · " + ch.pct.toFixed(1) + "%</span></div>"; }).join("") + "</div>" +
+      '<div class="grid2" style="gap:12px">' + meter("Cu", h.pred_cu_pct, h.cu_max_pct, 3) + meter("Sn", h.pred_sn_pct, h.sn_max_pct, 4) + "</div>" +
+      '<p style="font-size:.9rem"><b>예측 이탈 확률</b> ' + h.p_fail_pct.toFixed(1) + "% (모의 조업 1,000회) · <b>톤당 원가</b> " + P.won(h.cost_per_t) + "원</p>" +
+      '<p class="ink2" style="font-size:.9rem"><b style="color:var(--ink)">판단 근거</b> ' + esc(h.rationale) + "</p>";
+  }
+  P.start(render);
+})();
+</script>
+</body>
+</html>

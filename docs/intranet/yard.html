@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>스크랩 야드·검수</title>
+<meta name="description" content="리본스틸 사내포털: 스크랩 등급별 재고·시세와 검수 메모 판정 (가상 데이터)">
+<link rel="icon" href="assets/rebo-face.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="assets/portal.css">
+<style>
+.notes { list-style: none; margin: 0; padding: 0; display: grid; }
+.notes li { display: grid; gap: 2px; padding: 9px 0; border-bottom: 1px dashed var(--line); }
+.notes li:last-child { border-bottom: 0; }
+.notes .row { display: flex; justify-content: space-between; gap: 8px; align-items: start; }
+.notes .m { font-size: .78rem; color: var(--muted); }
+.sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: -1px; }
+</style>
+</head>
+<body data-page="yard">
+<header id="topbar"></header>
+<div class="shell">
+<nav class="side" id="side" aria-label="사내 메뉴"></nav>
+<main>
+  <div class="headpic">
+    <img src="assets/brand/rebo-recycle.jpg" alt="">
+    <div class="pagehead">
+      <div class="eyebrow" id="eb">스크랩 야드·검수</div>
+      <h1>등급별 재고·시세와 검수 메모</h1>
+      <p>표의 등급을 누르면 아래 그래프와 검수 이력이 그 등급으로 바뀝니다. 재고가 <span id="shortT"></span>t 아래면 부족으로 표시합니다.</p>
+    </div>
+  </div>
+
+  <section class="card" aria-labelledby="invT">
+    <h2 id="invT">오늘의 재고·시세</h2>
+    <div class="scroll-x"><table id="inv"><thead><tr><th>등급</th><th class="r">단가(원/t)</th><th class="r">전일 대비</th><th class="r">재고(t)</th><th class="r">오늘 배합 사용(t)</th><th>상태</th><th class="r">공칭 Cu / Sn(%)</th><th>오늘 검수</th></tr></thead><tbody></tbody></table></div>
+  </section>
+
+  <div class="grid2">
+    <section class="card chart" aria-labelledby="pT">
+      <h2 id="pT">단가 추이</h2>
+      <svg id="price" role="img" aria-label="선택한 등급의 날짜별 단가"></svg>
+      <p class="muted" style="font-size:.78rem">9/1부터 기준일까지, 원/t</p>
+    </section>
+    <section class="card chart" aria-labelledby="iT">
+      <h2 id="iT">재고 추이</h2>
+      <svg id="stock" role="img" aria-label="선택한 등급의 날짜별 재고와 부족 기준선"></svg>
+      <p class="muted" style="font-size:.78rem">점선은 재고 부족 기준</p>
+    </section>
+  </div>
+
+  <div class="grid2">
+    <section class="card" aria-labelledby="nT">
+      <h2 id="nT">오늘 검수 메모</h2>
+      <ul class="notes" id="today"></ul>
+      <p class="muted" style="font-size:.78rem" id="method"></p>
+    </section>
+    <section class="card" aria-labelledby="hT">
+      <div class="card-h"><h2 id="hT">최근 14일 검수 이력</h2><div class="chips" id="hf" role="group" aria-label="검수 이력 등급"></div></div>
+      <ul class="notes" id="hist"></ul>
+    </section>
+  </div>
+</main>
+</div>
+
+<script src="../data/results.js"></script>
+<script src="data/company.js"></script>
+<script src="assets/portal.js"></script>
+<script>
+(function () {
+  "use strict";
+  var P = window.Portal; if (!P || !P.D) return;
+  var $ = P.$, esc = P.esc;
+  var grade = P.GRADES.indexOf(P.params.get("grade")) >= 0 ? P.params.get("grade") : "LS_A", histAll = false;
+  var SCRAP = {}; P.C.scrap.forEach(function (s) { SCRAP[s.grade_id] = s; });
+  $("shortT").textContent = P.SHORT_T;
+
+  function render(c) {
+    var S = c.sheet, mk = P.marketRow(c.date), pm = P.marketRow(P.prevMarketDate(c.date) || c.date), use = P.usage(S);
+    var flag = {}; S.flags.forEach(function (x) { flag[x.grade_id] = x; });
+    $("eb").textContent = "스크랩 야드·검수 · " + c.date + " (" + P.dow(c.date) + ")";
+
+    var tb = $("inv").querySelector("tbody"); tb.innerHTML = "";
+    P.GRADES.forEach(function (g) {
+      var p = mk[g][0], inv = mk[g][1], ch = (p - pm[g][0]) / pm[g][0] * 100, fx = flag[g];
+      var st = inv < P.SHORT_T ? '<span class="pill crit">▲ 부족</span>' : inv < P.AVG_INV[g] * 0.85 ? '<span class="pill warn">△ 평소보다 적음</span>' : '<span class="pill good">● 정상</span>';
+      var tr = document.createElement("tr"); tr.className = "click"; tr.tabIndex = 0; tr.setAttribute("aria-selected", g === grade ? "true" : "false");
+      tr.innerHTML = '<td><span class="sw" style="background:' + P.css(P.GCOL[g]) + '"></span><b>' + P.GNAME[g] + '</b> <span class="mono muted" style="font-size:.76rem">' + g + "</span></td>" +
+        '<td class="r">' + P.won(p) + '</td><td class="r">' + (ch >= 0 ? "+" : "") + ch.toFixed(2) + '%</td><td class="r">' + inv + '</td><td class="r">' + use[g].toFixed(1) + "</td><td>" + st + "</td>" +
+        '<td class="r">' + SCRAP[g].nominal_cu_pct.toFixed(2) + " / " + SCRAP[g].nominal_sn_pct.toFixed(3) + "</td><td>" + (fx ? P.riskPill(fx.risk) : '<span class="muted">-</span>') + "</td>";
+      function choose() { grade = g; render(c); }
+      tr.addEventListener("click", choose);
+      tr.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); choose(); } });
+      tb.appendChild(tr);
+    });
+
+    var xs = P.MDATES.filter(function (d) { return d <= c.date; }), col = P.css(P.GCOL[grade]);
+    $("pT").textContent = P.GNAME[grade] + " 단가 추이";
+    $("iT").textContent = P.GNAME[grade] + " 재고 추이";
+    P.lineChart($("price"), { x: xs, series: [{ name: P.GNAME[grade], color: col, vals: xs.map(function (d) { return P.C.market[d][grade][0]; }) }],
+      fmt: function (v) { return (v / 1000).toFixed(0) + "천"; }, tipFmt: function (v) { return P.won(v) + "원/t"; } });
+    P.lineChart($("stock"), { x: xs, series: [{ name: P.GNAME[grade], color: col, vals: xs.map(function (d) { return P.C.market[d][grade][1]; }) }],
+      ref: { v: P.SHORT_T, label: "부족 기준 " + P.SHORT_T + "t" }, fmt: function (v) { return Math.round(v) + "t"; }, tipFmt: function (v) { return v + "t"; } });
+
+    $("today").innerHTML = S.notes.length ? S.notes.map(function (n) {
+      var fx = flag[n.grade_id] || { risk: "none" };
+      return '<li><div class="row"><span>' + esc(n.note_text) + "</span>" + P.riskPill(fx.risk) + '</div><span class="m mono">' + esc(n.lot_id) + " · " + P.GNAME[n.grade_id] + "</span>" +
+        (fx.risk !== "none" ? '<span class="m">' + esc(fx.reason) + "</span>" : "") + "</li>";
+    }).join("") : '<li class="empty">오늘 등록된 검수 메모가 없습니다.</li>';
+    $("method").textContent = "판정: " + P.noteMethod() + (P.D.meta.use_llm ? "" : " · 문맥을 읽지 못하므로 '제거 완료' 같은 메모는 품질보증팀이 원문을 확인합니다.");
+
+    $("hf").innerHTML = [[false, P.GNAME[grade]], [true, "전체 등급"]].map(function (o) {
+      return '<button type="button" class="chip" data-all="' + o[0] + '" aria-pressed="' + (histAll === o[0]) + '">' + o[1] + "</button>";
+    }).join("");
+    Array.prototype.forEach.call($("hf").children, function (b) { b.addEventListener("click", function () { histAll = b.dataset.all === "true"; render(c); }); });
+    var i = P.MDATES.indexOf(c.date), from = P.MDATES[Math.max(0, i - 13)];
+    var hist = P.C.notes.filter(function (n) { return n.date >= from && n.date <= c.date && (histAll || n.grade_id === grade); }).slice().reverse();
+    $("hist").innerHTML = hist.length ? hist.map(function (n) {
+      var sh = P.D.sheets[n.date], fx = sh ? sh.flags.filter(function (x) { return x.lot_id === n.lot_id; })[0] : null;
+      return '<li><div class="row"><span>' + esc(n.note_text) + "</span>" + (fx ? P.riskPill(fx.risk) : '<span class="pill mute">판정 전 기간</span>') +
+        '</div><span class="m"><span class="mono">' + esc(n.lot_id) + "</span> · " + P.GNAME[n.grade_id] + " · " + P.md(n.date) + "</span></li>";
+    }).join("") : '<li class="empty">최근 14일 동안 이 등급의 검수 메모가 없습니다.</li>';
+  }
+  P.start(render);
+})();
+</script>
+</body>
+</html>

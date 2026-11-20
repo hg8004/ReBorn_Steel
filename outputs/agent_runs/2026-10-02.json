@@ -1,0 +1,818 @@
+{
+ "date": "2026-10-02",
+ "summary": {
+  "date": "2026-10-02",
+  "cost_per_t": 410398,
+  "expert_cost_per_t": 419001,
+  "saving_per_t": 8603,
+  "iterations": 3,
+  "risky_lots": [
+   {
+    "lot_id": "TRN-20261002",
+    "grade_id": "TRN",
+    "element": "cu",
+    "risk": "high",
+    "suspected_multiplier": 2.0,
+    "reason": "키워드 규칙: '황동 절삭칩 섞여 들어옴. 구리 성분 높을 가능성'"
+   }
+  ],
+  "inventory_short": [],
+  "by_steel": {
+   "SD400": {
+    "share_pct": {
+     "HS_A": 3.0,
+     "HS_B": 0.0,
+     "HMS_A": 28.1,
+     "HMS_B": 38.7,
+     "LS_A": 30.2,
+     "LS_B": 0.0,
+     "SHR": 0.0,
+     "TRN": 0.0
+    },
+    "expert_share_pct": {
+     "HS_A": 10.0,
+     "HS_B": 10.0,
+     "HMS_A": 20.0,
+     "HMS_B": 20.0,
+     "LS_A": 12.0,
+     "LS_B": 8.0,
+     "SHR": 15.0,
+     "TRN": 5.0
+    },
+    "pred_cu_pct": 0.269,
+    "cu_max_pct": 0.4,
+    "pred_sn_pct": 0.0203,
+    "sn_max_pct": 0.04,
+    "margin_cu_pct": 0.13139,
+    "margin_sn_pct": 0.00464,
+    "max_p_fail_pct": 1.0,
+    "cost_per_t": 408410,
+    "expert_cost_per_t": 416360
+   },
+   "SD500": {
+    "share_pct": {
+     "HS_A": 4.4,
+     "HS_B": 0.0,
+     "HMS_A": 54.3,
+     "HMS_B": 25.7,
+     "LS_A": 15.6,
+     "LS_B": 0.0,
+     "SHR": 0.0,
+     "TRN": 0.0
+    },
+    "expert_share_pct": {
+     "HS_A": 15.0,
+     "HS_B": 15.0,
+     "HMS_A": 20.0,
+     "HMS_B": 15.0,
+     "LS_A": 10.0,
+     "LS_B": 5.0,
+     "SHR": 15.0,
+     "TRN": 5.0
+    },
+    "pred_cu_pct": 0.226,
+    "cu_max_pct": 0.35,
+    "pred_sn_pct": 0.0174,
+    "sn_max_pct": 0.035,
+    "margin_cu_pct": 0.12398,
+    "margin_sn_pct": 0.00451,
+    "max_p_fail_pct": 0.4,
+    "cost_per_t": 410783,
+    "expert_cost_per_t": 420016
+   },
+   "SD600": {
+    "share_pct": {
+     "HS_A": 20.0,
+     "HS_B": 0.0,
+     "HMS_A": 39.3,
+     "HMS_B": 20.6,
+     "LS_A": 20.1,
+     "LS_B": 0.0,
+     "SHR": 0.0,
+     "TRN": 0.0
+    },
+    "expert_share_pct": {
+     "HS_A": 25.0,
+     "HS_B": 20.0,
+     "HMS_A": 20.0,
+     "HMS_B": 10.0,
+     "LS_A": 5.0,
+     "LS_B": 3.0,
+     "SHR": 12.0,
+     "TRN": 5.0
+    },
+    "pred_cu_pct": 0.206,
+    "cu_max_pct": 0.3,
+    "pred_sn_pct": 0.0163,
+    "sn_max_pct": 0.03,
+    "margin_cu_pct": 0.09413,
+    "margin_sn_pct": 0.00416,
+    "max_p_fail_pct": 1.2,
+    "cost_per_t": 415508,
+    "expert_cost_per_t": 424792
+   }
+  }
+ },
+ "rationale": {
+  "day_summary": "2026-10-02 배합 원가 톤당 410,398원으로 숙련자 배합 대비 톤당 8,603원 절감. 최적화-시뮬레이션 3회 반복. 위험 로트: TRN-20261002(키워드 규칙: '황동 절삭칩 섞여 들어옴. 구리 성분 높을 가능성').",
+  "by_steel": {
+   "SD400": "숙련자 배합 대비 HMS_A, HMS_B, LS_A 비중을 늘리고 HS_A, HS_B, LS_B, SHR, TRN 비중을 줄임. 예상 Cu 0.269%(상한 0.4%, 안전여유 0.131%p), 최악 heat 이탈 확률 1.0%.",
+   "SD500": "숙련자 배합 대비 HMS_A, HMS_B, LS_A 비중을 늘리고 HS_A, HS_B, LS_B, SHR, TRN 비중을 줄임. 예상 Cu 0.226%(상한 0.35%, 안전여유 0.124%p), 최악 heat 이탈 확률 0.4%.",
+   "SD600": "숙련자 배합 대비 HMS_A, HMS_B, LS_A 비중을 늘리고 HS_A, HS_B, SHR, TRN 비중을 줄임. 예상 Cu 0.206%(상한 0.3%, 안전여유 0.094%p), 최악 heat 이탈 확률 1.2%."
+  },
+  "method": "template"
+ },
+ "heats": [
+  {
+   "heat_id": "P01",
+   "steel_grade": "SD400",
+   "target_tap_t": 98.0,
+   "charges": [
+    {
+     "grade_id": "HMS_A",
+     "name_kr": "중량A",
+     "t": 26.3,
+     "pct": 24.5
+    },
+    {
+     "grade_id": "HMS_B",
+     "name_kr": "중량B",
+     "t": 80.8,
+     "pct": 75.5
+    }
+   ],
+   "charge_t": 107.1,
+   "volume_m3": 130.2,
+   "pred_cu_pct": 0.269,
+   "cu_max_pct": 0.4,
+   "pred_sn_pct": 0.0186,
+   "sn_max_pct": 0.04,
+   "p_fail_pct": 0.3,
+   "cost_per_t": 410293,
+   "rationale": "숙련자 배합 대비 HMS_A, HMS_B, LS_A 비중을 늘리고 HS_A, HS_B, LS_B, SHR, TRN 비중을 줄임. 예상 Cu 0.269%(상한 0.4%, 안전여유 0.131%p), 최악 heat 이탈 확률 1.0%."
+  },
+  {
+   "heat_id": "P02",
+   "steel_grade": "SD500",
+   "target_tap_t": 102.0,
+   "charges": [
+    {
+     "grade_id": "HMS_A",
+     "name_kr": "중량A",
+     "t": 64.8,
+     "pct": 58.6
+    },
+    {
+     "grade_id": "HMS_B",
+     "name_kr": "중량B",
+     "t": 45.8,
+     "pct": 41.4
+    }
+   ],
+   "charge_t": 110.7,
+   "volume_m3": 129.3,
+   "pred_cu_pct": 0.226,
+   "cu_max_pct": 0.35,
+   "pred_sn_pct": 0.0166,
+   "sn_max_pct": 0.035,
+   "p_fail_pct": 0.1,
+   "cost_per_t": 410845,
+   "rationale": "숙련자 배합 대비 HMS_A, HMS_B, LS_A 비중을 늘리고 HS_A, HS_B, LS_B, SHR, TRN 비중을 줄임. 예상 Cu 0.226%(상한 0.35%, 안전여유 0.124%p), 최악 heat 이탈 확률 0.4%."
+  },
+  {
+   "heat_id": "P03",
+   "steel_grade": "SD600",
+   "target_tap_t": 100.0,
+   "charges": [
+    {
+     "grade_id": "HS_A",
+     "name_kr": "생철A",
+     "t": 48.2,
+     "pct": 44.1
+    },
+    {
+     "grade_id": "LS_A",
+     "name_kr": "경량A",
+     "t": 61.0,
+     "pct": 55.9
+    }
+   ],
+   "charge_t": 109.3,
+   "volume_m3": 148.1,
+   "pred_cu_pct": 0.206,
+   "cu_max_pct": 0.3,
+   "pred_sn_pct": 0.0177,
+   "sn_max_pct": 0.03,
+   "p_fail_pct": 1.2,
+   "cost_per_t": 419827,
+   "rationale": "숙련자 배합 대비 HMS_A, HMS_B, LS_A 비중을 늘리고 HS_A, HS_B, SHR, TRN 비중을 줄임. 예상 Cu 0.206%(상한 0.3%, 안전여유 0.094%p), 최악 heat 이탈 확률 1.2%."
+  },
+  {
+   "heat_id": "P04",
+   "steel_grade": "SD500",
+   "target_tap_t": 98.0,
+   "charges": [
+    {
+     "grade_id": "HMS_A",
+     "name_kr": "중량A",
+     "t": 73.5,
+     "pct": 68.5
+    },
+    {
+     "grade_id": "LS_A",
+     "name_kr": "경량A",
+     "t": 33.7,
+     "pct": 31.5
+    }
+   ],
+   "charge_t": 107.2,
+   "volume_m3": 142.9,
+   "pred_cu_pct": 0.226,
+   "cu_max_pct": 0.35,
+   "pred_sn_pct": 0.0185,
+   "sn_max_pct": 0.035,
+   "p_fail_pct": 0.0,
+   "cost_per_t": 407918,
+   "rationale": "숙련자 배합 대비 HMS_A, HMS_B, LS_A 비중을 늘리고 HS_A, HS_B, LS_B, SHR, TRN 비중을 줄임. 예상 Cu 0.226%(상한 0.35%, 안전여유 0.124%p), 최악 heat 이탈 확률 0.4%."
+  },
+  {
+   "heat_id": "P05",
+   "steel_grade": "SD500",
+   "target_tap_t": 98.0,
+   "charges": [
+    {
+     "grade_id": "HMS_A",
+     "name_kr": "중량A",
+     "t": 62.3,
+     "pct": 58.6
+    },
+    {
+     "grade_id": "HMS_B",
+     "name_kr": "중량B",
+     "t": 44.0,
+     "pct": 41.4
+    }
+   ],
+   "charge_t": 106.3,
+   "volume_m3": 124.3,
+   "pred_cu_pct": 0.226,
+   "cu_max_pct": 0.35,
+   "pred_sn_pct": 0.0166,
+   "sn_max_pct": 0.035,
+   "p_fail_pct": 0.1,
+   "cost_per_t": 410845,
+   "rationale": "숙련자 배합 대비 HMS_A, HMS_B, LS_A 비중을 늘리고 HS_A, HS_B, LS_B, SHR, TRN 비중을 줄임. 예상 Cu 0.226%(상한 0.35%, 안전여유 0.124%p), 최악 heat 이탈 확률 0.4%."
+  },
+  {
+   "heat_id": "P06",
+   "steel_grade": "SD400",
+   "target_tap_t": 98.0,
+   "charges": [
+    {
+     "grade_id": "HMS_A",
+     "name_kr": "중량A",
+     "t": 46.8,
+     "pct": 43.1
+    },
+    {
+     "grade_id": "LS_A",
+     "name_kr": "경량A",
+     "t": 61.9,
+     "pct": 56.9
+    }
+   ],
+   "charge_t": 108.7,
+   "volume_m3": 164.5,
+   "pred_cu_pct": 0.269,
+   "cu_max_pct": 0.4,
+   "pred_sn_pct": 0.0219,
+   "sn_max_pct": 0.04,
+   "p_fail_pct": 0.2,
+   "cost_per_t": 404921,
+   "rationale": "숙련자 배합 대비 HMS_A, HMS_B, LS_A 비중을 늘리고 HS_A, HS_B, LS_B, SHR, TRN 비중을 줄임. 예상 Cu 0.269%(상한 0.4%, 안전여유 0.131%p), 최악 heat 이탈 확률 1.0%."
+  },
+  {
+   "heat_id": "P07",
+   "steel_grade": "SD600",
+   "target_tap_t": 102.0,
+   "charges": [
+    {
+     "grade_id": "HS_A",
+     "name_kr": "생철A",
+     "t": 39.3,
+     "pct": 35.8
+    },
+    {
+     "grade_id": "HMS_B",
+     "name_kr": "중량B",
+     "t": 70.6,
+     "pct": 64.2
+    }
+   ],
+   "charge_t": 109.9,
+   "volume_m3": 118.5,
+   "pred_cu_pct": 0.206,
+   "cu_max_pct": 0.3,
+   "pred_sn_pct": 0.0147,
+   "sn_max_pct": 0.03,
+   "p_fail_pct": 0.8,
+   "cost_per_t": 422233,
+   "rationale": "숙련자 배합 대비 HMS_A, HMS_B, LS_A 비중을 늘리고 HS_A, HS_B, SHR, TRN 비중을 줄임. 예상 Cu 0.206%(상한 0.3%, 안전여유 0.094%p), 최악 heat 이탈 확률 1.2%."
+  },
+  {
+   "heat_id": "P08",
+   "steel_grade": "SD400",
+   "target_tap_t": 98.0,
+   "charges": [
+    {
+     "grade_id": "HMS_A",
+     "name_kr": "중량A",
+     "t": 26.3,
+     "pct": 24.5
+    },
+    {
+     "grade_id": "HMS_B",
+     "name_kr": "중량B",
+     "t": 80.8,
+     "pct": 75.5
+    }
+   ],
+   "charge_t": 107.1,
+   "volume_m3": 130.2,
+   "pred_cu_pct": 0.269,
+   "cu_max_pct": 0.4,
+   "pred_sn_pct": 0.0186,
+   "sn_max_pct": 0.04,
+   "p_fail_pct": 0.4,
+   "cost_per_t": 410293,
+   "rationale": "숙련자 배합 대비 HMS_A, HMS_B, LS_A 비중을 늘리고 HS_A, HS_B, LS_B, SHR, TRN 비중을 줄임. 예상 Cu 0.269%(상한 0.4%, 안전여유 0.131%p), 최악 heat 이탈 확률 1.0%."
+  },
+  {
+   "heat_id": "P09",
+   "steel_grade": "SD600",
+   "target_tap_t": 100.0,
+   "charges": [
+    {
+     "grade_id": "HMS_A",
+     "name_kr": "중량A",
+     "t": 82.8,
+     "pct": 76.5
+    },
+    {
+     "grade_id": "HMS_B",
+     "name_kr": "중량B",
+     "t": 19.8,
+     "pct": 18.3
+    },
+    {
+     "grade_id": "LS_A",
+     "name_kr": "경량A",
+     "t": 5.7,
+     "pct": 5.2
+    }
+   ],
+   "charge_t": 108.3,
+   "volume_m3": 127.0,
+   "pred_cu_pct": 0.206,
+   "cu_max_pct": 0.3,
+   "pred_sn_pct": 0.016,
+   "sn_max_pct": 0.03,
+   "p_fail_pct": 0.5,
+   "cost_per_t": 410623,
+   "rationale": "숙련자 배합 대비 HMS_A, HMS_B, LS_A 비중을 늘리고 HS_A, HS_B, SHR, TRN 비중을 줄임. 예상 Cu 0.206%(상한 0.3%, 안전여유 0.094%p), 최악 heat 이탈 확률 1.2%."
+  },
+  {
+   "heat_id": "P10",
+   "steel_grade": "SD500",
+   "target_tap_t": 100.0,
+   "charges": [
+    {
+     "grade_id": "HMS_A",
+     "name_kr": "중량A",
+     "t": 75.0,
+     "pct": 68.5
+    },
+    {
+     "grade_id": "LS_A",
+     "name_kr": "경량A",
+     "t": 34.4,
+     "pct": 31.5
+    }
+   ],
+   "charge_t": 109.4,
+   "volume_m3": 145.9,
+   "pred_cu_pct": 0.226,
+   "cu_max_pct": 0.35,
+   "pred_sn_pct": 0.0185,
+   "sn_max_pct": 0.035,
+   "p_fail_pct": 0.0,
+   "cost_per_t": 407918,
+   "rationale": "숙련자 배합 대비 HMS_A, HMS_B, LS_A 비중을 늘리고 HS_A, HS_B, LS_B, SHR, TRN 비중을 줄임. 예상 Cu 0.226%(상한 0.35%, 안전여유 0.124%p), 최악 heat 이탈 확률 0.4%."
+  },
+  {
+   "heat_id": "P11",
+   "steel_grade": "SD400",
+   "target_tap_t": 100.0,
+   "charges": [
+    {
+     "grade_id": "HMS_A",
+     "name_kr": "중량A",
+     "t": 26.8,
+     "pct": 24.5
+    },
+    {
+     "grade_id": "HMS_B",
+     "name_kr": "중량B",
+     "t": 82.5,
+     "pct": 75.5
+    }
+   ],
+   "charge_t": 109.3,
+   "volume_m3": 132.9,
+   "pred_cu_pct": 0.269,
+   "cu_max_pct": 0.4,
+   "pred_sn_pct": 0.0186,
+   "sn_max_pct": 0.04,
+   "p_fail_pct": 0.7,
+   "cost_per_t": 410293,
+   "rationale": "숙련자 배합 대비 HMS_A, HMS_B, LS_A 비중을 늘리고 HS_A, HS_B, LS_B, SHR, TRN 비중을 줄임. 예상 Cu 0.269%(상한 0.4%, 안전여유 0.131%p), 최악 heat 이탈 확률 1.0%."
+  },
+  {
+   "heat_id": "P12",
+   "steel_grade": "SD500",
+   "target_tap_t": 102.0,
+   "charges": [
+    {
+     "grade_id": "HS_A",
+     "name_kr": "생철A",
+     "t": 38.1,
+     "pct": 34.0
+    },
+    {
+     "grade_id": "HMS_A",
+     "name_kr": "중량A",
+     "t": 7.1,
+     "pct": 6.3
+    },
+    {
+     "grade_id": "LS_A",
+     "name_kr": "경량A",
+     "t": 66.9,
+     "pct": 59.7
+    }
+   ],
+   "charge_t": 112.0,
+   "volume_m3": 158.8,
+   "pred_cu_pct": 0.226,
+   "cu_max_pct": 0.35,
+   "pred_sn_pct": 0.0192,
+   "sn_max_pct": 0.035,
+   "p_fail_pct": 0.4,
+   "cost_per_t": 416042,
+   "rationale": "숙련자 배합 대비 HMS_A, HMS_B, LS_A 비중을 늘리고 HS_A, HS_B, LS_B, SHR, TRN 비중을 줄임. 예상 Cu 0.226%(상한 0.35%, 안전여유 0.124%p), 최악 heat 이탈 확률 0.4%."
+  },
+  {
+   "heat_id": "P13",
+   "steel_grade": "SD400",
+   "target_tap_t": 102.0,
+   "charges": [
+    {
+     "grade_id": "HS_A",
+     "name_kr": "생철A",
+     "t": 13.0,
+     "pct": 11.7
+    },
+    {
+     "grade_id": "HMS_B",
+     "name_kr": "중량B",
+     "t": 98.3,
+     "pct": 88.3
+    }
+   ],
+   "charge_t": 111.4,
+   "volume_m3": 133.0,
+   "pred_cu_pct": 0.269,
+   "cu_max_pct": 0.4,
+   "pred_sn_pct": 0.0182,
+   "sn_max_pct": 0.04,
+   "p_fail_pct": 1.0,
+   "cost_per_t": 413978,
+   "rationale": "숙련자 배합 대비 HMS_A, HMS_B, LS_A 비중을 늘리고 HS_A, HS_B, LS_B, SHR, TRN 비중을 줄임. 예상 Cu 0.269%(상한 0.4%, 안전여유 0.131%p), 최악 heat 이탈 확률 1.0%."
+  },
+  {
+   "heat_id": "P14",
+   "steel_grade": "SD500",
+   "target_tap_t": 98.0,
+   "charges": [
+    {
+     "grade_id": "HMS_A",
+     "name_kr": "중량A",
+     "t": 62.3,
+     "pct": 58.6
+    },
+    {
+     "grade_id": "HMS_B",
+     "name_kr": "중량B",
+     "t": 44.0,
+     "pct": 41.4
+    }
+   ],
+   "charge_t": 106.3,
+   "volume_m3": 124.3,
+   "pred_cu_pct": 0.226,
+   "cu_max_pct": 0.35,
+   "pred_sn_pct": 0.0166,
+   "sn_max_pct": 0.035,
+   "p_fail_pct": 0.2,
+   "cost_per_t": 410845,
+   "rationale": "숙련자 배합 대비 HMS_A, HMS_B, LS_A 비중을 늘리고 HS_A, HS_B, LS_B, SHR, TRN 비중을 줄임. 예상 Cu 0.226%(상한 0.35%, 안전여유 0.124%p), 최악 heat 이탈 확률 0.4%."
+  },
+  {
+   "heat_id": "P15",
+   "steel_grade": "SD400",
+   "target_tap_t": 98.0,
+   "charges": [
+    {
+     "grade_id": "HMS_A",
+     "name_kr": "중량A",
+     "t": 46.8,
+     "pct": 43.1
+    },
+    {
+     "grade_id": "LS_A",
+     "name_kr": "경량A",
+     "t": 61.9,
+     "pct": 56.9
+    }
+   ],
+   "charge_t": 108.7,
+   "volume_m3": 164.5,
+   "pred_cu_pct": 0.269,
+   "cu_max_pct": 0.4,
+   "pred_sn_pct": 0.0219,
+   "sn_max_pct": 0.04,
+   "p_fail_pct": 0.0,
+   "cost_per_t": 404921,
+   "rationale": "숙련자 배합 대비 HMS_A, HMS_B, LS_A 비중을 늘리고 HS_A, HS_B, LS_B, SHR, TRN 비중을 줄임. 예상 Cu 0.269%(상한 0.4%, 안전여유 0.131%p), 최악 heat 이탈 확률 1.0%."
+  },
+  {
+   "heat_id": "P16",
+   "steel_grade": "SD500",
+   "target_tap_t": 100.0,
+   "charges": [
+    {
+     "grade_id": "HMS_A",
+     "name_kr": "중량A",
+     "t": 63.5,
+     "pct": 58.6
+    },
+    {
+     "grade_id": "HMS_B",
+     "name_kr": "중량B",
+     "t": 44.9,
+     "pct": 41.4
+    }
+   ],
+   "charge_t": 108.5,
+   "volume_m3": 126.8,
+   "pred_cu_pct": 0.226,
+   "cu_max_pct": 0.35,
+   "pred_sn_pct": 0.0166,
+   "sn_max_pct": 0.035,
+   "p_fail_pct": 0.0,
+   "cost_per_t": 410845,
+   "rationale": "숙련자 배합 대비 HMS_A, HMS_B, LS_A 비중을 늘리고 HS_A, HS_B, LS_B, SHR, TRN 비중을 줄임. 예상 Cu 0.226%(상한 0.35%, 안전여유 0.124%p), 최악 heat 이탈 확률 0.4%."
+  },
+  {
+   "heat_id": "P17",
+   "steel_grade": "SD600",
+   "target_tap_t": 102.0,
+   "charges": [
+    {
+     "grade_id": "HMS_A",
+     "name_kr": "중량A",
+     "t": 89.6,
+     "pct": 80.8
+    },
+    {
+     "grade_id": "LS_A",
+     "name_kr": "경량A",
+     "t": 21.2,
+     "pct": 19.2
+    }
+   ],
+   "charge_t": 110.8,
+   "volume_m3": 138.1,
+   "pred_cu_pct": 0.206,
+   "cu_max_pct": 0.3,
+   "pred_sn_pct": 0.0168,
+   "sn_max_pct": 0.03,
+   "p_fail_pct": 0.5,
+   "cost_per_t": 409336,
+   "rationale": "숙련자 배합 대비 HMS_A, HMS_B, LS_A 비중을 늘리고 HS_A, HS_B, SHR, TRN 비중을 줄임. 예상 Cu 0.206%(상한 0.3%, 안전여유 0.094%p), 최악 heat 이탈 확률 1.2%."
+  },
+  {
+   "heat_id": "P18",
+   "steel_grade": "SD400",
+   "target_tap_t": 98.0,
+   "charges": [
+    {
+     "grade_id": "HMS_A",
+     "name_kr": "중량A",
+     "t": 26.3,
+     "pct": 24.5
+    },
+    {
+     "grade_id": "HMS_B",
+     "name_kr": "중량B",
+     "t": 80.8,
+     "pct": 75.5
+    }
+   ],
+   "charge_t": 107.1,
+   "volume_m3": 130.2,
+   "pred_cu_pct": 0.269,
+   "cu_max_pct": 0.4,
+   "pred_sn_pct": 0.0186,
+   "sn_max_pct": 0.04,
+   "p_fail_pct": 0.4,
+   "cost_per_t": 410293,
+   "rationale": "숙련자 배합 대비 HMS_A, HMS_B, LS_A 비중을 늘리고 HS_A, HS_B, LS_B, SHR, TRN 비중을 줄임. 예상 Cu 0.269%(상한 0.4%, 안전여유 0.131%p), 최악 heat 이탈 확률 1.0%."
+  },
+  {
+   "heat_id": "P19",
+   "steel_grade": "SD500",
+   "target_tap_t": 98.0,
+   "charges": [
+    {
+     "grade_id": "HMS_A",
+     "name_kr": "중량A",
+     "t": 62.3,
+     "pct": 58.6
+    },
+    {
+     "grade_id": "HMS_B",
+     "name_kr": "중량B",
+     "t": 44.0,
+     "pct": 41.4
+    }
+   ],
+   "charge_t": 106.3,
+   "volume_m3": 124.3,
+   "pred_cu_pct": 0.226,
+   "cu_max_pct": 0.35,
+   "pred_sn_pct": 0.0166,
+   "sn_max_pct": 0.035,
+   "p_fail_pct": 0.0,
+   "cost_per_t": 410845,
+   "rationale": "숙련자 배합 대비 HMS_A, HMS_B, LS_A 비중을 늘리고 HS_A, HS_B, LS_B, SHR, TRN 비중을 줄임. 예상 Cu 0.226%(상한 0.35%, 안전여유 0.124%p), 최악 heat 이탈 확률 0.4%."
+  },
+  {
+   "heat_id": "P20",
+   "steel_grade": "SD400",
+   "target_tap_t": 100.0,
+   "charges": [
+    {
+     "grade_id": "HMS_A",
+     "name_kr": "중량A",
+     "t": 47.8,
+     "pct": 43.1
+    },
+    {
+     "grade_id": "LS_A",
+     "name_kr": "경량A",
+     "t": 63.2,
+     "pct": 56.9
+    }
+   ],
+   "charge_t": 110.9,
+   "volume_m3": 167.9,
+   "pred_cu_pct": 0.269,
+   "cu_max_pct": 0.4,
+   "pred_sn_pct": 0.0219,
+   "sn_max_pct": 0.04,
+   "p_fail_pct": 0.3,
+   "cost_per_t": 404921,
+   "rationale": "숙련자 배합 대비 HMS_A, HMS_B, LS_A 비중을 늘리고 HS_A, HS_B, LS_B, SHR, TRN 비중을 줄임. 예상 Cu 0.269%(상한 0.4%, 안전여유 0.131%p), 최악 heat 이탈 확률 1.0%."
+  },
+  {
+   "heat_id": "P21",
+   "steel_grade": "SD400",
+   "target_tap_t": 98.0,
+   "charges": [
+    {
+     "grade_id": "HMS_A",
+     "name_kr": "중량A",
+     "t": 46.8,
+     "pct": 43.1
+    },
+    {
+     "grade_id": "LS_A",
+     "name_kr": "경량A",
+     "t": 61.9,
+     "pct": 56.9
+    }
+   ],
+   "charge_t": 108.7,
+   "volume_m3": 164.5,
+   "pred_cu_pct": 0.269,
+   "cu_max_pct": 0.4,
+   "pred_sn_pct": 0.0219,
+   "sn_max_pct": 0.04,
+   "p_fail_pct": 0.4,
+   "cost_per_t": 404921,
+   "rationale": "숙련자 배합 대비 HMS_A, HMS_B, LS_A 비중을 늘리고 HS_A, HS_B, LS_B, SHR, TRN 비중을 줄임. 예상 Cu 0.269%(상한 0.4%, 안전여유 0.131%p), 최악 heat 이탈 확률 1.0%."
+  },
+  {
+   "heat_id": "P22",
+   "steel_grade": "SD400",
+   "target_tap_t": 102.0,
+   "charges": [
+    {
+     "grade_id": "HMS_A",
+     "name_kr": "중량A",
+     "t": 27.3,
+     "pct": 24.5
+    },
+    {
+     "grade_id": "HMS_B",
+     "name_kr": "중량B",
+     "t": 84.1,
+     "pct": 75.5
+    }
+   ],
+   "charge_t": 111.5,
+   "volume_m3": 135.6,
+   "pred_cu_pct": 0.269,
+   "cu_max_pct": 0.4,
+   "pred_sn_pct": 0.0186,
+   "sn_max_pct": 0.04,
+   "p_fail_pct": 0.4,
+   "cost_per_t": 410293,
+   "rationale": "숙련자 배합 대비 HMS_A, HMS_B, LS_A 비중을 늘리고 HS_A, HS_B, LS_B, SHR, TRN 비중을 줄임. 예상 Cu 0.269%(상한 0.4%, 안전여유 0.131%p), 최악 heat 이탈 확률 1.0%."
+  },
+  {
+   "heat_id": "P23",
+   "steel_grade": "SD400",
+   "target_tap_t": 100.0,
+   "charges": [
+    {
+     "grade_id": "HS_A",
+     "name_kr": "생철A",
+     "t": 26.2,
+     "pct": 23.6
+    },
+    {
+     "grade_id": "LS_A",
+     "name_kr": "경량A",
+     "t": 85.0,
+     "pct": 76.4
+    }
+   ],
+   "charge_t": 111.3,
+   "volume_m3": 174.8,
+   "pred_cu_pct": 0.269,
+   "cu_max_pct": 0.4,
+   "pred_sn_pct": 0.0224,
+   "sn_max_pct": 0.04,
+   "p_fail_pct": 0.7,
+   "cost_per_t": 410626,
+   "rationale": "숙련자 배합 대비 HMS_A, HMS_B, LS_A 비중을 늘리고 HS_A, HS_B, LS_B, SHR, TRN 비중을 줄임. 예상 Cu 0.269%(상한 0.4%, 안전여유 0.131%p), 최악 heat 이탈 확률 1.0%."
+  },
+  {
+   "heat_id": "P24",
+   "steel_grade": "SD400",
+   "target_tap_t": 100.0,
+   "charges": [
+    {
+     "grade_id": "HMS_A",
+     "name_kr": "중량A",
+     "t": 47.8,
+     "pct": 43.1
+    },
+    {
+     "grade_id": "LS_A",
+     "name_kr": "경량A",
+     "t": 63.2,
+     "pct": 56.9
+    }
+   ],
+   "charge_t": 110.9,
+   "volume_m3": 167.9,
+   "pred_cu_pct": 0.269,
+   "cu_max_pct": 0.4,
+   "pred_sn_pct": 0.0219,
+   "sn_max_pct": 0.04,
+   "p_fail_pct": 0.2,
+   "cost_per_t": 404921,
+   "rationale": "숙련자 배합 대비 HMS_A, HMS_B, LS_A 비중을 늘리고 HS_A, HS_B, LS_B, SHR, TRN 비중을 줄임. 예상 Cu 0.269%(상한 0.4%, 안전여유 0.131%p), 최악 heat 이탈 확률 1.0%."
+  }
+ ],
+ "log": [
+  "검수 메모 2건 분석(keyword) → 제외 ['TRN'], 제한 []",
+  "반복 1: 원가 405,374원/t, 강종별 최대 이탈확률(%) {'SD400': 16.0, 'SD500': 21.3, 'SD600': 20.5}",
+  "반복 2: 원가 409,408원/t, 강종별 최대 이탈확률(%) {'SD400': 3.9, 'SD500': 0.4, 'SD600': 1.0}",
+  "반복 3: 원가 410,398원/t, 강종별 최대 이탈확률(%) {'SD400': 1.0, 'SD500': 0.4, 'SD600': 1.2}"
+ ],
+ "seconds": 0.3
+}

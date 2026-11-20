@@ -1,0 +1,101 @@
+{
+  "use_llm": false,
+  "n_days": 39,
+  "eval_period": [
+    "2026-09-22",
+    "2026-10-30"
+  ],
+  "anomaly_dates": [
+    "2026-09-25",
+    "2026-10-02",
+    "2026-10-08",
+    "2026-10-15",
+    "2026-10-21",
+    "2026-10-27"
+  ],
+  "decoy_dates": [
+    "2026-09-29",
+    "2026-10-11",
+    "2026-10-24"
+  ],
+  "estimation_error": {
+    "mae_cu_est": 0.019796818213780147,
+    "mae_cu_nominal": 0.024375000000000008,
+    "mae_sn_est": 0.0007457313300049788,
+    "mae_sn_nominal": 0.00175
+  },
+  "estimate_seconds": 0.039137399988248944,
+  "note_accuracy": {
+    "method": "keyword",
+    "true_pos": 6,
+    "false_pos": 3,
+    "false_neg": 0,
+    "true_neg": 49
+  },
+  "target_fail_prob": 0.02,
+  "note_detail": [
+    {
+      "date": "2026-09-25",
+      "lot_id": "LS_A-20260925",
+      "risk": "high",
+      "is_anomaly": true,
+      "reason": "키워드 규칙: '모터·전선 혼입 다수, Cu 주의'"
+    },
+    {
+      "date": "2026-09-29",
+      "lot_id": "LS_A-20260929",
+      "risk": "high",
+      "is_anomaly": false,
+      "reason": "키워드 규칙: '전선 피복 소량 발견, 선별 후 전량 제거 완료'"
+    },
+    {
+      "date": "2026-10-02",
+      "lot_id": "TRN-20261002",
+      "risk": "high",
+      "is_anomaly": true,
+      "reason": "키워드 규칙: '황동 절삭칩 섞여 들어옴. 구리 성분 높을 가능성'"
+    },
+    {
+      "date": "2026-10-08",
+      "lot_id": "LS_B-20261008",
+      "risk": "high",
+      "is_anomaly": true,
+      "reason": "키워드 규칙: '주석도금 강판(캔) 혼입 확인, Sn 주의 요망'"
+    },
+    {
+      "date": "2026-10-11",
+      "lot_id": "HMS_B-20261011",
+      "risk": "high",
+      "is_anomaly": false,
+      "reason": "키워드 규칙: '작년 모터 혼입 건 협력사. 이번 입고분은 정밀 선별 완료, 이상 없음'"
+    },
+    {
+      "date": "2026-10-15",
+      "lot_id": "HMS_B-20261015",
+      "risk": "high",
+      "is_anomaly": true,
+      "reason": "키워드 규칙: '폐모터 고정자 다수 발견, 구리코일 미분리'"
+    },
+    {
+      "date": "2026-10-21",
+      "lot_id": "LS_A-20261021",
+      "risk": "high",
+      "is_anomaly": true,
+      "reason": "키워드 규칙: '가전 폐기물 혼입, 전선 뭉치 많음'"
+    },
+    {
+      "date": "2026-10-24",
+      "lot_id": "TRN-20261024",
+      "risk": "high",
+      "is_anomaly": false,
+      "reason": "키워드 규칙: '황동칩 혼입 여부 자체 분석 결과 Cu 정상 범위'"
+    },
+    {
+      "date": "2026-10-27",
+      "lot_id": "SHR-20261027",
+      "risk": "high",
+      "is_anomaly": true,
+      "reason": "키워드 규칙: '슈레더 비철 선별기 고장 기간 입고분. Cu 혼입 우려'"
+    }
+  ]
+}
