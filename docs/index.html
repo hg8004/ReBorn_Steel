@@ -8,7 +8,7 @@
 <link rel="icon" href="assets/rebo-face.png">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<link rel="stylesheet" href="assets/portal.css?v=20261121b">
+<link rel="stylesheet" href="assets/portal.css?v=20261122a">
 <style>
 /* 홈: 왼쪽 오늘 할 일, 오른쪽 미션·리보 (높이 맞춤) */
 .daybox { display: grid; justify-items: end; gap: 2px; background: var(--accent); color: var(--accent-ink); border-radius: var(--radius); padding: 12px 18px; min-width: 132px; }
@@ -91,9 +91,9 @@
 </main>
 </div>
 
-<script src="data/results.js?v=20261121b"></script>
-<script src="data/company.js?v=20261121b"></script>
-<script src="assets/portal.js?v=20261121b"></script>
+<script src="data/results.js?v=20261122a"></script>
+<script src="data/company.js?v=20261122a"></script>
+<script src="assets/portal.js?v=20261122a"></script>
 <script>
 (function () {
   "use strict";
@@ -103,7 +103,7 @@
                safety: ["rebo-safety.jpg", "안전조끼를 입고 무전기를 든 리보"] };
 
   function render(c) {
-    var u = c.user, S = c.sheet, f = S.summary;
+    var u = c.user, notice = P.noticeFor(c.date), S = P.sheetFor(c.date), f = S.summary;   // 통지한 배합이 있으면 그것 기준
     $("today").textContent = c.date + " (" + P.dow(c.date) + ") · " + P.JOB.dept + " " + u.team;
     $("hello").textContent = (c.day === 1 ? "입사를 환영해요, " : "좋은 아침이에요, ") + u.name + " 사원님";
     $("job").textContent = P.JOB.roleLong + " · 사수 한지수 대리";
@@ -151,10 +151,10 @@
     var short = P.GRADES.filter(function (g) { return mk[g][1] < P.SHORT_T; });
     $("opsLink").href = "ops.html?date=" + c.date;
     $("tiles").innerHTML = [
-      ["톤당 배합 원가", P.won(f.cost_per_t) + "원", "숙련자 배합 " + P.won(f.expert_cost_per_t) + "원"],
+      ["톤당 배합 원가", P.won(f.cost_per_t) + "원", (notice ? "통지한 배합 기준 · " : "자동 초안 기준 · ") + "숙련자 " + P.won(f.expert_cost_per_t) + "원"],
       ["톤당 절감", P.won(f.saving_per_t) + "원", "하루 약 " + (f.saving_per_t * P.tapTotal(S) / 1e6).toFixed(1) + "백만 원"],
       ["예측 최대 이탈 확률", maxP.toFixed(1) + "%", "목표 heat별 2% 이하", maxP >= 1.5],
-      ["위험 로트", fl.length + "건", fl.length ? fl.map(function (x) { return P.GNAME[x.grade_id]; }).join(", ") + " 조치" : "검수 메모 이상 없음", fl.length > 0],
+      ["위험 로트", fl.length + "건", fl.length ? fl.map(function (x) { return P.gname(x.grade_id, S); }).join(", ") + " 조치" : "검수 메모 이상 없음", fl.length > 0],
       ["재고 부족 등급", short.length + "개", short.length ? short.map(function (g) { return P.GNAME[g] + " " + mk[g][1] + "t"; }).join(", ") : P.SHORT_T + "t 미만 없음", short.length > 0]
     ].map(function (t) { return '<div class="tile' + (t[3] ? " alert" : "") + '"><span class="k">' + t[0] + '</span><span class="v">' + t[1] + '</span><span class="s">' + esc(t[2]) + "</span></div>"; }).join("");
 

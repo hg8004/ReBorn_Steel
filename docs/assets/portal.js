@@ -18,18 +18,6 @@
   var BRAND = "assets/brand/";
   var NAME_MAX = 12;
 
-  /* ---------- timelyGPT (리보 AI 채팅) 설정 ----------
-     chatUrl: timelyai.io에 만든 리본스틸 스페이스. 지난 기록·미션 화면에서 결과 요약을 복사해 이 채팅에 붙여 넣는다 (기본 방식, 키 불필요).
-     아래 SDK 연동은 'TimelyChat SDK용 API 키'(ai.timelygpt.co.kr)가 있을 때만 동작한다.
-     timelyai.io에서 받은 키로는 "해당하는 조직을 찾을 수 없습니다"가 나온다 (2026-11 확인).
-     API 키는 코드에 적지 않는다. 입력하면 로그인에만 쓰고 버리며, 받은 토큰(24시간)만 이 창(sessionStorage)에 보관한다. */
-  var TIMELY = {
-    chatUrl: "https://timelyai.io/reborn-steel",
-    spaceRefId: "reborn-steel",                                           // timelyGPT 관리자 페이지에서 만든 스페이스 주소
-    authUrl: "https://ai.timelygpt.co.kr/api-back",
-    sdk: "https://cdn.jsdelivr.net/gh/timely-hub/timely-chat@p.1.1.3/index.js"
-  };
-
   /* ---------- 사람 ---------- */
   // 신입사원(접속자)의 자리. 이름만 입력받고 나머지는 과제 직무로 고정.
   var JOB = { team: "제강팀", dept: "생산본부", title: "사원", role: "스크랩 배합 담당",
@@ -173,52 +161,6 @@
       return { ok: true, msg: "긴급 발주로 " + GNAME[m.grade] + "을 300t 이상 확보하면 톤당 약 " + won(sub.costPerT - w.costPerT) + "원(하루 약 " + ((sub.costPerT - w.costPerT) * 2400 / 1e4).toFixed(0) + "만 원) 아낄 수 있다는 걸 확인했어요." };
     }
     return { ok: true, msg: "목표 이탈 확률 안에서 숙련자 배합보다 톤당 " + won(sub.saving) + "원 싼 배합으로 결재했어요." };
-  }
-
-  /* ---------- timelyGPT 연결 (리보 AI 채팅) ---------- */
-  function providerId() { var p = store.get("rb-pid", null); if (!p) { p = "reborn-" + Math.random().toString(36).slice(2, 10); store.set("rb-pid", p); } return p; }
-  function timelyToken() {
-    try { var t = JSON.parse(sessionStorage.getItem("rb-timely") || "null"); return t && t.exp > Date.now() ? t.token : null; } catch (e) { return mem["rb-timely"] && mem["rb-timely"].exp > Date.now() ? mem["rb-timely"].token : null; }
-  }
-  function timelyReady() { return !!TIMELY.spaceRefId; }
-  function timelyConnect(apiKey) {
-    if (!TIMELY.spaceRefId) return Promise.reject(new Error("스페이스 ID(spaceRefId)가 아직 설정되지 않았어요. assets/portal.js의 TIMELY 설정을 확인하세요."));
-    return fetch(TIMELY.authUrl + "/user/auth/login", {
-      method: "POST", headers: { "x-api-key": apiKey, "Content-Type": "application/json" },
-      body: JSON.stringify({ name: state.name || "신입", providerId: providerId(), spaceRefId: TIMELY.spaceRefId })
-    }).then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) {
-      if (!r.ok || !j.success || !j.data) {
-        // 서버 메시지를 그대로 보여 준다. 예: "해당하는 조직을 찾을 수 없습니다" → API 키 문제
-        var why = j.message ? " 서버 응답: " + j.message : "";
-        throw new Error("로그인에 실패했어요 (" + r.status + ")." + why + " API 키와 스페이스 ID(" + TIMELY.spaceRefId + ")를 확인하세요.");
-      }
-      var v = { token: j.data, exp: Date.now() + 23 * 3600 * 1000 };       // 토큰은 24시간 유효, 여유 1시간
-      mem["rb-timely"] = v; try { sessionStorage.setItem("rb-timely", JSON.stringify(v)); } catch (e) { /* 창 메모리만 사용 */ }
-      return true;
-    }); });
-  }
-  function timelyDisconnect() { delete mem["rb-timely"]; try { sessionStorage.removeItem("rb-timely"); } catch (e) { /* 무시 */ } }
-  var chatInst = null, sdkLoading = null;
-  function loadSdk() {
-    if (window.TimelyChat) return Promise.resolve();
-    if (sdkLoading) return sdkLoading;
-    sdkLoading = new Promise(function (ok, fail) {
-      var s = document.createElement("script"); s.src = TIMELY.sdk; s.onload = ok;
-      s.onerror = function () { sdkLoading = null; fail(new Error("채팅 모듈을 불러오지 못했어요.")); }; document.head.appendChild(s);
-    });
-    return sdkLoading;
-  }
-  // instructions: 지금 화면의 배합 결과를 요약한 글. 리보 AI가 이것을 바탕으로 답한다.
-  function openReboChat(room, instructions, faq) {
-    var token = timelyToken();
-    if (!token) return Promise.reject(new Error("리보 AI가 연결되어 있지 않아요."));
-    return loadSdk().then(function () {
-      var icon = new URL(PROFILE_IMG, location.href).href;
-      if (!chatInst) chatInst = new window.TimelyChat(document.body, { token: token, name: "리보 AI · 리본스틸", icons: { avatar: icon, chatbot: icon },
-        chatbot: { faq: faq || [], instructions: instructions } });
-      chatInst.send("chat-open", { chat: [{ refId: "reborn-blend", name: "배합 에이전트 작업실" }, room], instructions: instructions });
-      chatInst.send("module-toggle", { type: "open" });
-    });
   }
 
   /* ---------- 전사 공지 (가상) ---------- */
@@ -597,6 +539,18 @@
     if (!state.name) openJoin(false);
   }
 
+  /* ---------- 그날의 배합: AI 배합 설계에서 통지한 배합이 있으면 그것, 없으면 자동 초안 ----------
+     통지서(rb-notices)에는 보낼 때의 배합 결과(sheet)가 같이 저장된다. 같은 날 여러 번 통지하면 가장 최근 것. */
+  function noticeFor(d) { return store.get("rb-notices", []).filter(function (n) { return n.date === d && n.sheet; })[0] || null; }
+  function sheetFor(d, autoOnly) { var n = autoOnly ? null : noticeFor(d); return n ? n.sheet : D.sheets[d]; }
+  var EXTRA_COL = ["--s1", "--s2", "--s3", "--s4", "--s5", "--s6", "--s7", "--s8"];
+  function gcol(g) { return css(GCOL[g] || EXTRA_COL[Math.abs(String(g).split("").reduce(function (a, ch) { return a + ch.charCodeAt(0); }, 0)) % 8]); }
+  function gname(g, S) {
+    if (GNAME[g]) return GNAME[g];
+    var hit = null; (S && S.heats || []).some(function (h) { return h.charges.some(function (c) { if (c.grade_id === g) { hit = c.name_kr; return true; } return false; }); });
+    return hit || g;
+  }
+
   window.Portal = {
     D: D, C: C, GRADES: GRADES, GNAME: GNAME, GCOL: GCOL, PEOPLE: PEOPLE, JOB: JOB, NOTICES: NOTICES, DATES: DATES, MDATES: MDATES,
     SHORT_T: SHORT_T, AVG_INV: AVG_INV, JOIN_DATE: JOIN_DATE, BRAND: BRAND,
@@ -606,8 +560,8 @@
     flagged: flagged, usage: usage, tapTotal: tapTotal, noteMethod: noteMethod, marketRow: marketRow, prevMarketDate: prevMarketDate,
     hover: hover, showTip: showTip, hideTip: hideTip, svgEl: svgEl, lineChart: lineChart,
     start: start, refresh: function () { updateShell(); }, setDate: setDate,
+    noticeFor: noticeFor, sheetFor: sheetFor, gcol: gcol, gname: gname,
     noteText: noteText, prettyLog: prettyLog, getSubmit: getSubmit, setSubmit: setSubmit, getRuns: getRuns, addRun: addRun, hasOverrides: hasOverrides,
-    missionFor: missionFor, checkMission: checkMission, RESOLVED: RESOLVED,
-    timely: { chatUrl: TIMELY.chatUrl, ready: timelyReady, token: timelyToken, connect: timelyConnect, disconnect: timelyDisconnect, open: openReboChat }
+    missionFor: missionFor, checkMission: checkMission, RESOLVED: RESOLVED
   };
 })();

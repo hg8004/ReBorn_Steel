@@ -8,7 +8,7 @@
 <link rel="icon" href="assets/rebo-face.png">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<link rel="stylesheet" href="assets/portal.css?v=20261121b">
+<link rel="stylesheet" href="assets/portal.css?v=20261122a">
 <style>
 /* 공통 부품(.notes, .sw)은 portal.css에 있다. 이 페이지는 표 수치 색만 정한다. */
 .up { color: var(--crit-ink); } .down { color: var(--good-ink); }
@@ -59,9 +59,9 @@
 </main>
 </div>
 
-<script src="data/results.js?v=20261121b"></script>
-<script src="data/company.js?v=20261121b"></script>
-<script src="assets/portal.js?v=20261121b"></script>
+<script src="data/results.js?v=20261122a"></script>
+<script src="data/company.js?v=20261122a"></script>
+<script src="assets/portal.js?v=20261122a"></script>
 <script>
 (function () {
   "use strict";
@@ -72,7 +72,7 @@
   $("shortT").textContent = P.SHORT_T;
 
   function render(c) {
-    var S = c.sheet, mk = P.marketRow(c.date), pm = P.marketRow(P.prevMarketDate(c.date) || c.date), use = P.usage(S);
+    var S = P.sheetFor(c.date), mk = P.marketRow(c.date), pm = P.marketRow(P.prevMarketDate(c.date) || c.date), use = P.usage(S);
     var flag = {}; S.flags.forEach(function (x) { flag[x.grade_id] = x; });
     $("eb").textContent = "스크랩 야드·검수 · " + c.date + " (" + P.dow(c.date) + ")";
 

@@ -8,7 +8,7 @@
 <link rel="icon" href="assets/rebo-face.png">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<link rel="stylesheet" href="assets/portal.css?v=20261121b">
+<link rel="stylesheet" href="assets/portal.css?v=20261122a">
 <style>
 /* 강종 카드: Cu·Sn 계량기와 원가를 한눈에 */
 .steel-card .card-h h2 { font-size: var(--fs-xl); }
@@ -22,6 +22,10 @@
 .detail-facts b { font-size: var(--fs-lg); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .rationale { background: var(--surface-2); border-radius: var(--r); padding: 12px 14px; font-size: var(--fs-md); color: var(--ink-2); line-height: 1.65; }
 .rationale b { color: var(--ink); }
+.srcbar { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; justify-content: space-between; padding: 12px 16px; border-radius: var(--radius);
+  background: var(--point-soft); border: 1px solid #f3d9bf; font-size: var(--fs-md); color: var(--ink-2); }
+.srcbar.auto { background: var(--surface-2); border-color: var(--line); }
+.srcbar b { color: var(--ink); }
 </style>
 </head>
 <body data-page="ops">
@@ -34,9 +38,10 @@
     <div class="pagehead">
       <div class="eyebrow" id="eb">오늘의 조업 현황</div>
       <h1 id="title">배합 지시서</h1>
-      <p>배합 에이전트가 쓴 자동 초안이에요. 숫자는 회귀·선형계획·모의 조업 도구가 계산했고, 검토하고 결재를 올리는 건 배합 담당인 내 몫입니다.</p>
+      <p id="lead">배합 에이전트가 쓴 자동 초안이에요. 숫자는 회귀·선형계획·모의 조업 도구가 계산했고, 검토하고 결재를 올리는 건 배합 담당인 내 몫입니다.</p>
     </div>
   </div>
+  <div class="srcbar" id="src" role="status" hidden></div>
   <div class="tiles" id="tiles"></div>
 
   <div class="grid3" id="steels"></div>
@@ -63,16 +68,16 @@
 </main>
 </div>
 
-<script src="data/results.js?v=20261121b"></script>
-<script src="data/company.js?v=20261121b"></script>
-<script src="assets/portal.js?v=20261121b"></script>
+<script src="data/results.js?v=20261122a"></script>
+<script src="data/company.js?v=20261122a"></script>
+<script src="assets/portal.js?v=20261122a"></script>
 <script>
 (function () {
   "use strict";
   var P = window.Portal; if (!P || !P.D) return;
   var $ = P.$, esc = P.esc, cur = null, curHeat = P.params.get("heat");
 
-  $("gl").innerHTML = P.GRADES.map(function (g) { return '<span><i style="background:' + P.css(P.GCOL[g]) + '"></i>' + P.GNAME[g] + "</span>"; }).join("");
+  var showAuto = false;   // 통지서가 있어도 자동 초안을 보고 싶을 때
 
   // 계량기: 예상값 막대와 상한 눈금
   function meter(label, v, lim, d) {
@@ -83,16 +88,30 @@
   var prettyLog = P.prettyLog;   // 파이썬 실행 기록 문장 정리 (portal.js)
 
   function render(c) {
-    var S = c.sheet, f = S.summary; cur = S;
+    var n = P.noticeFor(c.date), S = n && !showAuto ? n.sheet : c.sheet, f = S.summary; cur = S;
     $("eb").textContent = "오늘의 조업 현황 · " + c.date + " (" + P.dow(c.date) + ")";
-    $("title").textContent = P.md(c.date) + " 배합 지시서 · 24 heat";
+    $("title").textContent = P.md(c.date) + " 배합 지시서 · " + S.heats.length + " heat";
+    // 무엇을 보여 주는지: AI 배합 설계에서 통지한 배합 / 자동 초안
+    $("src").hidden = !n;
+    if (n) {
+      $("src").className = "srcbar" + (showAuto ? " auto" : "");
+      $("src").innerHTML = showAuto
+        ? "<span>지금은 <b>배합 에이전트의 자동 초안</b>을 보고 있어요. 오늘은 AI 배합 설계에서 통지한 배합이 따로 있어요.</span>" + '<button class="btn sm" type="button" id="srcBtn">통지한 배합 보기</button>'
+        : "<span><b>AI 배합 설계 통지서 기준</b> · 문서번호 " + esc(n.docNo) + " · " + esc(n.time) + " 통지 · 작성 " + esc(n.by === "규칙" ? "규칙 기반" : n.by + " 에이전트") + "</span>" + '<button class="btn sm" type="button" id="srcBtn">자동 초안 보기</button>';
+      $("srcBtn").addEventListener("click", function () { showAuto = !showAuto; render(c); });
+    }
+    $("lead").textContent = n && !showAuto ? "AI 배합 설계에서 박준영 팀장님께 통지한 배합이에요. 숫자는 계산 도구가 냈고, 판단 근거는 통지서에 있어요."
+      : "배합 에이전트가 쓴 자동 초안이에요. 숫자는 회귀·선형계획·모의 조업 도구가 계산했고, 검토하고 결재를 올리는 건 배합 담당인 내 몫입니다.";
+    var gs = []; S.heats.forEach(function (h) { h.charges.forEach(function (ch) { if (gs.indexOf(ch.grade_id) < 0) gs.push(ch.grade_id); }); });
+    gs.sort(function (a, b) { var ia = P.GRADES.indexOf(a), ib = P.GRADES.indexOf(b); return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib); });
+    $("gl").innerHTML = gs.map(function (g) { return '<span><i style="background:' + P.gcol(g) + '"></i>' + esc(P.gname(g, S)) + "</span>"; }).join("");
     var maxP = Math.max.apply(null, S.heats.map(function (h) { return h.p_fail_pct; }));
     var fl = P.flagged(S);
     $("tiles").innerHTML = [
       ["톤당 배합 원가", P.won(f.cost_per_t) + "원", "숙련자 배합 " + P.won(f.expert_cost_per_t) + "원"],
       ["톤당 절감", P.won(f.saving_per_t) + "원", "하루 약 " + (f.saving_per_t * P.tapTotal(S) / 1e6).toFixed(1) + "백만 원"],
       ["예측 최대 이탈", maxP.toFixed(1) + "%", "에이전트 추정 분포 기준 · 목표 2%"],
-      ["반복 횟수", f.iterations + "회", "최적화–모의 조업 (최대 6회)"],
+      ["반복 횟수", f.iterations + "회", "최적화–모의 조업"],
       ["위험 로트 조치", fl.length + "건", fl.length ? fl.map(function (x) { return x.lot_id; }).join(", ") : "없음"]
     ].map(function (t) { return '<div class="tile"><span class="k">' + t[0] + '</span><span class="v">' + t[1] + '</span><span class="s">' + esc(t[2]) + "</span></div>"; }).join("");
 
@@ -112,7 +131,7 @@
     var xs = P.DATES.filter(function (d) { return d <= c.date; });
     P.lineChart($("cost"), {
       x: xs, fmt: function (v) { return (v / 1000).toFixed(0) + "천"; }, tipFmt: function (v) { return P.won(v) + "원/t"; },
-      series: [{ name: "에이전트", color: "var(--s4)", vals: xs.map(function (d) { return P.D.sheets[d].summary.cost_per_t; }) },
+      series: [{ name: "에이전트", color: "var(--s4)", vals: xs.map(function (d) { return P.sheetFor(d, showAuto).summary.cost_per_t; }) },
                { name: "숙련자", color: "var(--s1)", vals: xs.map(function (d) { return P.D.sheets[d].summary.expert_cost_per_t; }) }]
     });
 
@@ -120,7 +139,7 @@
     var idx = 0; S.heats.forEach(function (h, i) { if (h.heat_id === curHeat) idx = i; });
     S.heats.forEach(function (h, i) {
       var tr = document.createElement("tr"); tr.className = "click"; tr.tabIndex = 0;
-      var bar = '<div class="bar" aria-hidden="true">' + h.charges.map(function (ch) { return '<i style="width:' + ch.pct + "%;background:" + P.css(P.GCOL[ch.grade_id]) + '" data-g="' + ch.grade_id + '" data-t="' + ch.t + '" data-p="' + ch.pct + '"></i>'; }).join("") + "</div>";
+      var bar = '<div class="bar" aria-hidden="true">' + h.charges.map(function (ch) { return '<i style="width:' + ch.pct + "%;background:" + P.gcol(ch.grade_id) + '" data-g="' + esc(ch.grade_id) + '" data-t="' + ch.t + '" data-p="' + ch.pct + '"></i>'; }).join("") + "</div>";
       var risk = h.p_fail_pct >= 1.5 ? '<span class="pill warn">' + h.p_fail_pct.toFixed(1) + "%</span>" : '<span class="num">' + h.p_fail_pct.toFixed(1) + "%</span>";
       tr.innerHTML = '<td class="mono"><b>' + h.heat_id + "</b></td><td>" + h.steel_grade + "</td><td>" + bar + '</td><td class="r">' + h.charge_t.toFixed(1) +
         '</td><td class="r"><b class="chem">' + h.pred_cu_pct.toFixed(3) + '</b> <span class="lim">/ ' + h.cu_max_pct.toFixed(2) + "</span></td>" +
@@ -128,7 +147,7 @@
         '<td class="r">' + risk + '</td><td class="r num">' + P.won(h.cost_per_t) + "</td>";
       tr.addEventListener("click", function () { pick(i); });
       tr.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pick(i); } });
-      Array.prototype.forEach.call(tr.querySelectorAll(".bar i"), function (seg) { P.hover(seg, P.GNAME[seg.dataset.g] + " " + seg.dataset.t + "t (" + seg.dataset.p + "%)"); });
+      Array.prototype.forEach.call(tr.querySelectorAll(".bar i"), function (seg) { P.hover(seg, esc(P.gname(seg.dataset.g, S)) + " " + seg.dataset.t + "t (" + seg.dataset.p + "%)"); });
       tb.appendChild(tr);
     });
     pick(idx);
@@ -142,7 +161,7 @@
       '<div class="detail-facts"><div><span>목표 출강</span><b>' + h.target_tap_t + 't</b></div><div><span>장입량</span><b>' + h.charge_t.toFixed(1) + "t</b></div>" +
       "<div><span>버킷 용적</span><b>" + h.volume_m3.toFixed(1) + ' <small class="lim">/ 180 m³</small></b></div><div><span>예측 이탈 확률</span><b>' + h.p_fail_pct.toFixed(1) + "%</b></div>" +
       "<div><span>톤당 원가</span><b>" + P.won(h.cost_per_t) + "원</b></div></div>" +
-      '<div class="charges">' + h.charges.map(function (ch) { return '<div><span><i class="sw" style="background:' + P.css(P.GCOL[ch.grade_id]) + '"></i>' + ch.name_kr + '</span><span class="num"><b>' + ch.t.toFixed(1) + "t</b> · " + ch.pct.toFixed(1) + "%</span></div>"; }).join("") + "</div>" +
+      '<div class="charges">' + h.charges.map(function (ch) { return '<div><span><i class="sw" style="background:' + P.gcol(ch.grade_id) + '"></i>' + esc(ch.name_kr) + '</span><span class="num"><b>' + ch.t.toFixed(1) + "t</b> · " + ch.pct.toFixed(1) + "%</span></div>"; }).join("") + "</div>" +
       '<div class="grid2" style="gap:16px">' + meter("Cu", h.pred_cu_pct, h.cu_max_pct, 3) + meter("Sn", h.pred_sn_pct, h.sn_max_pct, 4) + "</div>" +
       '<p class="rationale"><b>판단 근거</b> ' + esc(h.rationale) + "</p>";
   }

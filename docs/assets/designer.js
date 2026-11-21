@@ -984,6 +984,41 @@
         (R.by !== "규칙" ? "문장은 AI(" + esc(r.agentLabel || "Claude") + ")가 그 결과를 읽고 썼어요." : "문장은 정해진 틀에 숫자를 채운 거예요.") + " 최종 결정은 결재권자가 해요.</p></section>";
     $("noticeState").textContent = sentNotice(r) ? "메일함에 통지한 통지서예요." : "";
   }
+  // 통지한 배합을 '오늘의 조업 현황'이 그대로 읽을 수 있는 모양(자동 초안과 같은 구조)으로 만든다
+  function noticeSheet(r, expert) {
+    var L = r.last, su = r.su, ctx = su.ctx, o = L.opt, nm = function (g) { return gradeName(g, r.spec); };
+    if (!L.sim) L.sim = E.simulate(ctx, o.x, su.comp, L.nc.mult, N_SIM, L.seed);
+    var simd = {}; L.sim.forEach(function (x) { simd[x.heat_id] = x; });
+    var bd = A.binding(ctx, o, L.margins), r1 = function (v) { return Math.round(v * 10) / 10; };
+    var heats = o.heats.map(function (h) {
+      var lim = bd.steel[h.steel] ? bd.steel[h.steel].limiting : "";
+      return { heat_id: h.heat_id, steel_grade: h.steel, target_tap_t: r1(h.W), charge_t: h.charge, volume_m3: h.vol,
+        pred_cu_pct: h.predCu, cu_max_pct: h.cuMax, pred_sn_pct: h.predSn, sn_max_pct: h.snMax,
+        p_fail_pct: simd[h.heat_id].p_fail * 100, cost_per_t: h.costPerT,
+        charges: ctx.grades.map(function (g, i) { return { grade_id: g, name_kr: nm(g), t: r1(h.x[i]), pct: r1(h.x[i] / h.charge * 100) }; }).filter(function (c) { return c.t >= 0.1; }),
+        rationale: "AI 배합 설계 통지서(" + docNo(r) + ") 기준. " + h.steel + " 안전여유 Cu " + (+L.margins[h.steel].cu).toFixed(3) + "%p" + (lim && lim !== "없음" ? ", " + lim + " 상한에 맞춰 싼 등급을 최대한 사용" : "") + "." };
+    });
+    var by = {};
+    Object.keys(ctx.specs).forEach(function (s) {
+      var hs = heats.filter(function (h) { return h.steel_grade === s; }); if (!hs.length) return;
+      var oh = o.heats.filter(function (h) { return h.steel === s; });
+      by[s] = { pred_cu_pct: hs.reduce(function (a, h) { return a + h.pred_cu_pct; }, 0) / hs.length, cu_max_pct: ctx.specs[s].cu,
+        pred_sn_pct: hs.reduce(function (a, h) { return a + h.pred_sn_pct; }, 0) / hs.length, sn_max_pct: ctx.specs[s].sn,
+        cost_per_t: oh.reduce(function (a, h) { return a + h.cost; }, 0) / oh.reduce(function (a, h) { return a + h.tap; }, 0),
+        margin_cu_pct: +L.margins[s].cu, max_p_fail_pct: Math.max.apply(null, hs.map(function (h) { return h.p_fail_pct; })) };
+    });
+    var its = iterations(r);
+    return {
+      date: r.bizDate, source: { docNo: docNo(r), by: r.report.by === "규칙" ? "규칙" : (r.agentLabel || "Claude"), at: r.at },
+      summary: { cost_per_t: o.costPerT, expert_cost_per_t: expert ? expert.costPerT : o.costPerT, saving_per_t: expert ? expert.costPerT - o.costPerT : 0, iterations: its.length, by_steel: by },
+      heats: heats,
+      flags: L.flags.map(function (f) { return { lot_id: nm(f.grade_id) + " 메모 " + f.lot_id, grade_id: f.grade_id, risk: f.risk, element: f.element, suspected_multiplier: f.suspected_multiplier, reason: f.reason }; }),
+      notes: r.spec.notes.map(function (n) { return { lot_id: n.id, grade_id: n.grade, note_text: n.text }; }),
+      rationale: { day_summary: r.report.summary, method: r.report.by === "규칙" ? "template" : "llm" },
+      log: its.map(function (x, i) { return (i + 1) + "회차: 안전여유 Cu " + Object.keys(x.margins || {}).map(function (s) { return s + " " + (+x.margins[s].cu).toFixed(3); }).join(" · ") + "%p → " +
+        (x.ok ? "톤당 " + won(x.cost) + "원" + (x.maxp != null ? ", 최대 이탈 " + x.maxp.toFixed(1) + "% " + (x.pass ? "통과" : "초과") : "") : "배합 불가"); })
+    };
+  }
   function sentNotice(r) { return P.store.get("rb-notices", []).some(function (n) { return n.id === r.at; }); }
   function sendNotice() {
     var r = run; if (!r || !r.report || !r.last) return;
@@ -994,10 +1029,11 @@
     var all = P.store.get("rb-notices", []);
     all.unshift({ id: r.at, date: r.bizDate, time: hh, title: r.report.title, summary: r.report.summary, by: r.report.by === "규칙" ? "규칙" : (r.agentLabel || "Claude"), docNo: docNo(r),
       costPerT: Math.round(o.costPerT), saving: expert ? Math.round(expert.costPerT - o.costPerT) : null,
-      maxP: Math.round(Math.max.apply(null, L.sim.map(function (x) { return x.p_fail; })) * 1000) / 10, reasons: r.report.reasons.slice(0, 4) });
+      maxP: Math.round(Math.max.apply(null, L.sim.map(function (x) { return x.p_fail; })) * 1000) / 10, reasons: r.report.reasons.slice(0, 4),
+      sheet: noticeSheet(r, expert) });
     P.store.set("rb-notices", all.slice(0, 20));
     P.refresh();
-    $("noticeState").innerHTML = '박준영 팀장님께 통지했어요. <a href="mail.html">메일함에서 보기</a>';
+    $("noticeState").innerHTML = '박준영 팀장님께 통지했어요. <a href="mail.html">메일함에서 보기</a> · <a href="ops.html?date=' + r.bizDate + '">오늘의 조업 현황에 반영됨 →</a>';
   }
 
   /* ====================================================================
