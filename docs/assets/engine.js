@@ -303,7 +303,8 @@
     var ctx = { date: "custom", grades: G, plan: plan, price: num("price"), inv: num("inv"), basePrice: num("price"), baseInv: num("inv"),
                 y: num("y"), dens: num("dens"), name: spec.grades.map(function (g) { return g.name; }), specs: specs, vol: +spec.vol };
     var comp = { grades: {}, meas_sd: spec.measSd || { cu: 0.005, sn: 0.0008 } };
-    spec.grades.forEach(function (g) { comp.grades[g.id] = { cu_mean: +g.cu, cu_sd: +g.cuSd, cu_se: 0, sn_mean: +g.sn, sn_sd: +g.snSd, sn_se: 0 }; });
+    // cuSe·snSe: 평균 자체의 추정 오차(이력 회귀의 표준오차). 회사 추정값을 불러온 등급에만 있고, 직접 넣은 등급은 0
+    spec.grades.forEach(function (g) { comp.grades[g.id] = { cu_mean: +g.cu, cu_sd: +g.cuSd, cu_se: +g.cuSe || 0, sn_mean: +g.sn, sn_sd: +g.snSd, sn_se: +g.snSe || 0 }; });
     return { ctx: ctx, comp: comp };
   }
 

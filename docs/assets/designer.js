@@ -16,6 +16,11 @@
   var LIMITS = { grades: 15, heats: 48 };
   var PALETTE = ["--s1", "--s2", "--s3", "--s4", "--s5", "--s6", "--s7", "--s8"];
   var RUNS_KEY = "rb-design-runs";
+  /* 검증 기준 = 목표 × 0.75 (목표 2%면 1.5%).
+     정답 채점에서 AI가 추정 이탈 확률을 2% 바로 밑까지 맞추면, 추정 성분의 오차(경량A Cu를 낮게 봄) 때문에
+     실제 이탈이 목표를 넘는 것을 확인했다. 그래서 모의 조업의 통과 판정에 여유를 둔다. */
+  var SAFETY = 0.75;
+  function gateOf(s) { return s.gate || s.target; }   // 예전에 저장한 실행은 gate가 없어서 목표 그대로
 
   /* ====================================================================
      1. 조건 (spec): 화면 입력과 1:1로 대응하는 상태
@@ -30,13 +35,15 @@
     return {
       grades: C.config.grades.map(function (g) {
         return { id: g, name: byId[g].name_kr, price: mk[g][0], inv: mk[g][1], y: byId[g].yield, dens: byId[g].bulk_density_t_per_m3,
-                 cu: r4(est[g].cu_mean), cuSd: r4(est[g].cu_sd), sn: r5(est[g].sn_mean), snSd: r5(est[g].sn_sd) };
+                 cu: r4(est[g].cu_mean), cuSd: r4(est[g].cu_sd), sn: r5(est[g].sn_mean), snSd: r5(est[g].sn_sd),
+                 cuSe: r4(est[g].cu_se || 0), snSe: r5(est[g].sn_se || 0) };
       }),
       steels: C.specs.map(function (s) { return { steel: s.steel_grade, cu: s.cu_max_pct, sn: s.sn_max_pct, heats: cnt[s.steel_grade] || 0, W: 100 }; }),
       notes: C.notes.filter(function (n) { return n.date === d; }).map(function (n, i) { return { id: "N" + (i + 1), grade: n.grade_id, text: n.note_text }; }),
       target: 0.02, vol: C.config.max_charge_volume_m3, measSd: C.estimate.meas_sd, date: d
     };
   }
+  function pct(p) { return String(+(p * 100).toFixed(2)); }   // 0.015 → "1.5"
   function r4(v) { return Math.round(v * 1e4) / 1e4; }
   function r5(v) { return Math.round(v * 1e5) / 1e5; }
   // 결과·과정 화면은 실행 당시 조건(run.spec)으로, 입력 화면은 지금 조건(spec)으로 이름·색을 찾는다
@@ -96,7 +103,8 @@
         '<td class="r">' + num(g.y, 0.01).replace("<input", '<input data-k="y" aria-label="실수율" style="width:70px"') + "</td>" +
         '<td class="r">' + num(g.dens, 0.05).replace("<input", '<input data-k="dens" aria-label="부피밀도" style="width:70px"') + "</td>" +
         '<td class="r">' + num(g.cu, 0.001).replace("<input", '<input data-k="cu" aria-label="Cu 평균" style="width:86px"') + ' <span class="muted">±</span> ' +
-          num(g.cuSd, 0.001).replace("<input", '<input data-k="cuSd" aria-label="Cu 편차" style="width:72px"') + "</td>" +
+          num(g.cuSd, 0.001).replace("<input", '<input data-k="cuSd" aria-label="Cu 편차" style="width:72px"') +
+          (+g.cuSe > 0 ? '<div class="muted" style="font-size:11px" title="과거 이력으로 추정한 평균값 자체의 오차. 모의 조업에 함께 넣어요.">평균 추정오차 ±' + (+g.cuSe).toFixed(3) + "</div>" : "") + "</td>" +
         '<td class="r">' + num(g.sn, 0.0001).replace("<input", '<input data-k="sn" aria-label="Sn 평균" style="width:94px"') + ' <span class="muted">±</span> ' +
           num(g.snSd, 0.0001).replace("<input", '<input data-k="snSd" aria-label="Sn 편차" style="width:86px"') + "</td>" +
         '<td><button class="btn sm" type="button" data-del="' + i + '" aria-label="' + esc(g.name) + ' 삭제">삭제</button></td></tr>';
@@ -177,6 +185,7 @@
   function newRun(mode) {
     var s = JSON.parse(JSON.stringify(spec));
     s.notes = s.notes.filter(function (n) { return String(n.text).trim(); });   // 빈 메모는 보내지 않는다
+    s.gate = Math.round(s.target * SAFETY * 1e5) / 1e5;
     var su = E.customSetup(engineSpec(s));
     return { mode: mode, at: new Date().toISOString(), bizDate: curDate, spec: s, su: su, events: [], optCalls: 0,
              last: null, usage: { in: 0, out: 0, cacheR: 0, cacheW: 0 }, conclusion: "", status: "running",
@@ -209,11 +218,13 @@
       var su = run.su, s = run.spec;
       return {
         grades: s.grades.map(function (g) { return { grade_id: g.id, name: g.name, price_krw_per_t: g.price, inventory_t: g.inv, yield: g.y, bulk_density_t_per_m3: g.dens,
-          cu_mean_pct: g.cu, cu_sd_pct: g.cuSd, sn_mean_pct: g.sn, sn_sd_pct: g.snSd }; }),
+          cu_mean_pct: g.cu, cu_sd_pct: g.cuSd, sn_mean_pct: g.sn, sn_sd_pct: g.snSd, cu_mean_se_pct: +g.cuSe || 0 }; }),
         steels: engineSpec(s).steels.map(function (t) { return { steel: t.steel, cu_max_pct: t.cu, sn_max_pct: t.sn, heats: t.heats, tap_t_per_heat: t.W }; }),
-        bucket_volume_m3: s.vol, target_fail_prob: s.target,
+        bucket_volume_m3: s.vol, target_fail_prob: s.target, pass_criterion_p_fail: gateOf(s),
+        pass_criterion_note: "모의 조업은 추정 성분으로 돌리기 때문에, 추정이 틀린 만큼 실제 이탈이 더 높을 수 있다. 그래서 통과 판정은 목표의 75%(pass_criterion_p_fail)로 한다. " +
+          "cu_mean_se_pct는 Cu 평균 추정값 자체의 오차로, 모의 조업에 이미 들어가 있다.",
         notes: s.notes.map(function (n) { return { note_id: n.id, grade_id: n.grade, grade_name: gradeName(n.grade), text: n.text }; }),
-        initial_margin_suggestion: E.initialMargins(su.ctx, su.comp, cfgFor(), s.target),
+        initial_margin_suggestion: E.initialMargins(su.ctx, su.comp, cfgFor(), gateOf(s)),
         max_optimize_calls: MAX_OPT
       };
     },
@@ -224,6 +235,9 @@
         var m = (input.margins || {})[st] || {};
         mg[st] = { cu: Math.max(+m.cu || 0, 0), sn: Math.max(+m.sn || 0, 0) };
       });
+      // 바로 앞과 똑같은 여유·판정으로 다시 부르면 같은 답이 나오므로 횟수를 쓰지 않고 돌려보낸다
+      if (run.last && JSON.stringify(run.last.margins) === JSON.stringify(mg) && JSON.stringify(run.last.rules) === JSON.stringify(input.note_rules || []))
+        return { status: "duplicate", iteration: run.optCalls, message: "바로 앞 계산과 안전여유·메모 판정이 같아서 다시 계산하지 않았어요. 지금 배합이 그대로 유효해요." };
       var o = E.optimize(su.ctx, su.comp, mg, conv.nc, window.solver);
       run.optCalls++;
       if (o.status !== "ok") return { status: "infeasible", iteration: run.optCalls, message: o.message,
@@ -269,13 +283,14 @@
       if (!run.last.sim) TOOLS_IMPL.simulate_blend();
       run.report = { by: run.mode === "ai" ? "AI" : "규칙", title: input.title, summary: input.summary, reasons: input.decision_reasons || [],
                      factors: input.factor_findings || [], notesSummary: input.note_judgment_summary || "", risks: input.risks || [], recs: input.recommendations || [] };
-      return { ok: true, message: "통지서를 만들었어요. 숫자 표(배합, 변인 영향, 검증 과정)는 화면이 도구 결과로 자동으로 붙여요. 이제 한두 문장으로 마무리하세요." };
+      return { ok: true, message: "통지서를 만들었어요. 숫자 표(배합, 변인 영향, 검증 과정)는 화면이 도구 결과로 자동으로 붙여요. 이제 한두 문장으로 마무리하세요." +
+        (run.last.pass === false ? " 주의: 마지막 배합은 검증 기준을 통과하지 못했어요. 마무리 문장에서 이 점을 분명히 밝히세요." : "") };
     },
     simulate_blend: function () {
       if (!run.last) return { error: "먼저 optimize_blend로 배합을 계산하세요." };
       var su = run.su, L = run.last;
       L.sim = E.simulate(su.ctx, L.opt.x, su.comp, L.nc.mult, N_SIM, L.seed);
-      var sg = E.suggestMargins(L.sim, su.ctx, L.margins, run.spec.target), by = {};
+      var sg = E.suggestMargins(L.sim, su.ctx, L.margins, gateOf(run.spec)), by = {};
       Object.keys(sg.status).forEach(function (st) {
         var rows = L.sim.filter(function (r) { return r.steel === st; });
         var w = rows.reduce(function (a, r) { return r.p_fail > a.p_fail ? r : a; }, rows[0]);
@@ -285,7 +300,9 @@
       });
       var pass = Object.keys(sg.status).every(function (st) { return sg.status[st].pass; });
       L.pass = pass;
-      return { simulations: N_SIM, target_p_fail_pct: run.spec.target * 100, all_pass: pass, by_steel: by, current_margins: L.margins, suggested_margins: sg.next };
+      return { simulations: N_SIM, target_p_fail_pct: run.spec.target * 100, pass_criterion_pct: gateOf(run.spec) * 100, all_pass: pass, by_steel: by,
+               current_margins: L.margins, suggested_margins: sg.next,
+               note: "pass는 최대 이탈 확률이 pass_criterion_pct 이하인지다. 같은 배합도 난수에 따라 0.3~0.4%p 오르내리니, 기준에 딱 붙은 통과는 안심할 수 없다." };
     }
   };
 
@@ -313,7 +330,8 @@
                 properties: { note_id: noteIdSchema, action: { type: "string", enum: ["exclude", "cap", "none"] },
                   element: { type: "string", enum: ["cu", "sn", "none"] }, multiplier: { type: "number" }, reason: { type: "string" } } } } } } },
       { name: "simulate_blend", strict: true,
-        description: "가장 최근 optimize_blend 배합으로 몬테카를로 모의 조업을 " + N_SIM + "회 돌려 heat별 규격 이탈 확률을 계산한다. 목표를 넘은 강종에는 안전여유 조정 제안값을 준다.",
+        description: "가장 최근 optimize_blend 배합으로 몬테카를로 모의 조업을 " + N_SIM + "회 돌려 heat별 규격 이탈 확률을 계산한다. 성분 편차와 평균 추정 오차를 함께 넣는다. " +
+          "통과 판정은 검증 기준(pass_criterion_pct, 목표의 75%)으로 하고, 기준을 넘은 강종에는 안전여유 조정 제안값을 준다.",
         input_schema: { type: "object", properties: {}, required: [], additionalProperties: false } },
       { name: "analyze_history", strict: true,
         description: "회사 기록을 주제별로 분석한다. grade_contribution: 과거 조업 이력 500 heat로 역추정한 등급별 Cu·Sn과 공칭값 차이, 과거 배합에서 Cu가 어느 등급에서 왔는지. " +
@@ -350,7 +368,8 @@
   }
   function systemPrompt() {
     return "당신은 전기로 제강사 리본스틸(가상 기업)의 스크랩 배합 AI 에이전트입니다.\n" +
-      "목표: 주어진 조건에서 모든 heat의 규격 이탈 확률을 목표 이하로 지키면서 톤당 배합 원가가 가장 낮은 스크랩 배합을 찾습니다.\n\n" +
+      "목표: 주어진 조건에서 모든 heat의 규격 이탈 확률을 목표 이하로 지키면서 톤당 배합 원가가 가장 낮은 스크랩 배합을 찾습니다. " +
+      "모의 조업의 통과 판정은 추정 오차를 감안한 검증 기준(목표의 75%)으로 합니다.\n\n" +
       "최종 산출물은 결재권자에게 보내는 '배합 결정 통지서'입니다. 왜 이 배합으로 정했는지를 기록과 계산 근거로 설명해야 합니다.\n\n" +
       "작업 순서\n" +
       "1. get_conditions로 조건을 읽습니다.\n" +
@@ -358,8 +377,11 @@
       "3. 검수 메모를 하나씩 판단합니다. Cu·Sn 원천(모터, 전선, 구리코일, 황동, 주석도금 캔, 비철 선별 불량 등)이 실제로 섞였다고 적혀 있으면 exclude, " +
       "가능성만 언급되면 cap, 성분과 무관하거나(유분·수분·녹·부피) '제거 완료', '분석 결과 정상'처럼 이미 해결됐다고 적혀 있으면 none입니다. notes_history의 과거 사례도 참고하세요.\n" +
       "4. 제안된 첫 안전여유와 메모 판정으로 optimize_blend를 부르고, 바로 simulate_blend로 검증합니다.\n" +
-      "5. 목표를 넘는 강종이 있으면 그 강종의 안전여유만 키워 다시 최적화합니다. suggested_margins를 참고하되 판단은 직접 하세요. 통과한 강종의 여유를 괜히 키우면 원가가 오릅니다. " +
+      "5. 검증 기준을 넘는 강종이 있으면 그 강종의 안전여유만 키워 다시 최적화합니다. suggested_margins를 참고하되 판단은 직접 하세요. 통과한 강종의 여유를 괜히 키우면 원가가 오릅니다. " +
       "최적화는 최대 " + MAX_OPT + "번입니다. 배합이 불가능하다고 나오면 원인을 짐작해 조정합니다.\n" +
+      "   검증 기준(pass_criterion_p_fail)은 목표 이탈 확률보다 낮게 잡혀 있습니다. 모의 조업은 과거 이력으로 추정한 성분으로 돌리는데, 추정이 실제보다 낮은 등급이 있으면 " +
+      "실제 이탈이 모의 조업보다 높게 나오기 때문입니다(검증 기간 정답 채점에서 확인한 사실). 그러니 통과 판정은 반드시 all_pass로 하고, '목표 2%보다 낮으니 여유가 지나치다'는 이유로 여유를 깎지 마세요. " +
+      "이미 통과한 강종의 여유를 줄이는 것은 최대 이탈이 검증 기준의 절반에도 못 미칠 때만 하고, 줄인 뒤에는 반드시 다시 검증합니다. 같은 여유로 두 번 계산하지 마세요.\n" +
       "6. 모두 통과하면 sensitivity로 변인 영향을 봅니다. 최소한 price(+10%, 전체), cu_mean(+20%, 전체)를 보고, 재고를 다 쓴 등급이 있으면 inventory(+20%), 필요하면 target_fail이나 spec_cu도 봅니다. " +
       "sensitivity는 배합을 바꾸지 않으니, 마지막 optimize_blend 결과가 최종 배합입니다.\n" +
       "7. write_report로 통지서를 씁니다. 이유는 '무엇이 이 배합을 묶고 있나'(limiting_element, inventory_used_up), 등급별 단가와 Cu의 관계, 기록에서 본 사실, 변인 영향의 크기로 설명하세요.\n" +
@@ -610,7 +632,8 @@
     for (var i = 1; i <= MAX_OPT; i++) {
       var inp = { margins: margins, note_rules: rules };
       emit({ t: "call", name: "optimize_blend", input: inp });
-      var o = TOOLS_IMPL.optimize_blend(inp); emit({ t: "result", name: "optimize_blend", out: o, err: o.status !== "ok" });
+      var o = TOOLS_IMPL.optimize_blend(inp); emit({ t: "result", name: "optimize_blend", out: o, err: o.status !== "ok" && o.status !== "duplicate" });
+      if (o.status === "duplicate") break;
       if (o.status !== "ok") {
         var shrunk = {}; Object.keys(margins).forEach(function (s) { shrunk[s] = { cu: r5(margins[s].cu * 0.8), sn: r5(margins[s].sn * 0.8) }; });
         margins = shrunk; continue;
@@ -670,7 +693,7 @@
     var unused = ctx.grades.filter(function (g) { return bd.usage[g] < 0.5 && L.nc.exclude.indexOf(g) < 0; });
     if (unused.length) reasons.push(josa(unused.map(nm).join("·"), ["은", "는"]) + " 쓰지 않았어요. 같은 성분을 더 싸게 맞추는 조합이 있었어요.");
     if (L.nc.exclude.length) reasons.push(josa(L.nc.exclude.map(nm).join("·"), ["은", "는"]) + " 검수 메모 때문에 오늘 배합에서 뺐어요.");
-    reasons.push("안전여유는 Cu 기준 " + Object.keys(L.margins).map(function (s) { return s + " " + (+L.margins[s].cu).toFixed(3) + "%p"; }).join(", ") + "로, 모의 조업에서 모든 강종이 목표 안에 들어온 값이에요.");
+    reasons.push("안전여유는 Cu 기준 " + Object.keys(L.margins).map(function (s) { return s + " " + (+L.margins[s].cu).toFixed(3) + "%p"; }).join(", ") + "로, 모의 조업에서 모든 강종이 검증 기준(" + pct(gateOf(r.spec)) + "%, 목표 " + pct(r.spec.target) + "%) 안에 들어온 값이에요. 성분 추정이 틀릴 수 있어 목표보다 낮은 기준으로 검증했어요.");
 
     var sp = sens("price"), sc = sens("cu_mean"), si = sens("inventory");
     if (sp && sp.rows[0] && sp.rows[0].feasible) { var a = sp.rows[0];
@@ -693,7 +716,7 @@
     if (!recs.length) recs.push("오늘 조건에서는 따로 조치할 구매·재고 항목이 없어요.");
 
     return { title: day + " 배합 결정 — 톤당 " + won(o.costPerT) + "원, 최대 이탈 " + mp.toFixed(1) + "%",
-      summary: ctx.plan.length + " heat 배합을 톤당 " + won(o.costPerT) + "원(하루 " + (o.totalCost / 1e8).toFixed(2) + "억 원)으로 정했어요. 모의 조업 " + N_SIM.toLocaleString("ko-KR") + "회 기준 최대 이탈 확률은 " + mp.toFixed(1) + "%로 목표 " + (r.spec.target * 100) + "% " + (mp <= r.spec.target * 100 ? "안이에요." : "를 넘어요.") +
+      summary: ctx.plan.length + " heat 배합을 톤당 " + won(o.costPerT) + "원(하루 " + (o.totalCost / 1e8).toFixed(2) + "억 원)으로 정했어요. 모의 조업 " + N_SIM.toLocaleString("ko-KR") + "회 기준 최대 이탈 확률은 " + mp.toFixed(1) + "%로 검증 기준 " + pct(gateOf(r.spec)) + "% " + (mp <= gateOf(r.spec) * 100 + 1e-9 ? "안이에요." : "를 넘어요.") +
         (expert ? " 숙련자 배합보다 톤당 " + won(expert.costPerT - o.costPerT) + "원(하루 약 " + Math.round((expert.costPerT - o.costPerT) * tap / 1e4).toLocaleString("ko-KR") + "만 원) 싸요." : ""),
       reasons: reasons, factors: factors, notesSummary: notesSummary, risks: risks, recs: recs };
   }
@@ -790,12 +813,15 @@
     }
     if (ev.t === "result") {
       var o = ev.out || {}, h = "";
-      if (ev.err || o.error) h = '<span class="pill crit">실패</span> ' + esc(o.error || o.message || "") + (o.hint ? '<br><span class="muted">' + esc(o.hint) + "</span>" : "");
-      else if (ev.name === "get_conditions") h = "등급 " + o.grades.length + "개 · 강종 " + o.steels.length + "개 · heat " + o.steels.reduce(function (a, t) { return a + t.heats; }, 0) + "개 · 검수 메모 " + o.notes.length + "건 · 목표 이탈 " + (o.target_fail_prob * 100) + "%<br>" + '<div class="ev-sub">첫 안전여유 제안</div>' + marginChips(o.initial_margin_suggestion);
+      if (ev.name === "optimize_blend" && o.status === "duplicate") h = '<span class="pill mute">같은 조건</span> ' + esc(o.message);
+      else if (ev.err || o.error || (ev.name === "optimize_blend" && o.status !== "ok")) h = '<span class="pill crit">실패</span> ' + esc(o.error || o.message || "") + (o.hint ? '<br><span class="muted">' + esc(o.hint) + "</span>" : "");
+      else if (ev.name === "get_conditions") h = "등급 " + o.grades.length + "개 · 강종 " + o.steels.length + "개 · heat " + o.steels.reduce(function (a, t) { return a + t.heats; }, 0) + "개 · 검수 메모 " + o.notes.length + "건 · 목표 이탈 " + (o.target_fail_prob * 100) + "%" +
+        (o.pass_criterion_p_fail && o.pass_criterion_p_fail !== o.target_fail_prob ? " (검증 기준 " + +(o.pass_criterion_p_fail * 100).toFixed(2) + "%)" : "") + "<br>" + '<div class="ev-sub">첫 안전여유 제안</div>' + marginChips(o.initial_margin_suggestion);
       else if (ev.name === "optimize_blend") h = "<b class=\"chem\">톤당 " + won(o.cost_per_t_krw) + "원</b> (" + o.iteration + "번째 계산)" +
         (o.excluded_grades.length ? ' · 제외 <b>' + esc(o.excluded_grades.join(", ")) + "</b>" : "") + (o.capped_grades.length ? " · 5% 제한 " + esc(o.capped_grades.join(", ")) : "") +
         '<div class="ev-sub">강종별 예상 성분</div>' + Object.keys(o.by_steel).map(function (s) { var v = o.by_steel[s]; return '<span class="pill mute">' + esc(s) + " Cu " + v.pred_cu_pct.toFixed(3) + "/" + v.cu_max_pct + "%</span>"; }).join(" ");
-      else if (ev.name === "simulate_blend") h = (o.all_pass ? '<span class="pill good">✓ 모두 통과</span>' : '<span class="pill crit">목표 초과 있음</span>') + " 모의 조업 " + N_SIM.toLocaleString("ko-KR") + "회, 목표 " + o.target_p_fail_pct + "%<br>" +
+      else if (ev.name === "simulate_blend") h = (o.all_pass ? '<span class="pill good">✓ 모두 통과</span>' : '<span class="pill crit">기준 초과 있음</span>') + " 모의 조업 " + N_SIM.toLocaleString("ko-KR") + "회, " +
+        (o.pass_criterion_pct != null && o.pass_criterion_pct !== o.target_p_fail_pct ? "검증 기준 " + +o.pass_criterion_pct.toFixed(2) + "% (목표 " + o.target_p_fail_pct + "%)" : "목표 " + o.target_p_fail_pct + "%") + "<br>" +
         Object.keys(o.by_steel).map(function (s) { var v = o.by_steel[s]; return '<span class="pill ' + (v.pass ? "good" : "crit") + '">' + esc(s) + " 최대 " + v.max_p_fail_pct.toFixed(1) + "% " + (v.pass ? "✓" : "✗") + "</span>"; }).join(" ");
       else if (ev.name === "analyze_history") h = historyBrief(o);
       else if (ev.name === "sensitivity") h = o.rows.slice(0, 4).map(function (x) {
@@ -849,7 +875,7 @@
     if (!L.sim) L.sim = E.simulate(ctx, o.x, su.comp, L.nc.mult, N_SIM, L.seed);
     var expert = E.canExpert(ctx, cfgFor()) ? E.expertBlend(ctx, su.comp, cfgFor()) : null;
     var maxH = L.sim.reduce(function (a, x) { return x.p_fail > a.p_fail ? x : a; }, L.sim[0]);
-    var pass = L.sim.every(function (x) { return x.p_fail <= r.spec.target; });
+    var gate = gateOf(r.spec), pass = L.sim.every(function (x) { return x.p_fail <= gate; });
     var tap = o.heats.reduce(function (a, h) { return a + h.tap; }, 0);
     $("resBox").hidden = false;
     $("resMeta").textContent = (r.mode === "ai" ? "AI 에이전트 · " + (r.agentLabel || "Claude") : "AI 없이 (키워드 규칙)") + " · " + new Date(r.at).toLocaleString("ko-KR") + " · 최적화 " + r.optCalls + "회";
@@ -857,7 +883,7 @@
       ["톤당 배합 원가", won(o.costPerT) + "원", "하루 " + Math.round(tap).toLocaleString("ko-KR") + "t 출강 기준"],
       expert ? ["숙련자 배합 대비", "−" + won(expert.costPerT - o.costPerT) + "원/t", ((expert.costPerT - o.costPerT) / expert.costPerT * 100).toFixed(1) + "% 절감 · 숙련자 " + won(expert.costPerT) + "원"]
              : ["숙련자 배합 대비", "비교 없음", "등급 구성이 기본 8종과 달라 숙련자 배합표를 쓸 수 없어요"],
-      ["예측 최대 이탈 확률", (maxH.p_fail * 100).toFixed(1) + "%", maxH.heat_id + " " + maxH.steel + " · 목표 " + (r.spec.target * 100) + "% " + (pass ? "통과" : "초과"), !pass],
+      ["예측 최대 이탈 확률", (maxH.p_fail * 100).toFixed(1) + "%", maxH.heat_id + " " + maxH.steel + " · 검증 기준 " + pct(gate) + "%(목표 " + pct(r.spec.target) + "%) " + (pass ? "통과" : "초과"), !pass],
       ["하루 배합 원가", (o.totalCost / 1e8).toFixed(2) + "억 원", ctx.plan.length + " heat 합계"]
     ].map(function (t) { return '<div class="tile' + (t[3] ? " alert" : "") + '"><span class="k">' + t[0] + '</span><span class="v">' + t[1] + '</span><span class="s">' + esc(t[2]) + "</span></div>"; }).join("");
     $("resConclusion").innerHTML = r.conclusion ? mdLite(r.conclusion) : '<p class="muted">설명이 없어요.</p>';
@@ -880,7 +906,7 @@
       var mix = ctx.grades.map(function (g, i) { return h.x[i] > 0.05 ? esc(gradeName(g)) + " " + h.x[i].toFixed(1) + "t" : ""; }).filter(Boolean).join(", ");
       return '<tr><td class="mono"><b>' + h.heat_id + "</b></td><td>" + esc(h.steel) + '</td><td class="wrap">' + mix + '</td><td class="r">' + h.charge.toFixed(1) +
         '</td><td class="r"><b class="chem">' + h.predCu.toFixed(3) + '</b> <span class="lim">/ ' + h.cuMax + '</span></td><td class="r"><b class="chem">' + h.predSn.toFixed(4) + '</b> <span class="lim">/ ' + h.snMax +
-        '</span></td><td class="r">' + (p > r.spec.target * 100 ? '<span class="pill crit">' + p.toFixed(1) + "%</span>" : p.toFixed(1) + "%") + '</td><td class="r num">' + won(h.costPerT) + "</td></tr>";
+        '</span></td><td class="r">' + (p > gate * 100 + 1e-9 ? '<span class="pill crit">' + p.toFixed(1) + "%</span>" : p.toFixed(1) + "%") + '</td><td class="r num">' + won(h.costPerT) + "</td></tr>";
     }).join("");
   }
 
@@ -895,7 +921,8 @@
     var out = [], cur = null;
     r.events.forEach(function (ev) {
       if (ev.t === "call" && ev.name === "optimize_blend") cur = { margins: ev.input.margins };
-      if (ev.t === "result" && ev.name === "optimize_blend" && cur) { cur.ok = ev.out.status === "ok"; cur.cost = ev.out.cost_per_t_krw; out.push(cur); }
+      if (ev.t === "result" && ev.name === "optimize_blend" && cur && ev.out.status !== "duplicate" && !ev.out.error) { cur.ok = ev.out.status === "ok"; cur.cost = ev.out.cost_per_t_krw; out.push(cur); }
+      if (ev.t === "result" && ev.name === "optimize_blend" && ev.out.status === "duplicate") cur = null;
       if (ev.t === "result" && ev.name === "simulate_blend" && out.length && !ev.out.error) {
         var c = out[out.length - 1]; c.pass = ev.out.all_pass;
         c.maxp = Math.max.apply(null, Object.keys(ev.out.by_steel).map(function (s) { return ev.out.by_steel[s].max_p_fail_pct; }));
@@ -954,7 +981,7 @@
       '<section><h3>1. 요약</h3><p>' + esc(R.summary) + '</p><div class="doc-kpi">' +
         "<div><span>톤당 배합 원가</span><b>" + won(o.costPerT) + "원</b></div>" +
         "<div><span>숙련자 배합 대비</span><b>" + (expert ? "−" + won(expert.costPerT - o.costPerT) + "원/t" : "비교 없음") + "</b></div>" +
-        "<div><span>최대 이탈 확률</span><b>" + mp.toFixed(1) + "% <small>목표 " + (r.spec.target * 100) + "%</small></b></div>" +
+        "<div><span>최대 이탈 확률</span><b>" + mp.toFixed(1) + "% <small>기준 " + pct(gateOf(r.spec)) + "% · 목표 " + pct(r.spec.target) + "%</small></b></div>" +
         "<div><span>하루 배합 원가</span><b>" + (o.totalCost / 1e8).toFixed(2) + "억 원</b></div></div></section>" +
 
       "<section><h3>2. 결정한 배합</h3>" +
