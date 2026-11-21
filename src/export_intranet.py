@@ -40,6 +40,15 @@ def build():
         "market": mk,
         "notes": notes.to_dict(orient="records"),
         "history_period": [hist["date"].min(), hist["date"].max()],
+        # 과거 조업 이력 원본 (AI 배합 설계에서 Claude가 기록을 직접 분석할 때 쓴다)
+        # 한 줄 = [heat_id, 날짜, 강종, 등급별 장입량 t × 8, 출강량 t, Cu %, Sn %, 전력 kWh, 합격 여부]
+        "heats": {"cols": ["heat_id", "date", "steel"] + ["charge_" + g for g in GRADES]
+                          + ["tap_t", "cu_pct", "sn_pct", "power_kwh", "pass"],
+                  "rows": [[r["heat_id"], r["date"], r["steel_grade"]]
+                           + [round(float(r["charge_%s_t" % g]), 2) for g in GRADES]
+                           + [round(float(r["tap_weight_t"]), 2), float(r["cu_pct"]), float(r["sn_pct"]),
+                              int(r["power_kwh"]), r["pass_fail"] == "PASS"]
+                           for _, r in hist.iterrows()]},
         "estimate": {"grades": comp["grades"], "meas_sd": comp["meas_sd"], "cv": comp["cv"],
                      "n_heats": comp["n_heats"], "outlier_dates": comp["outlier_dates"]},
         "config": {"grades": GRADES, "max_charge_volume_m3": MAX_CHARGE_VOLUME_M3,
