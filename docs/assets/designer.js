@@ -243,6 +243,7 @@
       if (o.status !== "ok") return { status: "infeasible", iteration: run.optCalls, message: o.message,
         hint: "안전여유를 줄이거나, 제외한 등급을 다시 보거나, 재고·버킷 용적 조건을 확인하세요." };
       run.last = { opt: o, margins: mg, rules: input.note_rules || [], flags: conv.flags, nc: conv.nc, sim: null, seed: run.optCalls };
+      var badReason = (input.note_rules || []).filter(function (r) { return !/[가-힣]/.test(String(r.reason || "")); }).map(function (r) { return r.note_id; });
       var by = {};
       Object.keys(su.ctx.specs).forEach(function (st) {
         var hs = o.heats.filter(function (h) { return h.steel === st; });
@@ -259,7 +260,8 @@
                capped_grades: Object.keys(conv.nc.cap).map(function (g) { return gradeName(g); }), by_steel: by,
                inventory_used_up: bd.inventoryLimited.map(function (g) { return gradeName(g); }),
                grade_use_t: su.ctx.grades.map(function (g, i) { return { name: gradeName(g), used_t: Math.round(bd.usage[g]), inventory_t: su.ctx.inv[i], price: su.ctx.price[i] }; }),
-               note: "limiting_element는 그 강종 배합을 묶고 있는 성분 상한(상한−여유에 닿은 원소). inventory_used_up은 재고를 다 쓴 등급." };
+               note: "limiting_element는 그 강종 배합을 묶고 있는 성분 상한(상한−여유에 닿은 원소). inventory_used_up은 재고를 다 쓴 등급.",
+               reason_warning: badReason.length ? badReason.join(", ") + "의 reason이 한국어 문장이 아니에요. 통지서에 그대로 실리니 다음 호출에서 한국어 한 문장으로 고쳐 주세요." : undefined };
     },
     analyze_history: function (input) {
       var topic = input.topic, opt = {};
@@ -328,7 +330,8 @@
             note_rules: { type: "array", description: "검수 메모 판정. 메모가 없으면 빈 배열.",
               items: { type: "object", additionalProperties: false, required: ["note_id", "action", "element", "multiplier", "reason"],
                 properties: { note_id: noteIdSchema, action: { type: "string", enum: ["exclude", "cap", "none"] },
-                  element: { type: "string", enum: ["cu", "sn", "none"] }, multiplier: { type: "number" }, reason: { type: "string" } } } } } } },
+                  element: { type: "string", enum: ["cu", "sn", "none"] }, multiplier: { type: "number" },
+                  reason: { type: "string", description: "판정 이유를 한국어 한 문장으로. 통지서에 그대로 실린다. 예: 유분은 Cu·Sn 성분과 무관" } } } } } } },
       { name: "simulate_blend", strict: true,
         description: "가장 최근 optimize_blend 배합으로 몬테카를로 모의 조업을 " + N_SIM + "회 돌려 heat별 규격 이탈 확률을 계산한다. 성분 편차와 평균 추정 오차를 함께 넣는다. " +
           "통과 판정은 검증 기준(pass_criterion_pct, 목표의 75%)으로 하고, 기준을 넘은 강종에는 안전여유 조정 제안값을 준다.",
@@ -792,12 +795,20 @@
     return Object.keys(m || {}).map(function (s) { return '<span class="pill mute">' + esc(s) + " Cu " + (+m[s].cu).toFixed(3) + " · Sn " + (+m[s].sn).toFixed(4) + "%p</span>"; }).join(" ");
   }
   var ACT = { exclude: ["crit", "제외"], cap: ["warn", "5% 제한"], none: ["mute", "영향 없음"] };
+  /* 메모 판정 이유 정리. TimelyGPT를 거친 실행에서 AI가 이유 칸에 'dummy'나 '수'의 역슬래시가 빠진 'uc218 uBD84'
+     같은 글자를 넣은 적이 있다(10/3·10/8·10/24·10/30 통지서). 깨진 글자를 되살리면 오히려 엉뚱한 문장이 되어서,
+     escape가 섞였거나 한글이 없으면 이유를 보여 주지 않는다. 통지서 5번 문단에 AI가 쓴 설명이 따로 있다. */
+  function cleanReason(s) {
+    s = String(s || "").trim();
+    if (/(^|\s)\\?u[0-9a-fA-F]{4}/.test(s)) return "";
+    return /[가-힣]/.test(s) ? s : "";
+  }
   function rulesHtml(rules, notes) {
     if (!rules || !rules.length) return "";
     return '<ul class="rules-l">' + rules.map(function (r) {
       var n = (notes || []).filter(function (x) { return x.id === r.note_id; })[0], a = ACT[r.action] || ACT.none;
       return "<li>" + '<span class="pill ' + a[0] + '">' + a[1] + "</span> " + (n ? "“" + esc(n.text) + "”" : esc(r.note_id)) +
-        (r.reason ? ' <span class="muted">— ' + esc(r.reason) + "</span>" : "") + "</li>";
+        (cleanReason(r.reason) ? ' <span class="muted">— ' + esc(cleanReason(r.reason)) + "</span>" : "") + "</li>";
     }).join("") + "</ul>";
   }
   function eventHtml(ev, notes) {
