@@ -362,7 +362,7 @@
         subject: "[배합 결정 통지서] " + n.title,
         body: [{ p: "AI 배합 설계에서 작성한 배합 결정 통지서예요. 제강팀장님께 통지했고, 작성자인 " + u.name + " 님도 참조로 받았어요." },
                { kv: [["문서번호", n.docNo], ["톤당 배합 원가", won(n.costPerT) + "원"], ["숙련자 배합 대비", n.saving != null ? "톤당 " + won(n.saving) + "원 절감" : "비교 없음 (등급 구성 변경)"],
-                      ["최대 이탈 확률", n.maxP.toFixed(1) + "%"], ["작성 방식", n.by === "Claude" ? "Claude 에이전트" : "규칙 기반 자동 작성"]] },
+                      ["최대 이탈 확률", n.maxP.toFixed(1) + "%"], ["작성 방식", n.by === "규칙" ? "규칙 기반 자동 작성" : n.by + " 에이전트"]] },
                { p: n.summary }, { list: n.reasons },
                { link: { href: "agent.html?run=" + encodeURIComponent(n.id), text: "통지서 전문 보기" } }] });
     });

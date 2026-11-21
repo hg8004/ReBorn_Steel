@@ -1,8 +1,8 @@
 /* AI 배합 설계 (agent.html)
    사용자가 조건(스크랩 등급·가격·재고·성분, 강종 상한·heat 수, 검수 메모)을 넣으면
-   Claude 에이전트가 도구를 골라 쓰며 가장 싸고 규격을 지키는 배합을 직접 풀어 낸다.
-   - 계산(선형계획, 모의 조업)은 engine.js가 이 브라우저에서 한다. Claude는 숫자를 만들지 않는다.
-   - Claude가 하는 일: 조건 읽기, 검수 메모 해석(제외/5% 제한/영향 없음), 안전여유 결정과 재계산 판단, 결과 설명.
+   AI 에이전트(TimelyGPT를 거친 Claude·GPT, 또는 Claude 직접 연결)가 도구를 골라 쓰며 가장 싸고 규격을 지키는 배합을 직접 풀어 낸다.
+   - 계산(선형계획, 모의 조업)은 engine.js가 이 브라우저에서 한다. AI는 숫자를 만들지 않는다.
+   - AI가 하는 일: 조건 읽기, 검수 메모 해석(제외/5% 제한/영향 없음), 안전여유 결정과 재계산 판단, 결과 설명.
    - API 키는 사용자가 넣는다. 코드나 저장소에 넣지 않고, 원하면 이 창(sessionStorage)에만 둔다.
    - 키가 없으면 같은 계산을 키워드 규칙으로 돌린다("AI 없이 계산").
    - 실행 기록(과정·결과)은 이 브라우저에 최근 5건 저장해, 발표 모드에서 한 단계씩 다시 볼 수 있다. */
@@ -11,8 +11,7 @@
   var P = window.Portal, E = window.RebornEngine, A = window.RebornAnalysis;
   if (!P || !P.D || !E || !A) return;
   var $ = P.$, esc = P.esc, C = P.C, won = P.won;
-  var MODEL = "claude-opus-5-5";
-  var PRICE_IN = 4 / 1e6, PRICE_OUT = 20 / 1e6;           // 달러/토큰 (Claude Opus 5.5)
+  var PRICE_IN = 4 / 1e6, PRICE_OUT = 20 / 1e6;           // 달러/토큰 (Claude Opus 5.5, 직접 연결일 때만 표시)
   var MAX_TURNS = 30, MAX_OPT = Math.max(8, C.config.max_iterations), N_SIM = C.config.n_sim;
   var LIMITS = { grades: 15, heats: 48 };
   var PALETTE = ["--s1", "--s2", "--s3", "--s4", "--s5", "--s6", "--s7", "--s8"];
@@ -268,7 +267,7 @@
     write_report: function (input) {
       if (!run.last) return { error: "배합을 계산하기 전에는 통지서를 쓸 수 없어요." };
       if (!run.last.sim) TOOLS_IMPL.simulate_blend();
-      run.report = { by: run.mode === "ai" ? "Claude" : "규칙", title: input.title, summary: input.summary, reasons: input.decision_reasons || [],
+      run.report = { by: run.mode === "ai" ? "AI" : "규칙", title: input.title, summary: input.summary, reasons: input.decision_reasons || [],
                      factors: input.factor_findings || [], notesSummary: input.note_judgment_summary || "", risks: input.risks || [], recs: input.recommendations || [] };
       return { ok: true, message: "통지서를 만들었어요. 숫자 표(배합, 변인 영향, 검증 과정)는 화면이 도구 결과로 자동으로 붙여요. 이제 한두 문장으로 마무리하세요." };
     },
@@ -369,10 +368,163 @@
   }
 
   /* ====================================================================
-     4. 실행: Claude 에이전트 / AI 없이
+     4. 실행: AI 에이전트 / AI 없이
+     AI 연결은 세 갈래다. 도구·화면·통지서는 같고, 모델을 부르는 부분만 다르다.
+       - TimelyGPT 연동 키(tgpt_sk_…) + Claude 모델 → TimelyGPT Direct API의 Anthropic 형식 주소 (/v1/messages)
+       - TimelyGPT 연동 키(tgpt_sk_…) + GPT 모델    → TimelyGPT Direct API의 OpenAI 형식 주소 (/chat/completions)
+       - Claude 키(sk-ant-…)                        → Anthropic 공식 SDK
+     TimelyGPT 서버는 브라우저 호출에 Content-Type·Authorization 헤더만 허용해서(CORS), 그쪽은 SDK 대신 fetch로 부른다.
      ==================================================================== */
   var busy = false;
   function emit(ev) { run.events.push(ev); if (!presenting) appendEvent(ev, run.events.length - 1); }
+
+  var TIMELY = "https://hello.timelyai.io/api/v2/chat/direct";
+  var MODELS = {
+    timely: [["claude-opus-5-5", "Claude Opus 5.5"], ["claude-sonnet-5-5", "Claude Sonnet 5.5"], ["claude-haiku-5-5", "Claude Haiku 5.5"], ["claude-sonnet-4-6", "Claude Sonnet 4.6"],
+             ["gpt-5.5", "GPT-5.5"], ["gpt-5.4", "GPT-5.4"], ["gpt-5.1", "GPT-5.1"], ["gpt-4.1", "GPT-4.1"]],
+    anthropic: [["claude-opus-5-5", "Claude Opus 5.5"], ["claude-sonnet-5-5", "Claude Sonnet 5.5"], ["claude-haiku-5-5", "Claude Haiku 5.5"]]
+  };
+  function keyKind(k) { return /^tgpt_sk_/.test(k) ? "timely" : /^sk-ant-/.test(k) ? "anthropic" : null; }
+  function wireOf(model) { return /^claude-/.test(model) ? "anthropic" : "openai"; }
+  function modelLabel(id) {
+    var all = MODELS.timely.concat(MODELS.anthropic), hit = all.filter(function (m) { return m[0] === id; })[0];
+    if (hit) return hit[1];
+    return String(id).replace(/^claude-/, "Claude ").replace(/^gpt-/, "GPT-");
+  }
+  function httpErr(status, msg) { var e = new Error(msg); e.status = status; e.http = true; return e; }
+  async function postJson(url, key, body) {
+    var res;
+    try { res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json", "Authorization": "Bearer " + key }, body: JSON.stringify(body) }); }
+    catch (e) { throw httpErr(0, "TimelyGPT 서버에 연결하지 못했어요. 인터넷 연결을 확인하세요."); }
+    var txt = await res.text(), j = null;
+    try { j = JSON.parse(txt); } catch (e) { /* JSON이 아닌 응답 */ }
+    if (!res.ok) throw httpErr(res.status, j && j.error ? (j.error.message || JSON.stringify(j.error)) : String(txt || "").slice(0, 200));
+    if (!j) throw httpErr(res.status, "응답을 읽지 못했어요: " + String(txt || "").slice(0, 120));
+    return j;
+  }
+  function normAnthropic(r) {
+    var blocks = [];
+    (r.content || []).forEach(function (b) {
+      if (b.type === "thinking" && b.thinking) blocks.push({ type: "thinking", text: b.thinking });
+      else if (b.type === "text") blocks.push({ type: "text", text: b.text || "" });
+      else if (b.type === "tool_use") blocks.push({ type: "tool_use", id: b.id, name: b.name, input: b.input || {} });
+    });
+    var u = r.usage || {}, s = r.stop_reason;
+    return { blocks: blocks, raw: r, usage: { in: u.input_tokens || 0, out: u.output_tokens || 0, cacheR: u.cache_read_input_tokens || 0, cacheW: u.cache_creation_input_tokens || 0 },
+             stop: s === "tool_use" ? "tool" : s === "max_tokens" ? "max" : s === "refusal" ? "refusal" : s === "pause_turn" ? "pause" : "end" };
+  }
+  function anthropicHistory() {
+    var messages = [];
+    return {
+      messages: messages,
+      start: function (u) { messages.push({ role: "user", content: u }); },
+      pushAssistant: function (n) { messages.push({ role: "assistant", content: n.raw.content }); },   // 생각 블록까지 그대로 돌려준다
+      pushResults: function (rs) { messages.push({ role: "user", content: rs.map(function (x) { return { type: "tool_result", tool_use_id: x.id, content: x.content, is_error: x.isErr }; }) }); }
+    };
+  }
+  // Claude 키로 공식 SDK
+  function sdkProvider(Anthropic, key, model, system, tools) {
+    var client = new Anthropic({ apiKey: key, dangerouslyAllowBrowser: true }), h = anthropicHistory();
+    return Object.assign(h, { label: modelLabel(model), kind: "anthropic",
+      send: async function () {
+        var r = await client.beta.messages.create({ model: model, max_tokens: 16000, system: system, tools: tools, messages: h.messages,
+          thinking: { type: "adaptive", display: "summarized" }, output_config: { effort: "medium" },
+          betas: ["server-side-fallback-2026-07-01"], fallbacks: "default" });
+        return normAnthropic(r);
+      } });
+  }
+  // TimelyGPT 연동 키 + Claude 모델: Anthropic 형식. 서버가 받지 않는 옵션이 있으면(400) 하나씩 빼고 다시 보낸다.
+  function timelyAnthropic(key, model, system, tools) {
+    var h = anthropicHistory(), level = 0;
+    function body() {
+      var b = { model: model, max_tokens: 16000, system: system, messages: h.messages,
+                tools: level >= 3 ? tools.map(function (t) { var c = Object.assign({}, t); delete c.strict; return c; }) : tools };
+      if (level < 2) b.thinking = { type: "adaptive", display: "summarized" };
+      else if (level < 3) b.thinking = { type: "adaptive" };
+      if (level < 1) b.output_config = { effort: "medium" };
+      return b;
+    }
+    return Object.assign(h, { label: modelLabel(model) + " · TimelyGPT", kind: "timely",
+      send: async function () {
+        for (;;) {
+          try { return normAnthropic(await postJson(TIMELY + "/anthropic/v1/messages", key, body())); }
+          catch (e) { if (e.status === 400 && level < 3) { level++; continue; } throw e; }
+        }
+      } });
+  }
+  // TimelyGPT 연동 키 + GPT 모델: OpenAI Chat Completions 형식
+  function timelyOpenAI(key, model, system, tools) {
+    var messages = [{ role: "system", content: system }], level = 0;
+    var oTools = tools.map(function (t) { return { type: "function", function: { name: t.name, description: t.description, parameters: t.input_schema } }; });
+    return { label: modelLabel(model) + " · TimelyGPT", kind: "timely",
+      start: function (u) { messages.push({ role: "user", content: u }); },
+      send: async function () {
+        var r;
+        for (;;) {
+          var b = { model: model, messages: messages, tools: oTools };
+          if (level < 1) { b.tool_choice = "auto"; b.max_completion_tokens = 16000; }
+          try { r = await postJson(TIMELY + "/openai/v1/chat/completions", key, b); break; }
+          catch (e) { if (e.status === 400 && level < 1) { level++; continue; } throw e; }
+        }
+        var ch = r.choices && r.choices[0]; if (!ch) throw httpErr(200, "응답에 내용이 없어요.");
+        var m = ch.message || {}, blocks = [], calls = m.tool_calls || [];
+        if (m.reasoning_content) blocks.push({ type: "thinking", text: String(m.reasoning_content) });
+        if (m.content) blocks.push({ type: "text", text: String(m.content) });
+        calls.forEach(function (tc) {
+          var inp; try { inp = JSON.parse((tc.function && tc.function.arguments) || "{}"); } catch (e) { inp = { __badJson: true }; }
+          blocks.push({ type: "tool_use", id: tc.id, name: tc.function && tc.function.name, input: inp });
+        });
+        var fr = ch.finish_reason, u = r.usage || {};
+        return { blocks: blocks, raw: m, usage: { in: u.prompt_tokens || 0, out: u.completion_tokens || 0, cacheR: 0, cacheW: 0 },
+                 stop: calls.length ? "tool" : fr === "length" ? "max" : fr === "content_filter" ? "refusal" : "end" };
+      },
+      pushAssistant: function (n) {
+        var a = { role: "assistant", content: n.raw.content || "" };
+        if (n.raw.tool_calls && n.raw.tool_calls.length) a.tool_calls = n.raw.tool_calls;
+        messages.push(a);
+      },
+      pushResults: function (rs) { rs.forEach(function (x) { messages.push({ role: "tool", tool_call_id: x.id, content: x.content }); }); }
+    };
+  }
+  // 상태 코드별 안내 (TimelyGPT Direct API 문서의 오류 표 기준)
+  function errorText(err, kind) {
+    var s = err && err.status, m = err && err.message ? String(err.message).slice(0, 200) : String(err);
+    if (s === 401) return kind === "timely" ? "연동 키가 올바르지 않아요. 키를 재발급했다면 예전 키는 더 이상 쓸 수 없어요. (" + m + ")" : "API 키가 올바르지 않아요. 키를 다시 확인해 주세요.";
+    if (s === 402) return "크레딧이 부족하거나 사용 한도를 넘었어요. 스페이스 관리자에게 문의해 주세요. (" + m + ")";
+    if (s === 403) return "이 모델은 스페이스나 그룹에서 꺼져 있거나, 지금 접속한 IP가 허용되지 않았어요. 다른 모델을 골라 보거나 관리자에게 문의해 주세요. (" + m + ")";
+    if (s === 404) return "이 모델이나 주소를 쓸 수 없어요. '모델 목록 불러오기'로 쓸 수 있는 모델을 확인해 주세요. (" + m + ")";
+    if (s === 429) return "요청이 너무 많아요. 잠시 뒤 다시 시도해 주세요.";
+    if (s === 400) return "요청 형식 오류: " + m;
+    if (s >= 500) return "모델 서버 연결이 잠시 안 돼요 (" + s + "). 잠시 뒤 다시 시도해 주세요.";
+    if (s === 0 || /connection|network|fetch/i.test(m)) return kind === "timely" ? "TimelyGPT 서버에 연결하지 못했어요. 인터넷 연결을 확인하세요." : "Claude 서버에 연결하지 못했어요. 인터넷 연결을 확인하세요.";
+    return "실행 중 오류: " + m;
+  }
+  // 이 키로 쓸 수 있는 모델 목록 (키 확인도 겸한다)
+  async function loadModels() {
+    var key = apiKey(), kind = keyKind(key);
+    if (kind !== "timely") { setStatus(kind === "anthropic" ? "Claude 키는 목록 없이 위 모델 중에서 고르면 돼요." : "TimelyGPT 연동 키(tgpt_sk_로 시작)를 먼저 넣어 주세요.", !kind); return; }
+    setStatus("쓸 수 있는 모델을 확인하는 중…");
+    var found = [], errs = [];
+    for (var path of ["/anthropic/v1/models", "/openai/v1/models"]) {
+      try {
+        var res = await fetch(TIMELY + path, { headers: { "Authorization": "Bearer " + key } });
+        var j = await res.json().catch(function () { return null; });
+        if (!res.ok) { errs.push(res.status); continue; }
+        ((j && j.data) || []).forEach(function (m) { if (m && m.id && (/^claude-/.test(m.id) || /^(gpt-|o\d)/.test(m.id)) && !/-pro$|codex/.test(m.id)) found.push(m.id); });
+      } catch (e) { errs.push(0); }
+    }
+    if (!found.length) { setStatus(errs.indexOf(401) >= 0 ? errorText({ status: 401, message: "인증 실패" }, "timely") : "모델 목록을 받지 못했어요 (" + errs.join(", ") + "). 아래 기본 목록에서 골라 시도해 보세요.", true); return; }
+    var cur = $("model").value;
+    $("model").innerHTML = found.map(function (id) { return '<option value="' + esc(id) + '">' + esc(modelLabel(id)) + "</option>"; }).join("");
+    $("model").value = found.indexOf(cur) >= 0 ? cur : (found.filter(function (id) { return /^claude-opus|^claude-sonnet/.test(id); })[0] || found[0]);
+    setStatus("이 키로 쓸 수 있는 모델 " + found.length + "개를 불러왔어요.");
+  }
+  function drawModelOptions() {
+    var kind = keyKind(apiKey()) || "timely", cur = $("model").value || P.store.get("rb-model", "claude-opus-5-5");
+    $("model").innerHTML = MODELS[kind].map(function (m) { return '<option value="' + m[0] + '">' + esc(m[1]) + "</option>"; }).join("");
+    $("model").value = MODELS[kind].some(function (m) { return m[0] === cur; }) ? cur : MODELS[kind][0][0];
+    $("modelsBtn").hidden = kind !== "timely";
+  }
 
   function getSdk() {
     if (window.Anthropic) return Promise.resolve(window.Anthropic);
@@ -384,70 +536,62 @@
   function apiKey() { var k = $("apiKey").value.trim(); return k; }
 
   async function runAgent() {
-    var key = apiKey();
-    if (/[^\x21-\x7e]/.test(key)) { setStatus("API 키에 공백이나 한글이 섞여 있어요. 키만 다시 붙여 넣어 주세요.", true); return; }
-    if (!key) { setStatus("API 키를 넣어 주세요. 키가 없으면 'AI 없이 계산'을 눌러요.", true); $("apiKey").focus(); return; }
+    var key = apiKey(), kind = keyKind(key), model = $("model").value;
+    if (!key) { setStatus("AI 연동 키를 넣어 주세요. 키가 없으면 'AI 없이 계산'을 눌러요.", true); $("apiKey").focus(); return; }
+    if (/[^\x21-\x7e]/.test(key)) { setStatus("키에 공백이나 한글이 섞여 있어요. 키만 다시 붙여 넣어 주세요.", true); return; }
+    if (!kind) { setStatus("TimelyGPT 연동 키(tgpt_sk_로 시작) 또는 Claude 키(sk-ant-로 시작)를 넣어 주세요.", true); return; }
+    if (kind === "anthropic" && wireOf(model) !== "anthropic") { setStatus("Claude 키로는 Claude 모델만 쓸 수 있어요. 모델을 바꿔 주세요.", true); return; }
     rememberKey(key);
-    var Anthropic;
-    try { Anthropic = await getSdk(); } catch (e) { setStatus(e.message, true); return; }
-    start("ai");
-    var client = new Anthropic({ apiKey: key, dangerouslyAllowBrowser: true });
+    var Anthropic = null;
+    if (kind === "anthropic") { try { Anthropic = await getSdk(); } catch (e) { setStatus(e.message, true); return; } }
+    start("ai");                                   // 도구 정의는 이번 실행의 조건(run)으로 만든다
     var tools = toolDefs(), system = systemPrompt();
-    var messages = [{ role: "user", content: "오늘 조건으로 스크랩 배합을 설계해 주세요. 조건은 get_conditions로 읽을 수 있어요." }];
+    var prov = kind === "anthropic" ? sdkProvider(Anthropic, key, model, system, tools)
+             : wireOf(model) === "anthropic" ? timelyAnthropic(key, model, system, tools) : timelyOpenAI(key, model, system, tools);
+    run.kind = kind; run.model = model; run.agentLabel = prov.label;
+    drawUsage();
+    prov.start("오늘 조건으로 스크랩 배합을 설계하고, 배합 결정 통지서까지 써 주세요. 조건은 get_conditions로 읽을 수 있어요.");
     try {
       for (var turn = 1; turn <= MAX_TURNS; turn++) {
-        setStatus("Claude가 생각하는 중… (" + turn + "번째 호출)");
+        setStatus("AI가 생각하는 중… (" + prov.label + ", " + turn + "번째 호출)");
         showWaiting(true);
-        var resp = await client.beta.messages.create({
-          model: MODEL, max_tokens: 16000, system: system, tools: tools, messages: messages,
-          thinking: { type: "adaptive", display: "summarized" }, output_config: { effort: "medium" },
-          betas: ["server-side-fallback-2026-07-01"], fallbacks: "default"
-        });
+        var n = await prov.send();
         showWaiting(false);
-        var u = resp.usage || {};
-        run.usage.in += u.input_tokens || 0; run.usage.out += u.output_tokens || 0;
-        run.usage.cacheR += u.cache_read_input_tokens || 0; run.usage.cacheW += u.cache_creation_input_tokens || 0;
+        run.usage.in += n.usage.in; run.usage.out += n.usage.out; run.usage.cacheR += n.usage.cacheR; run.usage.cacheW += n.usage.cacheW;
         drawUsage();
-        messages.push({ role: "assistant", content: resp.content });   // 생각 블록까지 그대로 돌려준다
-        resp.content.forEach(function (b) {
-          if (b.type === "thinking" && b.thinking && b.thinking.trim()) emit({ t: "thinking", text: b.thinking.trim() });
+        prov.pushAssistant(n);
+        n.blocks.forEach(function (b) {
+          if (b.type === "thinking" && b.text.trim()) emit({ t: "thinking", text: b.text.trim() });
           else if (b.type === "text" && b.text.trim()) emit({ t: "text", text: b.text.trim() });
           else if (b.type === "tool_use") emit({ t: "call", name: b.name, input: b.input });
         });
-        if (resp.stop_reason === "refusal") { finish("error", "Claude가 이 요청을 거절했어요."); return; }
-        if (resp.stop_reason === "max_tokens") { finish("error", "응답이 길어서 중간에 잘렸어요. 다시 실행해 주세요."); return; }
-        if (resp.stop_reason === "pause_turn") continue;
-        if (resp.stop_reason !== "tool_use") {
-          var last = resp.content.filter(function (b) { return b.type === "text"; }).map(function (b) { return b.text; }).join("\n").trim();
-          run.conclusion = last;
+        if (n.stop === "refusal") { finish("error", "AI가 이 요청을 거절했어요."); return; }
+        if (n.stop === "max") { finish("error", "응답이 길어서 중간에 잘렸어요. 크레딧이 적으면 출력이 짧게 잘릴 수 있어요. 다시 실행해 주세요."); return; }
+        if (n.stop === "pause") continue;
+        if (n.stop !== "tool") {
+          run.conclusion = n.blocks.filter(function (b) { return b.type === "text"; }).map(function (b) { return b.text; }).join("\n").trim();
           finish(run.last ? "done" : "error", run.last ? "" : "배합을 계산하기 전에 대화가 끝났어요.");
           return;
         }
         var results = [];
-        resp.content.forEach(function (b) {
+        n.blocks.forEach(function (b) {
           if (b.type !== "tool_use") return;
           var out, isErr = false;
-          try { out = TOOLS_IMPL[b.name] ? TOOLS_IMPL[b.name](b.input || {}) : { error: "없는 도구: " + b.name }; isErr = !!out.error; }
-          catch (e) { out = { error: String(e.message || e) }; isErr = true; }
+          try {
+            out = b.input && b.input.__badJson ? { error: "도구 입력(JSON)을 읽지 못했어요. 형식을 지켜 다시 불러 주세요." }
+                : TOOLS_IMPL[b.name] ? TOOLS_IMPL[b.name](b.input || {}) : { error: "없는 도구: " + b.name };
+            isErr = !!out.error;
+          } catch (e) { out = { error: String(e.message || e) }; isErr = true; }
           emit({ t: "result", name: b.name, out: out, err: isErr });
-          results.push({ type: "tool_result", tool_use_id: b.id, content: JSON.stringify(out), is_error: isErr });
+          results.push({ id: b.id, content: JSON.stringify(out), isErr: isErr });
         });
-        messages.push({ role: "user", content: results });   // 결과는 한 메시지에 모아서
+        prov.pushResults(results);   // 결과는 한 번에 모아서
       }
       finish(run.last ? "done" : "error", "호출 횟수 한도(" + MAX_TURNS + "번)에 닿아 멈췄어요.");
     } catch (err) {
       showWaiting(false);
-      finish("error", apiErrorText(Anthropic, err));
+      finish("error", errorText(err, kind));
     }
-  }
-  function apiErrorText(A, err) {
-    if (A && err instanceof A.AuthenticationError) return "API 키가 올바르지 않아요. 키를 다시 확인해 주세요.";
-    if (A && err instanceof A.PermissionDeniedError) return "이 키로는 이 모델을 쓸 권한이 없어요.";
-    if (A && err instanceof A.RateLimitError) return "요청이 너무 많아요. 잠시 뒤 다시 시도해 주세요.";
-    if (A && err instanceof A.BadRequestError) return "요청 형식 오류: " + (err.message || "");
-    if (A && err instanceof A.APIConnectionError) return "Claude 서버에 연결하지 못했어요. 인터넷 연결을 확인하세요.";
-    if (A && err instanceof A.APIError) return "Claude API 오류 (" + err.status + "): " + (err.message || "");
-    return "실행 중 오류: " + (err && err.message ? err.message : String(err));
   }
 
   // AI 없이: 메모는 키워드 규칙, 안전여유는 정해진 규칙으로 반복
@@ -505,7 +649,7 @@
     else has = /[lmnrLMNR]/.test(c);
     return word + (has ? pair[0] : pair[1]);
   }
-  /* 규칙 기반 통지서: AI 없이 계산했거나, Claude가 통지서를 쓰지 않고 끝냈을 때 숫자로 채운다 */
+  /* 규칙 기반 통지서: AI 없이 계산했거나, AI가 통지서를 쓰지 않고 끝냈을 때 숫자로 채운다 */
   function templateReport(r) {
     var L = r.last, su = r.su, ctx = su.ctx, o = L.opt, nm = function (g) { return gradeName(g, r.spec); };
     if (!L.sim) L.sim = E.simulate(ctx, o.x, su.comp, L.nc.mult, N_SIM, L.seed);
@@ -566,10 +710,10 @@
     busy = false; showWaiting(false);
     run.status = status;
     if (msg) emit({ t: "error", text: msg });
-    if (status === "done") { emit({ t: "done", text: run.conclusion }); setStatus(run.mode === "ai" ? "Claude가 배합을 다 풀었어요." : "계산을 마쳤어요."); }
+    if (status === "done") { emit({ t: "done", text: run.conclusion }); setStatus(run.mode === "ai" ? "AI 에이전트가 배합을 다 풀었어요. (" + run.agentLabel + ")" : "계산을 마쳤어요."); }
     else setStatus(msg || "실행을 마치지 못했어요.", true);
     showErrors();
-    if (run.last && !run.report) {     // Claude가 통지서를 쓰지 않고 끝났으면 숫자로 채운 기본 통지서
+    if (run.last && !run.report) {     // AI가 통지서를 쓰지 않고 끝났으면 숫자로 채운 기본 통지서
       var tr = templateReport(run);
       run.report = { by: "규칙", fallback: true, title: tr.title, summary: tr.summary, reasons: tr.reasons, factors: tr.factors, notesSummary: tr.notesSummary, risks: tr.risks, recs: tr.recs };
     }
@@ -612,7 +756,7 @@
       return "톤당 전력 최고 " + esc(g2[0].name) + " " + g2[0].kwh_per_t_charged + "kWh · 최저 " + esc(g2[g2.length - 1].name) + " " + g2[g2.length - 1].kwh_per_t_charged + "kWh"; }
     return "";
   }
-  function mdLite(s) {    // Claude 문장의 **굵게**, - 목록, 줄바꿈만 살린다
+  function mdLite(s) {    // AI 문장의 **굵게**, - 목록, 줄바꿈만 살린다
     var lines = esc(s).replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>").split(/\n+/), html = "", inList = false;
     lines.forEach(function (l) {
       var m = l.match(/^\s*[-•*]\s+(.*)/);
@@ -678,7 +822,8 @@
   function drawUsage() {
     if (!run || run.mode !== "ai") { $("usage").textContent = run && run.mode === "plain" ? "AI 없이 계산 · API 비용 없음" : ""; return; }
     var u = run.usage, usd = u.in * PRICE_IN + u.cacheW * PRICE_IN * 1.25 + u.cacheR * PRICE_IN * 0.1 + u.out * PRICE_OUT;
-    $("usage").textContent = "토큰 입력 " + (u.in + u.cacheR + u.cacheW).toLocaleString("ko-KR") + " · 출력 " + u.out.toLocaleString("ko-KR") + " · 약 $" + usd.toFixed(3);
+    var tail = run.kind === "timely" ? " · TimelyGPT 크레딧에서 차감" : run.model === "claude-opus-5-5" ? " · 약 $" + usd.toFixed(3) : "";
+    $("usage").textContent = (run.agentLabel ? run.agentLabel + " · " : "") + "토큰 입력 " + (u.in + u.cacheR + u.cacheW).toLocaleString("ko-KR") + " · 출력 " + u.out.toLocaleString("ko-KR") + tail;
   }
 
   /* 발표 모드: 끝난 실행을 한 단계씩 다시 보여 준다 */
@@ -707,7 +852,7 @@
     var pass = L.sim.every(function (x) { return x.p_fail <= r.spec.target; });
     var tap = o.heats.reduce(function (a, h) { return a + h.tap; }, 0);
     $("resBox").hidden = false;
-    $("resMeta").textContent = (r.mode === "ai" ? "Claude 에이전트" : "AI 없이 (키워드 규칙)") + " · " + new Date(r.at).toLocaleString("ko-KR") + " · 최적화 " + r.optCalls + "회";
+    $("resMeta").textContent = (r.mode === "ai" ? "AI 에이전트 · " + (r.agentLabel || "Claude") : "AI 없이 (키워드 규칙)") + " · " + new Date(r.at).toLocaleString("ko-KR") + " · 최적화 " + r.optCalls + "회";
     $("resTiles").innerHTML = [
       ["톤당 배합 원가", won(o.costPerT) + "원", "하루 " + Math.round(tap).toLocaleString("ko-KR") + "t 출강 기준"],
       expert ? ["숙련자 배합 대비", "−" + won(expert.costPerT - o.costPerT) + "원/t", ((expert.costPerT - o.costPerT) / expert.costPerT * 100).toFixed(1) + "% 절감 · 숙련자 " + won(expert.costPerT) + "원"]
@@ -741,7 +886,7 @@
 
   /* ====================================================================
      6-2. 배합 결정 통지서
-     문장(요약·이유·변인 해석·위험·제안)은 Claude가 write_report로 쓰고,
+     문장(요약·이유·변인 해석·위험·제안)은 AI가 write_report로 쓰고,
      숫자 표(배합, 재고 사용, 변인 영향, 검증 과정)는 도구 결과에서 화면이 직접 만든다.
      ==================================================================== */
   function docNo(r) { var t = new Date(r.at), p = function (v) { return (v < 10 ? "0" : "") + v; };
@@ -804,7 +949,7 @@
       '<header class="doc-h"><div class="doc-no">문서번호 ' + docNo(r) + '</div><h2>배합 결정 통지서</h2><p class="doc-title">' + esc(R.title) + "</p>" +
       '<dl class="doc-kv"><dt>수신</dt><dd>제강팀장 박준영</dd><dt>참조</dt><dd>생산본부장 정민재, 품질보증팀, 구매팀</dd>' +
       "<dt>작성</dt><dd>" + esc(u.name) + " (제강팀 스크랩 배합 담당)</dd><dt>업무 기준일</dt><dd>" + esc(r.bizDate || "") + (r.spec.date && r.spec.date !== r.bizDate ? " · 조건은 " + esc(r.spec.date) + " 기준" : "") + "</dd>" +
-      "<dt>작성 방식</dt><dd>" + (R.by === "Claude" ? "Claude 에이전트 (도구 " + calls + "회 호출)" : R.fallback ? "규칙 기반 자동 작성 (Claude가 통지서를 쓰지 않아 대신 채움)" : "규칙 기반 자동 작성 (AI 없이 계산)") + "</dd></dl></header>" +
+      "<dt>작성 방식</dt><dd>" + (R.by !== "규칙" ? "AI 에이전트 · " + esc(r.agentLabel || "Claude") + " (도구 " + calls + "회 호출)" : R.fallback ? "규칙 기반 자동 작성 (AI가 통지서를 쓰지 않아 대신 채움)" : "규칙 기반 자동 작성 (AI 없이 계산)") + "</dd></dl></header>" +
 
       '<section><h3>1. 요약</h3><p>' + esc(R.summary) + '</p><div class="doc-kpi">' +
         "<div><span>톤당 배합 원가</span><b>" + won(o.costPerT) + "원</b></div>" +
@@ -836,7 +981,7 @@
           '</td><td class="r num">' + (x.ok ? won(x.cost) + "원" : "배합 불가") + '</td><td class="r">' + (x.maxp != null ? x.maxp.toFixed(1) + "%" : "-") + "</td><td>" + (x.pass ? '<span class="pill good">통과</span>' : x.ok ? (x.maxp != null ? '<span class="pill crit">초과</span>' : "-") : '<span class="pill crit">불가</span>') + "</td></tr>"; }).join("") +
         "</tbody></table></div>" +
         '<p class="fine-note">근거 자료: 오늘 입력 조건' + (srcs.length ? ", " + srcs.join(", ") : "") + " (과거 조업 이력 " + C.heats.rows.length + " heat, 시세·재고 기록, 검수 메모). 숫자는 계산 도구(선형계획법, 모의 조업 " + N_SIM.toLocaleString("ko-KR") + "회)의 결과이고, " +
-        (R.by === "Claude" ? "문장은 Claude가 그 결과를 읽고 썼어요." : "문장은 정해진 틀에 숫자를 채운 거예요.") + " 최종 결정은 결재권자가 해요.</p></section>";
+        (R.by !== "규칙" ? "문장은 AI(" + esc(r.agentLabel || "Claude") + ")가 그 결과를 읽고 썼어요." : "문장은 정해진 틀에 숫자를 채운 거예요.") + " 최종 결정은 결재권자가 해요.</p></section>";
     $("noticeState").textContent = sentNotice(r) ? "메일함에 통지한 통지서예요." : "";
   }
   function sentNotice(r) { return P.store.get("rb-notices", []).some(function (n) { return n.id === r.at; }); }
@@ -847,7 +992,7 @@
     var expert = E.canExpert(ctx, cfgFor()) ? E.expertBlend(ctx, su.comp, cfgFor()) : null;
     var now = new Date(), hh = (now.getHours() < 10 ? "0" : "") + now.getHours() + ":" + (now.getMinutes() < 10 ? "0" : "") + now.getMinutes();
     var all = P.store.get("rb-notices", []);
-    all.unshift({ id: r.at, date: r.bizDate, time: hh, title: r.report.title, summary: r.report.summary, by: r.report.by, docNo: docNo(r),
+    all.unshift({ id: r.at, date: r.bizDate, time: hh, title: r.report.title, summary: r.report.summary, by: r.report.by === "규칙" ? "규칙" : (r.agentLabel || "Claude"), docNo: docNo(r),
       costPerT: Math.round(o.costPerT), saving: expert ? Math.round(expert.costPerT - o.costPerT) : null,
       maxP: Math.round(Math.max.apply(null, L.sim.map(function (x) { return x.p_fail; })) * 1000) / 10, reasons: r.report.reasons.slice(0, 4) });
     P.store.set("rb-notices", all.slice(0, 20));
@@ -859,7 +1004,7 @@
      7. 실행 기록 저장·불러오기 (이 브라우저, 최근 8건)
      ==================================================================== */
   function saveRun(r) {
-    var rec = { at: r.at, bizDate: r.bizDate, mode: r.mode, spec: r.spec, events: r.events, usage: r.usage, conclusion: r.conclusion, optCalls: r.optCalls, status: r.status,
+    var rec = { at: r.at, bizDate: r.bizDate, mode: r.mode, kind: r.kind, model: r.model, agentLabel: r.agentLabel, spec: r.spec, events: r.events, usage: r.usage, conclusion: r.conclusion, optCalls: r.optCalls, status: r.status,
                 last: r.last ? { margins: r.last.margins, rules: r.last.rules, seed: r.last.seed } : null,
                 sens: r.sens, topics: r.topics, report: r.report,
                 cost: r.last ? Math.round(r.last.opt.costPerT) : null };
@@ -867,7 +1012,7 @@
   }
   function loadRun(rec) {
     var su = E.customSetup(engineSpec(rec.spec));
-    var r = { mode: rec.mode, at: rec.at, bizDate: rec.bizDate, spec: rec.spec, su: su, events: rec.events, usage: rec.usage, conclusion: rec.conclusion, optCalls: rec.optCalls, status: rec.status, last: null,
+    var r = { mode: rec.mode, kind: rec.kind, model: rec.model, agentLabel: rec.agentLabel, at: rec.at, bizDate: rec.bizDate, spec: rec.spec, su: su, events: rec.events, usage: rec.usage, conclusion: rec.conclusion, optCalls: rec.optCalls, status: rec.status, last: null,
               sens: rec.sens || [], topics: rec.topics || [], report: rec.report || null };
     if (rec.last) {
       run = r;   // rulesToNc는 run.spec을 본다
@@ -885,7 +1030,7 @@
   function drawSaved() {
     var all = P.store.get(RUNS_KEY, []);
     $("savedRuns").innerHTML = '<option value="">최근 실행 다시 보기…</option>' + all.map(function (r, i) {
-      return '<option value="' + i + '">' + new Date(r.at).toLocaleString("ko-KR") + " · " + (r.mode === "ai" ? "Claude" : "AI 없이") + (r.cost ? " · " + won(r.cost) + "원/t" : " · 미완료") + "</option>";
+      return '<option value="' + i + '">' + new Date(r.at).toLocaleString("ko-KR") + " · " + (r.mode === "ai" ? (r.agentLabel || "Claude") : "AI 없이") + (r.cost ? " · " + won(r.cost) + "원/t" : " · 미완료") + "</option>";
     }).join("");
   }
 
@@ -926,6 +1071,10 @@
     $("plainBtn").addEventListener("click", function () { if (!busy && !showErrors().length) runPlain(); });
     $("presentBtn").addEventListener("click", function () { present(!presenting); });
     $("printBtn").addEventListener("click", function () { window.print(); });
+    $("modelsBtn").addEventListener("click", loadModels);
+    var lastKind = null;
+    $("apiKey").addEventListener("input", function () { var k = keyKind(apiKey()); if (k && k !== lastKind) { lastKind = k; drawModelOptions(); } });
+    $("model").addEventListener("change", function () { P.store.set("rb-model", $("model").value); });
     $("noticeBtn").addEventListener("click", sendNotice);
     $("prevBtn").addEventListener("click", function () { if (presenting) stepTo(pIdx - 1); });
     $("nextBtn").addEventListener("click", function () { if (!presenting) present(true); else stepTo(pIdx + 1); });
@@ -940,7 +1089,7 @@
       if (e.key === "ArrowLeft") { e.preventDefault(); stepTo(pIdx - 1); }
     });
     $("loadDate").innerHTML = P.DATES.map(function (d) { return '<option value="' + d + '">' + d + " (" + P.dow(d) + ")</option>"; }).join("");
-    restoreKey(); drawSaved();
+    restoreKey(); drawModelOptions(); lastKind = keyKind(apiKey()); drawSaved();
   }
 
   var bound = false;

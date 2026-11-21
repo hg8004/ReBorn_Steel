@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>AI 배합 설계</title>
-<meta name="description" content="리본스틸 사내포털: 스크랩 등급·시세·재고·성분과 강종 규격을 넣으면 Claude 에이전트가 도구를 써 가며 가장 싸고 규격을 지키는 배합을 직접 풀어 내는 페이지 (가상 데이터)">
+<meta name="description" content="리본스틸 사내포털: 스크랩 등급·시세·재고·성분과 강종 규격을 넣으면 AI 에이전트(TimelyGPT의 Claude·GPT)가 도구를 써 가며 가장 싸고 규격을 지키는 배합을 직접 풀어 내는 페이지 (가상 데이터)">
 <link rel="icon" href="assets/rebo-face.png">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
@@ -37,6 +37,8 @@
 .runbar .row { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; }
 .runbar label { font-size: var(--fs-md); font-weight: 600; }
 .runbar input[type=password] { height: 40px; width: 300px; max-width: 100%; border-color: transparent; font-family: var(--mono); }
+.runbar select { height: 40px; min-width: 200px; border-color: transparent; }
+.runbar code { font-family: var(--mono); background: rgba(255,255,255,.14); padding: 0 4px; border-radius: 4px; }
 .runbar .chk { display: inline-flex; gap: 6px; align-items: center; font-weight: 500; font-size: var(--fs-sm); }
 .runbar .btn.run { background: var(--point); border-color: var(--point); color: #fff; font-weight: 700; font-size: var(--fs-base); height: 42px; padding: 0 22px; }
 .runbar .btn.run:hover { background: var(--point-hover); border-color: var(--point-hover); }
@@ -160,15 +162,15 @@ td.wrap { white-space: normal; min-width: 220px; font-size: var(--fs-sm); color:
     <div class="pagehead">
       <div class="eyebrow">AI 배합 설계</div>
       <h1>조건을 넣으면, AI가 직접 풀어요</h1>
-      <p>스크랩 등급별 가격·재고·성분과 강종 규격을 넣고 실행하면, Claude가 회사 기록을 분석하고 도구를 하나씩 골라 쓰면서 가장 싸고 규격을 지키는 배합을 찾아가요. 끝나면 왜 그렇게 정했는지 적은 '배합 결정 통지서'를 써요. 정해진 답은 없어요. 조건을 바꾸면 답도 바뀌고, AI가 어떻게 생각했는지 과정이 그대로 남아요.</p>
+      <p>스크랩 등급별 가격·재고·성분과 강종 규격을 넣고 실행하면, AI 에이전트가 회사 기록을 분석하고 도구를 하나씩 골라 쓰면서 가장 싸고 규격을 지키는 배합을 찾아가요. 끝나면 왜 그렇게 정했는지 적은 '배합 결정 통지서'를 써요. 정해진 답은 없어요. 조건을 바꾸면 답도 바뀌고, AI가 어떻게 생각했는지 과정이 그대로 남아요.</p>
     </div>
   </div>
 
   <section class="card" aria-labelledby="hT">
     <h2 id="hT">AI가 푸는 순서</h2>
     <div class="how">
-      <div><b>① 기록 분석</b>과거 조업 이력 500 heat, 시세·재고 기록, 지난 검수 메모를 Claude가 직접 조회해요. 등급별 실제 Cu, 시세 흐름, 재고 사정을 먼저 봐요.</div>
-      <div><b>② 판단과 계산</b>Claude는 메모 판정과 안전여유를 정하고, 원가 최소 배합(선형계획법)과 모의 조업 1,000회는 이 브라우저가 계산해요. 목표를 넘으면 여유를 키워 다시 풀어요.</div>
+      <div><b>① 기록 분석</b>과거 조업 이력 500 heat, 시세·재고 기록, 지난 검수 메모를 AI가 직접 조회해요. 등급별 실제 Cu, 시세 흐름, 재고 사정을 먼저 봐요.</div>
+      <div><b>② 판단과 계산</b>AI는 메모 판정과 안전여유를 정하고, 원가 최소 배합(선형계획법)과 모의 조업 1,000회는 이 브라우저가 계산해요. 목표를 넘으면 여유를 키워 다시 풀어요.</div>
       <div><b>③ 변인 영향</b>단가, Cu 함량, 재고, 목표를 하나씩 바꿔 다시 풀어 보고, 무엇이 원가와 위험을 가장 크게 흔드는지 재요.</div>
       <div><b>④ 통지서</b>왜 이 배합인지 근거를 적어 팀장님께 보낼 통지서를 써요. AI는 숫자를 지어내지 않고, 표는 도구 결과로 채워요.</div>
     </div>
@@ -208,16 +210,22 @@ td.wrap { white-space: normal; min-width: 220px; font-size: var(--fs-sm); color:
   <section class="runbar" aria-labelledby="rT">
     <h2 id="rT" style="color:inherit;font-size:var(--fs-lg)"><span class="stepno" style="background:var(--point)">4</span>풀기</h2>
     <div class="row">
-      <label for="apiKey">Claude API 키</label>
-      <input type="password" id="apiKey" autocomplete="off" spellcheck="false" placeholder="sk-ant-...">
+      <label for="apiKey">AI 연동 키</label>
+      <input type="password" id="apiKey" autocomplete="off" spellcheck="false" placeholder="tgpt_sk_... 또는 sk-ant-...">
       <label class="chk"><input type="checkbox" id="rememberKey"> 이 창을 닫을 때까지 기억</label>
+    </div>
+    <div class="row">
+      <label for="model">모델</label>
+      <select id="model"></select>
+      <button class="btn ghost sm-ghost" type="button" id="modelsBtn">쓸 수 있는 모델 불러오기</button>
     </div>
     <div class="row">
       <button class="btn run" type="button" id="aiBtn">AI 에이전트로 풀기</button>
       <button class="btn ghost" type="button" id="plainBtn">AI 없이 계산</button>
       <span class="status" id="runStatus" role="status" aria-live="polite"></span>
     </div>
-    <p class="fine">키는 이 브라우저에서 Anthropic으로 바로 보내지고, 사내포털 서버나 저장소에는 남지 않아요. 키는 <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">Claude Console</a>에서 만들 수 있어요. 쓴 토큰과 추정 비용은 실행하는 동안 아래에 표시돼요. 키가 없으면 'AI 없이 계산'으로 같은 도구를 정해진 규칙으로 돌리고, 통지서도 정해진 틀로 써요.</p>
+    <p class="fine"><b>TimelyGPT 연동 키</b>(<code>tgpt_sk_</code>로 시작)를 넣으면 TimelyGPT를 거쳐 Claude나 GPT를 불러요. 키는 타임리 스페이스 관리자에게 받고, 비용은 스페이스 크레딧에서 차감돼요. 어떤 모델을 쓸 수 있는지는 스페이스 설정에 따라 달라서, '쓸 수 있는 모델 불러오기'로 확인할 수 있어요. Claude 키(<code>sk-ant-</code>)가 있으면 Anthropic에 바로 연결해요.
+      키는 이 브라우저에서 AI 서버로만 가고, 사내포털 서버나 저장소에는 남지 않아요. 키가 없으면 'AI 없이 계산'으로 같은 도구를 정해진 규칙으로 돌리고, 통지서도 정해진 틀로 써요.</p>
   </section>
 
   <section class="card" id="tlBox" aria-labelledby="tT" hidden>
@@ -233,7 +241,7 @@ td.wrap { white-space: normal; min-width: 220px; font-size: var(--fs-sm); color:
       <select id="savedRuns" aria-label="최근 실행 다시 보기"></select>
     </div>
     <ol class="tl" id="tl" aria-live="polite"></ol>
-    <div class="waiting" id="waiting" hidden><span class="dots"><i></i><i></i><i></i></span> Claude가 생각하는 중이에요</div>
+    <div class="waiting" id="waiting" hidden><span class="dots"><i></i><i></i><i></i></span> AI가 생각하는 중이에요</div>
   </section>
 
   <div id="resBox" hidden style="display:grid;gap:var(--gap)">
