@@ -104,7 +104,7 @@
         '<td class="r">' + num(g.dens, 0.05).replace("<input", '<input data-k="dens" aria-label="부피밀도" style="width:70px"') + "</td>" +
         '<td class="r">' + num(g.cu, 0.001).replace("<input", '<input data-k="cu" aria-label="Cu 평균" style="width:86px"') + ' <span class="muted">±</span> ' +
           num(g.cuSd, 0.001).replace("<input", '<input data-k="cuSd" aria-label="Cu 편차" style="width:72px"') +
-          (+g.cuSe > 0 ? '<div class="muted" style="font-size:11px" title="과거 이력으로 추정한 평균값 자체의 오차. 모의 조업에 함께 넣어요.">평균 추정오차 ±' + (+g.cuSe).toFixed(3) + "</div>" : "") + "</td>" +
+          (+g.cuSe > 0 ? '<div class="muted" style="font-size:12px" title="과거 이력으로 추정한 평균값 자체의 오차. 모의 조업에 함께 넣어요.">평균 추정오차 ±' + (+g.cuSe).toFixed(3) + "</div>" : "") + "</td>" +
         '<td class="r">' + num(g.sn, 0.0001).replace("<input", '<input data-k="sn" aria-label="Sn 평균" style="width:94px"') + ' <span class="muted">±</span> ' +
           num(g.snSd, 0.0001).replace("<input", '<input data-k="snSd" aria-label="Sn 편차" style="width:86px"') + "</td>" +
         '<td><button class="btn sm" type="button" data-del="' + i + '" aria-label="' + esc(g.name) + ' 삭제">삭제</button></td></tr>';

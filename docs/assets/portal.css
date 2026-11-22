@@ -33,14 +33,14 @@
   /* 글꼴과 크기 단계 */
   --font: "Pretendard Variable", Pretendard, "Malgun Gothic", "Apple SD Gothic Neo", system-ui, sans-serif;
   --mono: ui-monospace, "Cascadia Mono", Consolas, "D2Coding", monospace;
-  --fs-xs: 12px;    /* 배지 */
-  --fs-sm: 13px;    /* 캡션, 표 머리, 메타 정보 */
-  --fs-md: 14px;    /* 표, 보조 본문 */
-  --fs-base: 15px;  /* 본문 */
-  --fs-lg: 17px;    /* 카드 제목 */
-  --fs-xl: 20px;    /* 섹션 제목 */
-  --fs-2xl: 28px;   /* 페이지 제목 */
-  --fs-kpi: 28px;   /* 핵심 수치 */
+  --fs-xs: 13px;    /* 배지 */
+  --fs-sm: 14px;    /* 캡션, 표 머리, 메타 정보 */
+  --fs-md: 15px;    /* 표, 보조 본문 */
+  --fs-base: 16px;  /* 본문 */
+  --fs-lg: 18px;    /* 카드 제목 */
+  --fs-xl: 21px;    /* 섹션 제목 */
+  --fs-2xl: 29px;   /* 페이지 제목 */
+  --fs-kpi: 29px;   /* 핵심 수치 */
   /* 간격·모양 */
   --gap: 20px;      /* 카드 사이 */
   --pad: 20px;      /* 카드 안 */
@@ -126,7 +126,7 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: var(--accent);
   padding: 0 max(24px, env(safe-area-inset-right, 0px)) 3px max(24px, env(safe-area-inset-left, 0px)); }
 .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--ink); margin-right: auto; min-width: 0; }
 .brand .logo { height: 30px; width: auto; flex: none; }
-.brand b { font-size: 18px; letter-spacing: -.01em; color: var(--accent); white-space: nowrap; }
+.brand b { font-size: 19px; letter-spacing: -.01em; color: var(--accent); white-space: nowrap; }
 .brand em { font-style: normal; font-size: var(--fs-sm); font-weight: 600; color: var(--accent-ink); background: var(--accent); border-radius: 6px; padding: 2px 8px; white-space: nowrap; }
 .ctx { display: flex; align-items: center; gap: 8px; font-size: var(--fs-sm); color: var(--ink-2); font-weight: 600; }
 .ctx label { white-space: nowrap; }
@@ -331,7 +331,7 @@ svg text { font-family: var(--font); }
 .join-form { display: grid; gap: 8px; }
 .join-form label { font-weight: 650; }
 .join-row { display: flex; gap: 8px; flex-wrap: wrap; }
-.join-row input { flex: 1 1 200px; min-width: 0; height: 44px; font-size: 16px; }
+.join-row input { flex: 1 1 200px; min-width: 0; height: 44px; font-size: 17px; }
 .join-row .btn { height: 44px; padding: 0 20px; }
 .join-err { color: var(--crit-ink); font-size: var(--fs-md); min-height: 1.2em; }
 .join-kv { display: grid; grid-template-columns: max-content minmax(0, 1fr); gap: 6px 16px; margin: 0; font-size: var(--fs-base); }
@@ -378,7 +378,7 @@ svg text { font-family: var(--font); }
   .side .sep, .side .ext, .side .side-note { display: none; }
 }
 @media (max-width: 768px) {
-  :root { --pad: 16px; --fs-2xl: 24px; --fs-kpi: 24px; --fs-xl: 19px; }
+  :root { --pad: 16px; --fs-2xl: 25px; --fs-kpi: 25px; --fs-xl: 20px; }
   main { padding: 20px 16px 40px; }
   .headpic, .headpic.has-aside { grid-template-columns: 48px minmax(0, 1fr); gap: 12px; }
   .headpic > img, .headpic > .avatar { width: 48px; height: 48px; }

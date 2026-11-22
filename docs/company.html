@@ -8,7 +8,7 @@
 <link rel="icon" href="assets/rebo-face.png">
 <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
-<link rel="stylesheet" href="assets/portal.css?v=20261122c">
+<link rel="stylesheet" href="assets/portal.css?v=20261122d">
 <style>
 .about { display: grid; grid-template-columns: 140px minmax(0, 1fr); gap: 28px; align-items: center; }
 .about img { width: 140px; height: auto; }
@@ -30,12 +30,13 @@
 /* 공정 흐름도: 발표 자료의 공정도를 사이트 색·글꼴로 다시 그림. 초록(브랜드 메인색)은 내 업무(배합·장입)에만 쓴다 */
 .pf-wrap { border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); padding: 8px 6px 4px; margin-bottom: 14px; }
 .procflow { display: block; width: 100%; min-width: 760px; height: auto; }
-.procflow text { fill: var(--ink); font-size: 13px; }
-.procflow .sm { font-size: 11.5px; fill: var(--ink-2); }
-.procflow .mu { font-size: 11.5px; fill: var(--muted); }
-.procflow .nm { font-size: 14.5px; font-weight: 700; }
-.procflow .num { font-size: 12px; font-weight: 700; fill: var(--accent-ink); }
-.procflow .num2 { font-size: 12px; font-weight: 700; fill: var(--ink-2); }
+.procflow text { fill: var(--ink); font-size: 14px; }
+/* 설비 이름·보조 설명도 본문색으로 진하게 */
+.procflow .sm { font-size: 12.5px; fill: var(--ink); font-weight: 600; }
+.procflow .mu { font-size: 12.5px; fill: var(--ink); font-weight: 600; }
+.procflow .nm { font-size: 15.5px; font-weight: 700; }
+.procflow .num { font-size: 13px; font-weight: 700; fill: var(--accent-ink); }
+.procflow .num2 { font-size: 13px; font-weight: 700; fill: var(--ink); }
 .procflow .eq { fill: var(--surface); stroke: var(--ink-2); stroke-width: 2; }
 .procflow .metal { fill: var(--line-strong); }
 .procflow .dark { fill: var(--ink-2); }
@@ -139,7 +140,7 @@ details.notice .mailbody { padding: 4px 0 16px 18px; }
         <rect class="mine-bg" x="208" y="66" width="156" height="262" rx="12"/>
         <rect class="mine-fill" x="250" y="55" width="72" height="22" rx="11"/><text class="num" x="286" y="70" text-anchor="middle">내 업무</text>
         <rect x="220" y="86" width="132" height="46" rx="8" style="fill:var(--surface);stroke:var(--accent);stroke-width:1.5"/>
-        <text class="mine-ink" x="286" y="105" text-anchor="middle" style="font-size:12.5px;font-weight:700">AI 배합 에이전트</text>
+        <text class="mine-ink" x="286" y="105" text-anchor="middle" style="font-size:13.5px;font-weight:700">AI 배합 에이전트</text>
         <text class="sm" x="286" y="122" text-anchor="middle">등급별 장입량 결정</text>
         <line class="mine-line" x1="286" y1="132" x2="286" y2="150" marker-end="url(#pfP)"/>
         <path d="M262,170 L286,154 L310,170" style="stroke:var(--ink-2);stroke-width:2;fill:none"/><circle cx="286" cy="154" r="3.5" style="fill:var(--surface);stroke:var(--ink-2);stroke-width:2"/>
@@ -291,9 +292,9 @@ details.notice .mailbody { padding: 4px 0 16px 18px; }
 </main>
 </div>
 
-<script src="data/results.js?v=20261122c"></script>
-<script src="data/company.js?v=20261122c"></script>
-<script src="assets/portal.js?v=20261122c"></script>
+<script src="data/results.js?v=20261122d"></script>
+<script src="data/company.js?v=20261122d"></script>
+<script src="assets/portal.js?v=20261122d"></script>
 <script>
 (function () {
   "use strict";
