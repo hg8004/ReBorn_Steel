@@ -20,19 +20,22 @@
 .steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
 .step { border: 1px solid var(--line); border-radius: var(--r); padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; background: var(--surface); }
 .step h3 { display: flex; align-items: center; gap: 10px; font-size: var(--fs-base); }
-.step .n { width: 26px; height: 26px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: inline-grid; place-items: center; font-size: var(--fs-sm); flex: none; }
+.step .n { width: 26px; height: 26px; border-radius: 50%; background: var(--surface-2); border: 1px solid var(--line-strong); color: var(--ink-2); display: inline-grid; place-items: center; font-size: var(--fs-sm); flex: none; }
 .step p { font-size: var(--fs-md); color: var(--ink-2); line-height: 1.65; }
-.step.mine { background: var(--cream); border-color: var(--point); box-shadow: inset 4px 0 0 var(--point); }
-.step.mine .n { background: var(--point); color: #fff; }
-.step.mine h3 { color: var(--point-ink); }
-/* 공정 흐름도: 발표 자료의 공정도를 사이트 색·글꼴로 다시 그림. 주황은 내 업무(배합·장입)에만 쓴다 */
+/* 내 업무(배합·장입) 강조: 브랜드 메인색(포레스트 그린). 나머지 단계는 무채색 */
+.step.mine { background: var(--accent-soft); border-color: var(--accent); box-shadow: inset 4px 0 0 var(--accent); }
+.step.mine .n { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.step.mine h3 { color: var(--accent); }
+.pill.mine { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+/* 공정 흐름도: 발표 자료의 공정도를 사이트 색·글꼴로 다시 그림. 초록(브랜드 메인색)은 내 업무(배합·장입)에만 쓴다 */
 .pf-wrap { border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); padding: 8px 6px 4px; margin-bottom: 14px; }
 .procflow { display: block; width: 100%; min-width: 760px; height: auto; }
 .procflow text { fill: var(--ink); font-size: 13px; }
 .procflow .sm { font-size: 11.5px; fill: var(--ink-2); }
 .procflow .mu { font-size: 11.5px; fill: var(--muted); }
 .procflow .nm { font-size: 14.5px; font-weight: 700; }
-.procflow .num { font-size: 12px; font-weight: 700; fill: #fff; }
+.procflow .num { font-size: 12px; font-weight: 700; fill: var(--accent-ink); }
+.procflow .num2 { font-size: 12px; font-weight: 700; fill: var(--ink-2); }
 .procflow .eq { fill: var(--surface); stroke: var(--ink-2); stroke-width: 2; }
 .procflow .metal { fill: var(--line-strong); }
 .procflow .dark { fill: var(--ink-2); }
@@ -40,12 +43,12 @@
 .procflow .flow { stroke: var(--muted); stroke-width: 2.5; fill: none; }
 .procflow .side { stroke: var(--muted); stroke-width: 1.5; fill: none; stroke-dasharray: 5 4; }
 .procflow .ground { stroke: var(--line-strong); stroke-width: 1.5; }
-.procflow .badge { fill: var(--accent); }
-.procflow .mine-bg { fill: var(--point-soft); stroke: var(--point); stroke-width: 2; }
-.procflow .mine-fill { fill: var(--point); }
-.procflow .mine-ink { fill: var(--point-ink); }
-.procflow .mine-line { stroke: var(--point); stroke-width: 1.75; fill: none; stroke-dasharray: 5 4; }
-.procflow .prod { fill: var(--accent); }
+.procflow .badge { fill: var(--surface-2); stroke: var(--line-strong); stroke-width: 1.5; }
+.procflow .mine-bg { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 2; }
+.procflow .mine-fill { fill: var(--accent); }
+.procflow .mine-ink { fill: var(--accent); }
+.procflow .mine-line { stroke: var(--accent); stroke-width: 1.75; fill: none; stroke-dasharray: 5 4; }
+.procflow .prod { fill: var(--ink-2); }
 .pf-cap { font-size: var(--fs-sm); color: var(--muted); margin: 4px 0 14px; }
 .rebo { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 28px; align-items: start; }
 .rebo > img { width: 200px; height: auto; }
@@ -102,14 +105,14 @@ details.notice .mailbody { padding: 4px 0 16px 18px; }
   </section>
 
   <section class="card" aria-labelledby="sT2">
-    <div class="card-h"><h2 id="sT2">공정 단계: 성분은 배합에서 결정된다</h2><span class="pill point">2단계가 내 업무</span></div>
+    <div class="card-h"><h2 id="sT2">공정 단계: 성분은 배합에서 결정된다</h2><span class="pill mine">2단계가 내 업무</span></div>
     <div class="pf-wrap scroll-x">
       <svg class="procflow" viewBox="0 0 1100 372" role="img" aria-labelledby="pfT pfD">
         <title id="pfT">리본스틸 전기로 제강 공정 흐름도</title>
         <desc id="pfD">철스크랩이 스크랩 야드, 배합·장입(내 업무), 전기로, LF 정련, 연속주조, 압연을 거쳐 철근이 된다. 배합·장입 단계에서 AI 배합 에이전트가 등급별 장입량을 정한다. 전기로 배가스는 냉각기와 백필터 집진기를 거쳐 굴뚝으로 나가고 제강분진에서 아연을 회수한다. 슬래그는 도로용 골재로 판다.</desc>
         <defs>
           <marker id="pfA" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--muted)"/></marker>
-          <marker id="pfP" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--point)"/></marker>
+          <marker id="pfP" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" style="fill:var(--accent)"/></marker>
         </defs>
 
         <!-- 배가스 처리 (위쪽 띠) -->
@@ -135,12 +138,12 @@ details.notice .mailbody { padding: 4px 0 16px 18px; }
         <!-- 2 배합·장입 (내 업무) -->
         <rect class="mine-bg" x="208" y="66" width="156" height="262" rx="12"/>
         <rect class="mine-fill" x="250" y="55" width="72" height="22" rx="11"/><text class="num" x="286" y="70" text-anchor="middle">내 업무</text>
-        <rect x="220" y="86" width="132" height="46" rx="8" style="fill:var(--surface);stroke:var(--point);stroke-width:1.5"/>
+        <rect x="220" y="86" width="132" height="46" rx="8" style="fill:var(--surface);stroke:var(--accent);stroke-width:1.5"/>
         <text class="mine-ink" x="286" y="105" text-anchor="middle" style="font-size:12.5px;font-weight:700">AI 배합 에이전트</text>
         <text class="sm" x="286" y="122" text-anchor="middle">등급별 장입량 결정</text>
         <line class="mine-line" x1="286" y1="132" x2="286" y2="150" marker-end="url(#pfP)"/>
         <path d="M262,170 L286,154 L310,170" style="stroke:var(--ink-2);stroke-width:2;fill:none"/><circle cx="286" cy="154" r="3.5" style="fill:var(--surface);stroke:var(--ink-2);stroke-width:2"/>
-        <path class="mine-fill" d="M258,170 L266,160 L276,168 L286,158 L296,167 L306,159 L314,170 L305,220 L267,220 Z" style="stroke:var(--point-ink);stroke-width:1.5"/>
+        <path class="mine-fill" d="M258,170 L266,160 L276,168 L286,158 L296,167 L306,159 L314,170 L305,220 L267,220 Z" style="stroke:var(--accent);stroke-width:1.5"/>
         <rect class="dark" x="262" y="220" width="48" height="6" rx="2"/><circle class="dark" cx="272" cy="230" r="4.5"/><circle class="dark" cx="300" cy="230" r="4.5"/>
         <line class="flow" x1="318" y1="204" x2="394" y2="204" marker-end="url(#pfA)"/>
         <text class="mu" x="382" y="196" text-anchor="middle">장입</text>
@@ -186,12 +189,12 @@ details.notice .mailbody { padding: 4px 0 16px 18px; }
 
         <!-- 단계 번호와 이름 -->
         <g text-anchor="middle">
-          <circle class="badge" cx="101" cy="262" r="12"/><text class="num" x="101" y="266">1</text><text class="nm" x="101" y="292">스크랩 야드</text><text class="mu" x="101" y="311">입고·검수·등급별 적치</text>
+          <circle class="badge" cx="101" cy="262" r="12"/><text class="num2" x="101" y="266">1</text><text class="nm" x="101" y="292">스크랩 야드</text><text class="mu" x="101" y="311">입고·검수·등급별 적치</text>
           <circle class="mine-fill" cx="286" cy="262" r="12"/><text class="num" x="286" y="266">2</text><text class="nm mine-ink" x="286" y="292">배합·장입</text><text class="sm" x="286" y="311">스크랩 배합, 버킷 장입</text>
-          <circle class="badge" cx="480" cy="262" r="12"/><text class="num" x="480" y="266">3</text><text class="nm" x="480" y="292">전기로 (EAF)</text><text class="mu" x="480" y="311">아크열로 용해</text>
-          <circle class="badge" cx="659" cy="262" r="12"/><text class="num" x="659" y="266">4</text><text class="nm" x="659" y="292">LF 정련</text><text class="mu" x="659" y="311">성분·온도 조정</text>
-          <circle class="badge" cx="836" cy="262" r="12"/><text class="num" x="836" y="266">5</text><text class="nm" x="836" y="292">연속주조</text><text class="mu" x="836" y="311">빌릿 생산</text>
-          <circle class="badge" cx="1012" cy="262" r="12"/><text class="num" x="1012" y="266">6</text><text class="nm" x="1012" y="292">압연</text><text class="mu" x="1012" y="311">철근 (SD400~600)</text>
+          <circle class="badge" cx="480" cy="262" r="12"/><text class="num2" x="480" y="266">3</text><text class="nm" x="480" y="292">전기로 (EAF)</text><text class="mu" x="480" y="311">아크열로 용해</text>
+          <circle class="badge" cx="659" cy="262" r="12"/><text class="num2" x="659" y="266">4</text><text class="nm" x="659" y="292">LF 정련</text><text class="mu" x="659" y="311">성분·온도 조정</text>
+          <circle class="badge" cx="836" cy="262" r="12"/><text class="num2" x="836" y="266">5</text><text class="nm" x="836" y="292">연속주조</text><text class="mu" x="836" y="311">빌릿 생산</text>
+          <circle class="badge" cx="1012" cy="262" r="12"/><text class="num2" x="1012" y="266">6</text><text class="nm" x="1012" y="292">압연</text><text class="mu" x="1012" y="311">철근 (SD400~600)</text>
         </g>
 
         <!-- 슬래그와 범례 (아래쪽 띠) -->
@@ -204,7 +207,7 @@ details.notice .mailbody { padding: 4px 0 16px 18px; }
         </g>
       </svg>
     </div>
-    <p class="pf-cap">Cu·Sn은 전기로·LF에서 빠지지 않아서, 최종 성분은 주황색으로 표시한 <b style="color:var(--point-ink)">배합·장입 단계(내 업무)</b>에서 정해져요. 좁은 화면에서는 그림을 옆으로 밀어 볼 수 있어요.</p>
+    <p class="pf-cap">Cu·Sn은 전기로·LF에서 빠지지 않아서, 최종 성분은 초록색으로 표시한 <b style="color:var(--accent)">배합·장입 단계(내 업무)</b>에서 정해져요. 좁은 화면에서는 그림을 옆으로 밀어 볼 수 있어요.</p>
     <div class="steps">
       <div class="step"><h3><span class="n">1</span>스크랩 입고·야드</h3><p>무게를 달고 검수한 뒤 등급별로 쌓아 둡니다. 등급마다 가격, 실수율, 불순물 함량이 달라요.</p></div>
       <div class="step mine"><h3><span class="n">2</span>배합·장입 (내 업무)</h3><p>강종에 맞춰 등급별로 몇 톤씩 넣을지 정하고, 버킷에 담아 전기로에 넣어요. AI 배합 에이전트가 일하는 곳이 바로 여기예요.</p></div>
